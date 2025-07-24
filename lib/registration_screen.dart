@@ -295,7 +295,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                       child: ElevatedButton(
                         onPressed: _previousPage,
                         style:ElevatedButton.styleFrom(
-                            backgroundColor: Color(0xFF3E4685),
+                            backgroundColor:Color(0xFF2E356A),
                             foregroundColor:Colors.white,
                             textStyle:TextStyle(fontSize:screenWidth*0.040)
                         ),
@@ -308,12 +308,12 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                   Padding(
                     padding:  EdgeInsets.only(right:screenWidth*0.012,bottom:screenHeight*0.025),
                     child: SizedBox(
-                      width:screenWidth*0.39,
+                      width:screenWidth*0.37,
                       height:screenHeight*0.05,
                       child: ElevatedButton(
                         onPressed: _nextPage,
                         style:ElevatedButton.styleFrom(
-                          backgroundColor: Color(0xFF3E4685),
+                            backgroundColor:Color(0xFF2E356A),
                           foregroundColor:Colors.white,
                           textStyle:TextStyle(fontSize:screenWidth*0.040)
                         ),
@@ -326,7 +326,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                   Padding(
                     padding:  EdgeInsets.only(right:screenWidth*0.012,bottom:screenHeight*0.025),
                     child: SizedBox(
-                      width:screenWidth*0.39,
+                      width:screenWidth*0.37,
                       height:screenHeight*0.05,
                       child: ElevatedButton(
                         onPressed:(){
@@ -338,7 +338,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                           );
                         },
                         style:ElevatedButton.styleFrom(
-                            backgroundColor: Color(0xFF3E4685),
+                            backgroundColor:Color(0xFF2E356A),
                             foregroundColor:Colors.white,
                             textStyle:TextStyle(fontSize:screenWidth*0.040)
                         ),

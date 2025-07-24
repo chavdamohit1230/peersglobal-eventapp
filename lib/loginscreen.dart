@@ -31,7 +31,7 @@ class _LoginscreenState extends State<Loginscreen> {
     double screenHeight = MediaQuery.of(context).size.height;
 
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor:Color(0xFFF0F4FD),
       body: SafeArea(
         child: SingleChildScrollView(
           child: Padding(
@@ -54,7 +54,7 @@ class _LoginscreenState extends State<Loginscreen> {
                     children: [
                       Text(
                         "Welcome Back!",
-                        style: TextStyle(fontSize: screenWidth * 0.060, fontWeight: FontWeight.bold),
+                        style: TextStyle(fontSize: screenWidth * 0.060, fontWeight: FontWeight.bold,color:Color(0xFF535D97)),
                       ),
                       Text(
                         "Please enter your Mobile Number",
@@ -179,8 +179,9 @@ class _LoginscreenState extends State<Loginscreen> {
                             );
                           }
                         },
-                        child: Text('Login', style: TextStyle(fontSize: screenWidth * 0.050)),
+                        child: Text('Login', style: TextStyle(color:Colors.white,fontSize: screenWidth * 0.050)),
                         style: ElevatedButton.styleFrom(
+                          backgroundColor:Color(0xFF2E356A),
                           minimumSize: Size(double.infinity, screenHeight * 0.050),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(10),

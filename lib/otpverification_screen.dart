@@ -21,7 +21,7 @@ class _OtpverificationScreenState extends State<OtpverificationScreen> {
     double screenWidth = MediaQuery.of(context).size.width;
 
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor:Color(0xFFF0F4FD),
       body: SafeArea(
         child: SingleChildScrollView(
           child: Padding(
@@ -46,6 +46,7 @@ class _OtpverificationScreenState extends State<OtpverificationScreen> {
                         style: TextStyle(
                           fontWeight: FontWeight.bold,
                           fontSize: screenWidth * 0.05,
+                            color:Color(0xFF535D97)
                         ),
                       ),
                       Text(
@@ -113,8 +114,9 @@ class _OtpverificationScreenState extends State<OtpverificationScreen> {
                       SnackBar(content: Text("Verifying OTP: $otp")),
                     );
                   },
-                  child: const Text("Verify OTP"),
+                  child: const Text("Verify OTP",style:TextStyle(color:Colors.white),),
                   style: ElevatedButton.styleFrom(
+                    backgroundColor:Color(0xFF2E356A),
                     minimumSize: Size(screenWidth*1,screenHeight*0.060),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(10),
