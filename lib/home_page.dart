@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:peersglobleeventapp/widgets/postcard.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -15,6 +16,24 @@ class _HomePageState extends State<HomePage> {
       selectedIndex = index;
     });
   }
+  final List<Map<String, dynamic>> posts = List.generate(5, (index) => {
+    'companyName': 'AppsRow Solutions LLP',
+    'boothInfo': 'Booth S-11 | Meet the Best Webflow Agency.',
+    'timeAgo': '${index + 1} months ago',
+    'postText':
+    '🎉 Fly to Win: A Contest Full of Excitement! 🎉\nThe Fly to Win Contest at our booth brought fun and engagement.',
+    'imageUrl': [
+      'https://images.unsplash.com/photo-1603791440384-56cd371ee9a7',
+      'https://images.unsplash.com/photo-1522199755839-a2bacb67c546',
+      'https://images.unsplash.com/photo-1522199755839-a2bacb67c546',
+      'https://images.unsplash.com/photo-1504384308090-c894fdcc538d',
+      'https://images.unsplash.com/photo-1531482615713-2afd69097998',
+    ][index],
+    'likes': 20 + index,
+    'comments': 2 + index,
+    'shares': 5 + index,
+  });
+
 
   @override
   Widget build(BuildContext context) {
@@ -34,12 +53,24 @@ class _HomePageState extends State<HomePage> {
               child:Row(
                 crossAxisAlignment:CrossAxisAlignment.start ,
                 children: [
-                  CircleAvatar(
-                    radius:45,
-                    backgroundImage:AssetImage('assets/peersgloblelogo.png'),
+                  Padding(
+                    padding:EdgeInsets.only(top:screenHeight*0.020),
+                    child: CircleAvatar(
+                      radius:35,
+                      backgroundImage:AssetImage('assets/peersgloblelogo.png'),
+
+                    ),
                   ),
-                  Text("Mr.chavda")
-                  
+                  Column(
+                    children: [
+                      Padding(
+                        padding: EdgeInsets.all(screenWidth*0.030),
+                        child: Text("Mr.Chavda",
+                        style:TextStyle(fontSize:18,fontWeight:FontWeight.bold),),
+                      ),
+                    ],
+                  )
+
                 ],
               )
             ),
@@ -138,33 +169,23 @@ class _HomePageState extends State<HomePage> {
 
       //  Scrollable Body Content
       body: SingleChildScrollView(
-        child: Padding(
-          padding: EdgeInsets.all(screenWidth * 0.04),
           child: Column(
-            children: List.generate(
-              15,
-                  (index) => Padding(
-                padding: const EdgeInsets.symmetric(vertical: 8),
-                child: Container(
-                  height: 80,
-                  width: double.infinity,
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(12),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.grey.withOpacity(0.2),
-                        blurRadius: 5,
-                        offset: const Offset(0, 2),
-                      ),
-                    ],
-                  ),
-                  child: Center(child: Text('Item ${index + 1}')),
+            children: posts.map((post) {
+              return Padding(
+                padding: const EdgeInsets.symmetric(vertical:0),
+                child: LinkedInPostCard(
+                  companyName: post['companyName'],
+                  boothInfo: post['boothInfo'],
+                  timeAgo: post['timeAgo'],
+                  postText: post['postText'],
+                  imageUrl: post['imageUrl'],
+                  likes: post['likes'],
+                  comments: post['comments'],
+                  shares: post['shares'],
                 ),
-              ),
-            ),
+              );
+            }).toList(),
           ),
-        ),
       ),
 
       //  Bottom Navigation Bar
