@@ -22,17 +22,22 @@ class LinkedInPostCard extends StatelessWidget {
     required this.shares,
   });
 
+  // Clamp font size between min and max to avoid huge sizes in landscape
+  double safeFontSize(double screenWidth, double fraction, double min, double max) {
+    return (screenWidth * fraction).clamp(min, max);
+  }
+
   @override
   Widget build(BuildContext context) {
-    double screenWidth = MediaQuery.of(context).size.width;
+    final screenWidth = MediaQuery.of(context).size.width;
 
     return Card(
       color: Colors.white,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(0)),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Top Section with Padding
+          // Top Section
           Padding(
             padding: const EdgeInsets.all(12),
             child: Column(
@@ -50,31 +55,40 @@ class LinkedInPostCard extends StatelessWidget {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(companyName,
-                              style: TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: screenWidth * 0.042)),
+                          Text(
+                            companyName,
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: safeFontSize(screenWidth, 0.042, 14, 17),
+                            ),
+                          ),
                           const SizedBox(height: 2),
-                          Text(boothInfo,
-                              style: TextStyle(
-                                  color: Colors.grey,
-                                  fontSize: screenWidth * 0.032)),
-                          Text(timeAgo,
-                              style: TextStyle(
-                                  color: Colors.grey,
-                                  fontSize: screenWidth * 0.030)),
+                          Text(
+                            boothInfo,
+                            style: TextStyle(
+                              color: Colors.grey,
+                              fontSize: safeFontSize(screenWidth, 0.032, 11, 14),
+                            ),
+                          ),
+                          Text(
+                            timeAgo,
+                            style: TextStyle(
+                              color: Colors.grey,
+                              fontSize: safeFontSize(screenWidth, 0.030, 10, 13),
+                            ),
+                          ),
                         ],
                       ),
                     ),
                     const Icon(Icons.more_vert, size: 20),
                   ],
                 ),
-
                 const SizedBox(height: 12),
-
                 Text(
                   postText,
-                  style: TextStyle(fontSize: screenWidth * 0.035),
+                  style: TextStyle(
+                    fontSize: safeFontSize(screenWidth, 0.035, 12, 14),
+                  ),
                   maxLines: 4,
                   overflow: TextOverflow.ellipsis,
                 ),
@@ -82,20 +96,20 @@ class LinkedInPostCard extends StatelessWidget {
             ),
           ),
 
-          // Image (No padding)
+          // Image
           ClipRRect(
             borderRadius: BorderRadius.circular(2),
             child: Image.network(
               imageUrl,
               width: double.infinity,
-              height: screenWidth * 0.6, // Responsive height
+              height: screenWidth * 1,
               fit: BoxFit.cover,
             ),
           ),
 
           const SizedBox(height: 12),
 
-          // Actions (with horizontal padding)
+          // Bottom Actions
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 12),
             child: Row(
@@ -124,7 +138,10 @@ class LinkedInPostCard extends StatelessWidget {
           Flexible(
             child: Text(
               text,
-              style: TextStyle(color: Colors.grey[700], fontSize: 13),
+              style: TextStyle(
+                color: Colors.grey[700],
+                fontSize: 13, // This size is already small and readable
+              ),
               overflow: TextOverflow.ellipsis,
             ),
           ),

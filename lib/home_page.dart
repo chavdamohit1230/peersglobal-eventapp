@@ -1,3 +1,5 @@
+import 'dart:ffi';
+
 import 'package:flutter/material.dart';
 import 'package:peersglobleeventapp/widgets/postcard.dart';
 
@@ -34,6 +36,9 @@ class _HomePageState extends State<HomePage> {
     'shares': 5 + index,
   });
 
+  double safeFontSize(double size, double min, double max) {
+    return size.clamp(min, max);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -43,61 +48,93 @@ class _HomePageState extends State<HomePage> {
     return Scaffold(
       backgroundColor: const Color(0xFFF0F4FD),
       drawer: Drawer(
-        child: ListView(
-          padding: EdgeInsets.zero,
-          children: [
-             DrawerHeader(
-              decoration: BoxDecoration(
-                color: Color(0xFFF0F4FD),
-              ),
-              child:Row(
-                crossAxisAlignment:CrossAxisAlignment.start ,
-                children: [
-                  Padding(
-                    padding:EdgeInsets.only(top:screenHeight*0.020),
-                    child: CircleAvatar(
-                      radius:35,
-                      backgroundImage:AssetImage('assets/peersgloblelogo.png'),
-
+        backgroundColor:Color(0xFFF0F4FD),
+        child: SafeArea(
+          child: ListView(
+            padding: EdgeInsets.zero,
+            children: [
+              // Custom flexible header
+              Container(
+                color: const Color(0xFFF0F4FD),
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const CircleAvatar(
+                      radius: 35,
+                      backgroundImage: AssetImage('assets/peersgloblelogo.png'),
                     ),
-                  ),
-                  Column(
-                    children: [
-                      Padding(
-                        padding: EdgeInsets.all(screenWidth*0.030),
-                        child: Text("Mr.Chavda",
-                        style:TextStyle(fontSize:18,fontWeight:FontWeight.bold),),
+                    const SizedBox(height: 10),
+                    Text(
+                      "Chavda Mohit",
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: safeFontSize(
+                            MediaQuery.of(context).size.width * 0.080, 18, 24),
                       ),
-                    ],
-                  )
+                    ),
+                    const SizedBox(height: 4),
+                 Text(
+                      "Co-Founder of Sarda Dairy Farm",
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        color: Colors.grey,
+                        fontSize: safeFontSize(
+                            MediaQuery.of(context).size.width * 0.030, 11, 15),
+                      ),
+                    ),
+                    Text(
+                      "Attendee : Business Information",
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        color: Colors.grey,
+                        fontSize: safeFontSize(
+                            MediaQuery.of(context).size.width * 0.040, 13, 17),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+                Divider(
+                  thickness:2,
+                  indent:20,
+                  endIndent:20,
+                ),
+              // Navigation Items
+              ListTile(
+                leading: const Icon(Icons.home,size:28,),
+                title: const Text('Home',style:TextStyle(fontSize:18),),
+                onTap: () => Navigator.pop(context),
+              ),
+              ListTile(
+                leading: const Icon(Icons.person,size:28),
+                title: const Text('Profile',style:TextStyle(fontSize:18)),
+                onTap: () => Navigator.pop(context),
+              ),
 
-                ],
-              )
-            ),
-            ListTile(
-              leading: const Icon(Icons.home),
-              title: const Text('Home'),
-              onTap: () {
-                Navigator.pop(context);
-              },
-            ),
-            ListTile(
-              leading: const Icon(Icons.person),
-              title: const Text('Profile'),
-              onTap: () {
-                Navigator.pop(context);
-              },
-            ),
-            ListTile(
-              leading: const Icon(Icons.settings),
-              title: const Text('Settings'),
-              onTap: () {
-                Navigator.pop(context);
-              },
-            ),
-          ],
+              ListTile(
+                leading: const Icon(Icons.people_alt_outlined,size:28),
+                title: const Text('Meeting',style:TextStyle(fontSize:18)),
+                onTap: () => Navigator.pop(context),
+              ),
+
+              ListTile(
+                leading: const Icon(Icons.settings,size:28),
+                title: const Text('Settings',style:TextStyle(fontSize:18)),
+                onTap: () => Navigator.pop(context),
+              ),
+
+            ],
+          ),
         ),
       ),
+
 
       //  AppBar with Drawer Menu
       appBar: AppBar(
