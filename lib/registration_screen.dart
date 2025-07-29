@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:peersglobleeventapp/home_page.dart';
 import 'package:peersglobleeventapp/widgets/autocomplatetextbox.dart';
 import 'package:peersglobleeventapp/widgets/dropdown.dart';
@@ -331,11 +332,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                       child: ElevatedButton(
                         onPressed:(){
                           _submitForm();
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(builder: (context) => HomePage()),
-
-                          );
+                          context.go('/home_page');
                         },
                         style:ElevatedButton.styleFrom(
                             backgroundColor:Color(0xFF2E356A),

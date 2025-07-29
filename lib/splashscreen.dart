@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart'; // ✅ Required for context.go
 
 class Splashscreen extends StatefulWidget {
   const Splashscreen({super.key});
@@ -7,14 +8,16 @@ class Splashscreen extends StatefulWidget {
   @override
   State<Splashscreen> createState() => _SplashscreenState();
 }
+
 class _SplashscreenState extends State<Splashscreen> {
   @override
   void initState() {
     super.initState();
     Timer(const Duration(seconds: 3), () {
-      Navigator.pushReplacementNamed(context, '/loginscreen');
+      context.go('/loginscreen'); //
     });
   }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(

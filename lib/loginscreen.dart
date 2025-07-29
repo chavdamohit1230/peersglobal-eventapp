@@ -1,5 +1,6 @@
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:lottie/lottie.dart';
 import 'package:peersglobleeventapp/otpverification_screen.dart';
 import 'package:peersglobleeventapp/registration_screen.dart';
@@ -211,7 +212,7 @@ class _LoginscreenState extends State<Loginscreen> {
                                     ),
                                       recognizer:TapGestureRecognizer()
                                         ..onTap=(){
-                                          Navigator.push(context,MaterialPageRoute(builder:(context) => RegistrationScreen(),));
+                                         context.go('/registration_screen');
                                         }
                                   ),
                                 ],

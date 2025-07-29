@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_screenutil/flutter_screenutil.dart'; // 👈 Import screenutil
-import 'package:peersglobleeventapp/loginscreen.dart';
-import 'package:peersglobleeventapp/splashscreen.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:peersglobleeventapp/routers/route.dart';
 
 void main() {
   runApp(const MyApp());
@@ -18,18 +17,14 @@ class _MyAppState extends State<MyApp> {
   @override
   Widget build(BuildContext context) {
     return ScreenUtilInit(
-      designSize: const Size(375, 812), // 👈 Base size (iPhone X)
+      designSize: const Size(375, 812),
       minTextAdapt: true,
       splitScreenMode: true,
       builder: (context, child) {
-        return MaterialApp(
+        return MaterialApp.router(
           debugShowCheckedModeBanner: false,
           title: 'Peers Global Event App',
-          initialRoute: '/',
-          routes: {
-            '/': (context) => const Splashscreen(),
-            '/loginscreen': (context) => const Loginscreen(),
-          },
+          routerConfig: AppRouter.router,
         );
       },
     );
