@@ -14,7 +14,7 @@ class _SplashscreenState extends State<Splashscreen> {
   void initState() {
     super.initState();
     Timer(const Duration(seconds: 3), () {
-      context.go('/loginscreen'); //
+      context.go('/home_page');
     });
   }
 

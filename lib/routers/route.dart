@@ -1,4 +1,5 @@
 import 'package:go_router/go_router.dart';
+import 'package:peersglobleeventapp/home_page.dart';
 import 'package:peersglobleeventapp/loginscreen.dart';
 import 'package:peersglobleeventapp/registration_screen.dart';
 import 'package:peersglobleeventapp/splashscreen.dart';
@@ -17,7 +18,7 @@ class AppRouter{
     builder: (context, state) => RegistrationScreen(),)
     ,
     GoRoute(path: "/home_page",
-    builder:(context, state) => RegistrationScreen(),)
+    builder:(context, state) =>HomePage(),)
 
 
   ]);

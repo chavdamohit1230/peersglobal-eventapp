@@ -16,8 +16,71 @@ class _HomePageState extends State<HomePage> {
   void onTabTapped(int index) {
     setState(() {
       selectedIndex = index;
+      if (index == 4) {
+        // Modal Bottom Sheet for "More"
+        showModalBottomSheet(
+          context: context,
+          shape: const RoundedRectangleBorder(
+            borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+          ),
+          builder: (context) {
+            return Container(
+              height: MediaQuery.of(context).size.height * 0.5,
+              width:double.infinity,
+              child:Column(
+                children: [
+                    Padding(
+                      padding: const EdgeInsets.only(top:25),
+                      child: Text("Peers Global",style:TextStyle(fontSize:25,fontWeight:FontWeight.w500,color: Color(0xFF535D97)),),
+                    ),
+                    Text("The Community Of collaboration",style:TextStyle(fontSize:16,color: Color(0xFF535D97)
+                    ),),
+                  Divider(
+                    height:40,
+                    thickness:1,
+                    endIndent:50,
+                    indent:50,
+                  ),
+                  Row(
+                    mainAxisAlignment:MainAxisAlignment.spaceEvenly,
+                    children: [
+                      Column(
+                        children: [
+                          IconButton(onPressed:(){}, icon:Icon(Icons.work_outline,size:30,color:Colors.grey,),),
+                          Text("My Briefcase",style:TextStyle(color:Colors.grey),)
+                        ],
+                      ),
+                      Column(
+                        children: [
+                          IconButton(onPressed:(){}, icon:Icon(Icons.star_border_outlined,size:30,color:Colors.grey,),),
+                          Text("My favorite",style:TextStyle(color:Colors.grey),)
+                        ],
+                      ),
+                      Column(
+                        children: [
+                          IconButton(onPressed:(){}, icon:Icon(Icons.grid_on,size:30,color:Colors.grey,),),
+                          Text("Floor Plan",style:TextStyle(color:Colors.grey),)
+
+                        ],
+                      ),
+
+                    ],
+                  ),
+                ],
+              ),
+
+            );
+          },
+        );
+      } else {
+        setState(() {
+          selectedIndex = index;
+        });
+      }
+
     });
   }
+
   final List<Map<String, dynamic>> posts = List.generate(5, (index) => {
     'companyName': 'AppsRow Solutions LLP',
     'boothInfo': 'Booth S-11 | Meet the Best Webflow Agency.',
