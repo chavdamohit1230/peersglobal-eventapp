@@ -41,31 +41,119 @@ class _HomePageState extends State<HomePage> {
                     endIndent:50,
                     indent:50,
                   ),
-                  Row(
-                    mainAxisAlignment:MainAxisAlignment.spaceEvenly,
-                    children: [
-                      Column(
-                        children: [
-                          IconButton(onPressed:(){}, icon:Icon(Icons.work_outline,size:30,color:Colors.grey,),),
-                          Text("My Briefcase",style:TextStyle(color:Colors.grey),)
-                        ],
-                      ),
-                      Column(
-                        children: [
-                          IconButton(onPressed:(){}, icon:Icon(Icons.star_border_outlined,size:30,color:Colors.grey,),),
-                          Text("My favorite",style:TextStyle(color:Colors.grey),)
-                        ],
-                      ),
-                      Column(
-                        children: [
-                          IconButton(onPressed:(){}, icon:Icon(Icons.grid_on,size:30,color:Colors.grey,),),
-                          Text("Floor Plan",style:TextStyle(color:Colors.grey),)
-
-                        ],
-                      ),
-
-                    ],
+                  Container(
+                    margin: EdgeInsets.symmetric(vertical:MediaQuery.of(context).size.height*0.015),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                      children: [
+                        Column(
+                          children: [
+                            IconButton(
+                              onPressed: () {},
+                              icon: Icon(Icons.work_outline,color: Colors.black),
+                            ),
+                            SizedBox(
+                              width: 80,
+                              child: Text(
+                                "My Briefcase",
+                                textAlign: TextAlign.center,
+                                style: TextStyle(color: Colors.black,),
+                              ),
+                            ),
+                          ],
+                        ),
+                        Column(
+                          children: [
+                            IconButton(
+                              onPressed: () {},
+                              icon: Icon(Icons.star_border_outlined,color: Colors.black),
+                            ),
+                            SizedBox(
+                              width: 80,
+                              child: Text(
+                                "My Favorite",
+                                textAlign: TextAlign.center,
+                                style: TextStyle(color: Colors.black),
+                              ),
+                            ),
+                          ],
+                        ),
+                        Column(
+                          children: [
+                            IconButton(
+                              onPressed: () {},
+                              icon: Icon(Icons.grid_on,color: Colors.black),
+                            ),
+                            SizedBox(
+                              width: 80,
+                              child: Text(
+                                "Floor Plan",
+                                textAlign: TextAlign.center,
+                                style: TextStyle(color: Colors.black),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
                   ),
+                  Container(
+                    margin: EdgeInsets.symmetric(vertical:MediaQuery.of(context).size.height*0.010),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                      children: [
+                        Column(
+                          children: [
+                            IconButton(
+                              onPressed: () {},
+                              icon: Icon(Icons.handshake_outlined,color: Colors.black),
+                            ),
+                            SizedBox(
+                              width: 80,
+                              child: Text(
+                                "Sponsors\n& Partners",
+                                textAlign: TextAlign.center,
+                                style: TextStyle(color: Colors.black),
+                              ),
+                            ),
+                          ],
+                        ),
+                        Column(
+                          children: [
+                            IconButton(
+                              onPressed: () {},
+                              icon: Icon(Icons.photo_camera_front_outlined, size: 30, color: Colors.black),
+                            ),
+                            SizedBox(
+                              width: 80,
+                              child: Text(
+                                "Selfie Plan",
+                                textAlign: TextAlign.center,
+                                style: TextStyle(color: Colors.black),
+                              ),
+                            ),
+                          ],
+                        ),
+                        Column(
+                          children: [
+                            IconButton(
+                              onPressed: () {},
+                              icon: Icon(Icons.event_note_outlined, size: 30, color: Colors.black),
+                            ),
+                            SizedBox(
+                              width: 80,
+                              child: Text(
+                                "Agenda",
+                                textAlign: TextAlign.center,
+                                style: TextStyle(color: Colors.grey),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  )
+
                 ],
               ),
 
