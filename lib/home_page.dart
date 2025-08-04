@@ -1,6 +1,7 @@
 import 'dart:ffi';
 
 import 'package:flutter/material.dart';
+import 'package:peersglobleeventapp/exhibiter_screen.dart';
 import 'package:peersglobleeventapp/widgets/postcard.dart';
 
 class HomePage extends StatefulWidget {
@@ -145,7 +146,7 @@ class _HomePageState extends State<HomePage> {
                               child: Text(
                                 "Agenda",
                                 textAlign: TextAlign.center,
-                                style: TextStyle(color: Colors.grey),
+                                style: TextStyle(color: Colors.black ),
                               ),
                             ),
                           ],
@@ -356,24 +357,42 @@ class _HomePageState extends State<HomePage> {
       ),
 
       //  Scrollable Body Content
-      body: SingleChildScrollView(
-          child: Column(
-            children: posts.map((post) {
-              return Padding(
-                padding: const EdgeInsets.symmetric(vertical:0),
-                child: LinkedInPostCard(
-                  companyName: post['companyName'],
-                  boothInfo: post['boothInfo'],
-                  timeAgo: post['timeAgo'],
-                  postText: post['postText'],
-                  imageUrl: post['imageUrl'],
-                  likes: post['likes'],
-                  comments: post['comments'],
-                  shares: post['shares'],
-                ),
-              );
-            }).toList(),
+      body: IndexedStack(
+        index: selectedIndex == 4 ? 0 : selectedIndex,
+        children: [
+          // 0: Home Screen
+          SingleChildScrollView(
+            child: Column(
+              children: posts.map((post) {
+                return Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 0),
+                  child: LinkedInPostCard(
+                    companyName: post['companyName'],
+                    boothInfo: post['boothInfo'],
+                    timeAgo: post['timeAgo'],
+                    postText: post['postText'],
+                    imageUrl: post['imageUrl'],
+                    likes: post['likes'],
+                    comments: post['comments'],
+                    shares: post['shares'],
+                  ),
+                );
+              }).toList(),
+            ),
           ),
+
+          // 1: My Network
+          Center(child: Text("My Network")),
+
+          // 2: QR Scanner
+          Center(child: Text("QR Code Scanner")),
+
+          // 3: Exhibitors Page
+           ExhibiterScreen(),
+
+          // 4: (More) — ignore because modal bottom sheet handle karega
+          Container(),
+        ],
       ),
 
       //  Bottom Navigation Bar
