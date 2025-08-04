@@ -13,7 +13,6 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   int selectedIndex = 0;
-
   void onTabTapped(int index) {
     setState(() {
       selectedIndex = index;
@@ -25,150 +24,97 @@ class _HomePageState extends State<HomePage> {
             borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
           ),
           builder: (context) {
+            double iconSize = MediaQuery.of(context).size.width * 0.08;
+            double fontSize = MediaQuery.of(context).size.width * 0.035;
+            double spacing = MediaQuery.of(context).size.height * 0.01;
+
+            Widget buildAction(String label, IconData icon, VoidCallback onTap) {
+              return GestureDetector(
+                onTap: onTap,
+                child: SizedBox(
+                  width: 90,
+                  child: Column(
+                    children: [
+                      Icon(icon, size: iconSize, color: Colors.black),
+                      SizedBox(height: spacing),
+                      Text(
+                        label,
+                        textAlign: TextAlign.center,
+                        style: TextStyle(fontSize: fontSize, color: Colors.black),
+                      ),
+                    ],
+                  ),
+                ),
+              );
+            }
+
             return Container(
               height: MediaQuery.of(context).size.height * 0.5,
-              width:double.infinity,
-              child:Column(
+              padding: const EdgeInsets.only(top: 25),
+              child: Column(
                 children: [
-                    Padding(
-                      padding: const EdgeInsets.only(top:25),
-                      child: Text("Peers Global",style:TextStyle(fontSize:25,fontWeight:FontWeight.w500,color: Color(0xFF535D97)),),
-                    ),
-                    Text("The Community Of collaboration",style:TextStyle(fontSize:16,color: Color(0xFF535D97)
-                    ),),
-                  Divider(
-                    height:40,
-                    thickness:1,
-                    endIndent:50,
-                    indent:50,
-                  ),
-                  Container(
-                    margin: EdgeInsets.symmetric(vertical:MediaQuery.of(context).size.height*0.015),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                      children: [
-                        Column(
-                          children: [
-                            IconButton(
-                              onPressed: () {},
-                              icon: Icon(Icons.work_outline,color: Colors.black),
-                            ),
-                            SizedBox(
-                              width: 80,
-                              child: Text(
-                                "My Briefcase",
-                                textAlign: TextAlign.center,
-                                style: TextStyle(color: Colors.black,),
-                              ),
-                            ),
-                          ],
-                        ),
-                        Column(
-                          children: [
-                            IconButton(
-                              onPressed: () {},
-                              icon: Icon(Icons.star_border_outlined,color: Colors.black),
-                            ),
-                            SizedBox(
-                              width: 80,
-                              child: Text(
-                                "My Favorite",
-                                textAlign: TextAlign.center,
-                                style: TextStyle(color: Colors.black),
-                              ),
-                            ),
-                          ],
-                        ),
-                        Column(
-                          children: [
-                            IconButton(
-                              onPressed: () {},
-                              icon: Icon(Icons.grid_on,color: Colors.black),
-                            ),
-                            SizedBox(
-                              width: 80,
-                              child: Text(
-                                "Floor Plan",
-                                textAlign: TextAlign.center,
-                                style: TextStyle(color: Colors.black),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ],
+                  Text(
+                    "Peers Global",
+                    style: TextStyle(
+                      fontSize: fontSize + 5,
+                      fontWeight: FontWeight.w500,
+                      color: const Color(0xFF535D97),
                     ),
                   ),
-                  Container(
-                    margin: EdgeInsets.symmetric(vertical:MediaQuery.of(context).size.height*0.010),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                      children: [
-                        Column(
-                          children: [
-                            IconButton(
-                              onPressed: () {},
-                              icon: Icon(Icons.handshake_outlined,color: Colors.black),
-                            ),
-                            SizedBox(
-                              width: 80,
-                              child: Text(
-                                "Sponsors\n& Partners",
-                                textAlign: TextAlign.center,
-                                style: TextStyle(color: Colors.black),
-                              ),
-                            ),
-                          ],
-                        ),
-                        Column(
-                          children: [
-                            IconButton(
-                              onPressed: () {},
-                              icon: Icon(Icons.photo_camera_front_outlined, size: 30, color: Colors.black),
-                            ),
-                            SizedBox(
-                              width: 80,
-                              child: Text(
-                                "Selfie Plan",
-                                textAlign: TextAlign.center,
-                                style: TextStyle(color: Colors.black),
-                              ),
-                            ),
-                          ],
-                        ),
-                        Column(
-                          children: [
-                            IconButton(
-                              onPressed: () {},
-                              icon: Icon(Icons.event_note_outlined, size: 30, color: Colors.black),
-                            ),
-                            SizedBox(
-                              width: 80,
-                              child: Text(
-                                "Agenda",
-                                textAlign: TextAlign.center,
-                                style: TextStyle(color: Colors.black ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ],
+                  Text(
+                    "The Community Of Collaboration",
+                    style: TextStyle(
+                      fontSize: fontSize,
+                      color: const Color(0xFF535D97),
                     ),
-                  )
-
+                  ),
+                  const Divider(
+                    height: 40,
+                    thickness: 1,
+                    endIndent: 50,
+                    indent: 50,
+                  ),
+                  SizedBox(height: spacing),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    children: [
+                      buildAction("My Briefcase", Icons.work_outline, () {
+                        print("My Briefcase tapped");
+                      }),
+                      buildAction("My Favorite", Icons.star_border_outlined, () {
+                        print("My Favorite tapped");
+                      }),
+                      buildAction("Floor Plan", Icons.grid_on, () {
+                        print("Floor Plan tapped");
+                      }),
+                    ],
+                  ),
+                  SizedBox(height: spacing * 2),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    children: [
+                      buildAction("Sponsors\n& Partners", Icons.handshake_outlined, () {
+                        print("Sponsors & Partners tapped");
+                      }),
+                      buildAction("Selfie Plan", Icons.photo_camera_front_outlined, () {
+                        print("Selfie Plan tapped");
+                      }),
+                      buildAction("Agenda", Icons.event_note_outlined, () {
+                        print("Agenda tapped");
+                      }),
+                    ],
+                  ),
                 ],
               ),
-
             );
           },
         );
       } else {
-        setState(() {
-          selectedIndex = index;
-        });
+        selectedIndex = index;
       }
-
     });
   }
+
 
   final List<Map<String, dynamic>> posts = List.generate(5, (index) => {
     'companyName': 'AppsRow Solutions LLP',

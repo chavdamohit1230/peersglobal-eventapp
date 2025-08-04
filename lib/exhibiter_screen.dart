@@ -15,9 +15,57 @@ class ExhibiterScreen extends StatefulWidget {
 final List<Exhibiter>exhibiterList=[
 
   Exhibiter(name: 'Gtpl',
-      Imageurl: "https://via.placeholder.com/100",
+      Imageurl:"https://www.clipartmax.com/png/middle/192-1924552_gtpl-saathi-apk-download-install-for-android-dekstop-gtpl.png",
       badge: 'p1 Category',
       catogory: "Platinum"),
+
+    Exhibiter(name: 'Gtpl',
+      Imageurl:"https://www.clipartmax.com/png/middle/192-1924552_gtpl-saathi-apk-download-install-for-android-dekstop-gtpl.png",
+      badge: 'p1 Category',
+      catogory: "Platinum"),
+
+  Exhibiter(name: 'Gtpl',
+      Imageurl:"https://www.clipartmax.com/png/middle/192-1924552_gtpl-saathi-apk-download-install-for-android-dekstop-gtpl.png",
+      badge: 'p1 Category',
+      catogory: "Platinum"),
+
+  Exhibiter(name: 'Gtpl',
+      Imageurl:"https://www.clipartmax.com/png/middle/192-1924552_gtpl-saathi-apk-download-install-for-android-dekstop-gtpl.png",
+      badge: 'p1 Category',
+      catogory: "Platinum"),
+
+  Exhibiter(name: 'Gtpl',
+      Imageurl:"https://www.clipartmax.com/png/middle/192-1924552_gtpl-saathi-apk-download-install-for-android-dekstop-gtpl.png",
+      badge: 'p1 Category',
+      catogory: "Platinum"),
+
+  Exhibiter(name: 'Gtpl',
+      Imageurl:"https://www.clipartmax.com/png/middle/192-1924552_gtpl-saathi-apk-download-install-for-android-dekstop-gtpl.png",
+      badge: 'p1 Category',
+      catogory: "Platinum"),
+
+  Exhibiter(name: 'Gtpl',
+      Imageurl:"https://www.clipartmax.com/png/middle/192-1924552_gtpl-saathi-apk-download-install-for-android-dekstop-gtpl.png",
+      badge: 'p1 Category',
+      catogory: "Platinum"),
+
+  Exhibiter(name: 'Gtpl',
+      Imageurl:"https://www.clipartmax.com/png/middle/192-1924552_gtpl-saathi-apk-download-install-for-android-dekstop-gtpl.png",
+      badge: 'p1 Category',
+      catogory: "Platinum"),
+
+  Exhibiter(name: 'Gtpl',
+      Imageurl:"https://www.clipartmax.com/png/middle/192-1924552_gtpl-saathi-apk-download-install-for-android-dekstop-gtpl.png",
+      badge: 'p1 Category',
+      catogory: "Platinum"),
+
+  Exhibiter(name: 'Gtpl',
+      Imageurl:"https://www.clipartmax.com/png/middle/192-1924552_gtpl-saathi-apk-download-install-for-android-dekstop-gtpl.png",
+      badge: 'p1 Category',
+      catogory: "Platinum"),
+
+
+
 
 ];
 
@@ -30,6 +78,7 @@ class _ExhibiterScreenState extends State<ExhibiterScreen> {
     double screenwidth = MediaQuery.of(context).size.width;
 
     return Scaffold(
+      backgroundColor:Colors.white,
       appBar:AppBar(
         title:Text("Exhibiters List",style:TextStyle(fontSize:18),),
         backgroundColor:Colors.white,
@@ -39,8 +88,8 @@ class _ExhibiterScreenState extends State<ExhibiterScreen> {
           itemCount:exhibiterList.length,
           gridDelegate:SliverGridDelegateWithFixedCrossAxisCount(
               crossAxisCount:2,
-              crossAxisSpacing:12,
-              mainAxisSpacing:12,
+              crossAxisSpacing:2,
+              mainAxisSpacing:2,
               childAspectRatio:0.85),
           itemBuilder:(context,index){
             return ExhibiterWidgets(exhibiter:exhibiterList[index],);
