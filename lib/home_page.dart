@@ -1,7 +1,7 @@
 import 'dart:ffi';
-
 import 'package:flutter/material.dart';
 import 'package:peersglobleeventapp/exhibiter_screen.dart';
+import 'package:peersglobleeventapp/my_network.dart';
 import 'package:peersglobleeventapp/widgets/postcard.dart';
 
 class HomePage extends StatefulWidget {
@@ -328,7 +328,7 @@ class _HomePageState extends State<HomePage> {
           ),
 
           // 1: My Network
-          Center(child: Text("My Network")),
+          MyNetwork(),
 
           // 2: QR Scanner
           Center(child: Text("QR Code Scanner")),
