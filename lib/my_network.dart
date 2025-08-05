@@ -17,6 +17,7 @@ class _MyNetworkState extends State<MyNetwork> {
       ImageUrl:
       "https://imgv3.fotor.com/images/slider-image/A-clear-close-up-photo-of-a-woman.jpg",
       reject: Icons.cancel_outlined,
+      accept:Icons.check_circle_outlined
     ),
     Mynetwork(
       username: "Mohit",
@@ -24,15 +25,26 @@ class _MyNetworkState extends State<MyNetwork> {
       ImageUrl:
       "https://imgv3.fotor.com/images/slider-image/A-clear-close-up-photo-of-a-woman.jpg",
       reject: Icons.cancel_outlined,
-    ),
-    Mynetwork(
-      username: "Riya",
-      Designnation: "UI Designer",
-      ImageUrl:
-      "https://imgv3.fotor.com/images/slider-image/A-clear-close-up-photo-of-a-woman.jpg",
-      reject: Icons.cancel_outlined,
+        accept:Icons.check_circle_outlined
     ),
   ];
+  final List<Mynetwork> peopleknows = [
+    Mynetwork(
+        username: "Mohit",
+        Designnation: "Flutter Developer",
+        ImageUrl:
+        "https://imgv3.fotor.com/images/slider-image/A-clear-close-up-photo-of-a-woman.jpg",
+        reject: Icons.person_add_alt,
+    ),
+    Mynetwork(
+        username: "Mohit",
+        Designnation: "Flutter Developer",
+        ImageUrl:
+        "https://imgv3.fotor.com/images/slider-image/A-clear-close-up-photo-of-a-woman.jpg",
+        reject: Icons.person_add_alt,
+    ),
+  ];
+
 
   @override
   Widget build(BuildContext context) {
@@ -47,7 +59,7 @@ class _MyNetworkState extends State<MyNetwork> {
             // 🔹 Top Heading + List
             Container(
               width: double.infinity,
-              color: Colors.white,
+              color: const Color(0xFFF3F8FE),
               padding: EdgeInsets.symmetric(
                 horizontal: screenwidth * 0.04,
                 vertical: screenHeight * 0.02,
@@ -69,22 +81,15 @@ class _MyNetworkState extends State<MyNetwork> {
                     ],
                   ),
                   SizedBox(height: screenHeight * 0.010),
-                  ListView.separated(
+                  ListView.builder(
                     shrinkWrap: true,
                     physics: NeverScrollableScrollPhysics(),
                     itemCount: networklist.length,
                     itemBuilder: (context, index) {
                       return MyNetworkWidget(mynetwork: networklist[index]);
                     },
-                    separatorBuilder: (context, index) {
-                      return Divider(
-                        thickness: 1,
-                        color: Colors.grey.shade300,
-                        indent: 16,
-                        endIndent: 16,
-                      );
-                    },
                   ),
+
 
                 ],
               ),
@@ -94,15 +99,79 @@ class _MyNetworkState extends State<MyNetwork> {
 
             // 🔹 Dummy sections below
             Container(
-              height: screenHeight * 0.25,
               width: double.infinity,
-              color: Colors.blue,
+              color: const Color(0xFFF3F8FE),
+              padding: EdgeInsets.symmetric(
+                horizontal: screenwidth * 0.04,
+                vertical: screenHeight * 0.02,
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        "People You May Know",
+                        style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                      ),
+                      Text(
+                        "View All",
+                        style: TextStyle(fontSize: 16, color: Colors.blue),
+                      ),
+                    ],
+                  ),
+                  SizedBox(height: screenHeight * 0.010),
+                  ListView.builder(
+                    shrinkWrap: true,
+                    physics: NeverScrollableScrollPhysics(),
+                    itemCount: peopleknows .length,
+                    itemBuilder: (context, index) {
+                      return MyNetworkWidget(mynetwork: peopleknows [index]);
+                    },
+                  ),
+
+
+                ],
+              ),
             ),
             SizedBox(height: screenHeight * 0.01),
             Container(
-              height: screenHeight * 0.25,
               width: double.infinity,
-              color: Colors.pinkAccent,
+              color: const Color(0xFFF3F8FE),
+              padding: EdgeInsets.symmetric(
+                horizontal: screenwidth * 0.04,
+                vertical: screenHeight * 0.02,
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        "Connections",
+                        style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                      ),
+                      Text(
+                        "View All",
+                        style: TextStyle(fontSize: 16, color: Colors.blue),
+                      ),
+                    ],
+                  ),
+                  SizedBox(height: screenHeight * 0.010),
+                  ListView.builder(
+                    shrinkWrap: true,
+                    physics: NeverScrollableScrollPhysics(),
+                    itemCount: networklist.length,
+                    itemBuilder: (context, index) {
+                      return MyNetworkWidget(mynetwork: networklist[index]);
+                    },
+                  ),
+
+
+                ],
+              ),
             ),
           ],
         ),
