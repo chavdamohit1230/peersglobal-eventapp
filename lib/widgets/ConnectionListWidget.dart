@@ -53,7 +53,6 @@ class ConnectionListWidget extends StatelessWidget {
             ),
           ),
 
-          // ❌ No toggle, just a fixed "Connect" button
           ElevatedButton(
             onPressed: () {
               // 👉 You can add your connection logic here
@@ -64,7 +63,7 @@ class ConnectionListWidget extends StatelessWidget {
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
             ),
             child: const Text(
-              "Connect",
+              "Message  ",
               style: TextStyle(fontSize: 14, color: Colors.white),
             ),
           ),

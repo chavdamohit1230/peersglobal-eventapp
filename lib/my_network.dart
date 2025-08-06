@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:peersglobleeventapp/widgets/ConnectionListWidget.dart';
 import 'package:peersglobleeventapp/widgets/Peopleknows_list_widgets.dart';
 import 'modelClass/mynetwork_model.dart';
 import 'package:peersglobleeventapp/widgets/my_network_widget.dart';
@@ -39,6 +40,29 @@ class _MyNetworkState extends State<MyNetwork> {
         ImageUrl:
         "https://imgv3.fotor.com/images/slider-image/A-clear-close-up-photo-of-a-woman.jpg",
         reject: Icons.person_add_alt,
+    ),
+    Mynetwork(
+      username: "Mohit",
+      Designnation: "Flutter Developer",
+      ImageUrl:
+      "https://imgv3.fotor.com/images/slider-image/A-clear-close-up-photo-of-a-woman.jpg",
+      reject: Icons.person_add_alt,
+    ),
+  ];
+  final List<Mynetwork> connection = [
+    Mynetwork(
+      username: "Mohit",
+      Designnation: "Flutter Developer",
+      ImageUrl:
+      "https://imgv3.fotor.com/images/slider-image/A-clear-close-up-photo-of-a-woman.jpg",
+      reject: Icons.person_add_alt,
+    ),
+    Mynetwork(
+      username: "Mohit",
+      Designnation: "Flutter Developer",
+      ImageUrl:
+      "https://imgv3.fotor.com/images/slider-image/A-clear-close-up-photo-of-a-woman.jpg",
+      reject: Icons.person_add_alt,
     ),
     Mynetwork(
       username: "Mohit",
@@ -167,9 +191,9 @@ class _MyNetworkState extends State<MyNetwork> {
                   ListView.builder(
                     shrinkWrap: true,
                     physics: NeverScrollableScrollPhysics(),
-                    itemCount: networklist.length,
+                    itemCount: connection.length,
                     itemBuilder: (context, index) {
-                      return MyNetworkWidget(mynetwork: networklist[index]);
+                      return ConnectionListWidget(connection: connection[index]);
                     },
                   ),
 
