@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:peersglobleeventapp/widgets/Peopleknows_list_widgets.dart';
 import 'modelClass/mynetwork_model.dart';
 import 'package:peersglobleeventapp/widgets/my_network_widget.dart';
 
@@ -11,23 +12,19 @@ class MyNetwork extends StatefulWidget {
 
 class _MyNetworkState extends State<MyNetwork> {
   final List<Mynetwork> networklist = [
-    Mynetwork(
-      username: "Mohit",
-      Designnation: "Flutter Developer",
-      ImageUrl:
-      "https://imgv3.fotor.com/images/slider-image/A-clear-close-up-photo-of-a-woman.jpg",
-      reject: Icons.cancel_outlined,
-      accept:Icons.check_circle_outlined
-    ),
-    Mynetwork(
-      username: "Mohit",
-      Designnation: "Flutter Developer",
-      ImageUrl:
-      "https://imgv3.fotor.com/images/slider-image/A-clear-close-up-photo-of-a-woman.jpg",
-      reject: Icons.cancel_outlined,
-        accept:Icons.check_circle_outlined
-    ),
-  ];
+    Mynetwork(username:"ABC",
+        Designnation:"flutter Developer",
+        ImageUrl:"https://imgv3.fotor.com/images/slider-image/A-clear-close-up-photo-of-a-woman.jpg",
+       ),
+      Mynetwork(username:"XYZ",
+      Designnation:"flutter Developer",
+      ImageUrl:"https://imgv3.fotor.com/images/slider-image/A-clear-close-up-photo-of-a-woman.jpg",
+      ),
+      Mynetwork(username:"DEmo",
+      Designnation:"flutter Developer",
+      ImageUrl:"https://imgv3.fotor.com/images/slider-image/A-clear-close-up-photo-of-a-woman.jpg",
+    )
+      ];
   final List<Mynetwork> peopleknows = [
     Mynetwork(
         username: "Mohit",
@@ -42,6 +39,13 @@ class _MyNetworkState extends State<MyNetwork> {
         ImageUrl:
         "https://imgv3.fotor.com/images/slider-image/A-clear-close-up-photo-of-a-woman.jpg",
         reject: Icons.person_add_alt,
+    ),
+    Mynetwork(
+      username: "Mohit",
+      Designnation: "Flutter Developer",
+      ImageUrl:
+      "https://imgv3.fotor.com/images/slider-image/A-clear-close-up-photo-of-a-woman.jpg",
+      reject: Icons.person_add_alt,
     ),
   ];
 
@@ -127,7 +131,7 @@ class _MyNetworkState extends State<MyNetwork> {
                     physics: NeverScrollableScrollPhysics(),
                     itemCount: peopleknows .length,
                     itemBuilder: (context, index) {
-                      return MyNetworkWidget(mynetwork: peopleknows [index]);
+                      return PeopleknowsListWidgets(peopleknows: peopleknows[index]);
                     },
                   ),
 

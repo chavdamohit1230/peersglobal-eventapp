@@ -5,7 +5,7 @@ class Mynetwork{
   final String username;
   final String Designnation;
   final String ImageUrl;
-  final IconData reject;
+  final IconData? reject;
   final IconData? accept;
 
   Mynetwork({
@@ -13,7 +13,7 @@ class Mynetwork{
     required this.username,
     required this.Designnation,
     required this.ImageUrl,
-    required this.reject,
+     this.reject,
     this.accept,
 
 });

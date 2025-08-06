@@ -1,29 +1,36 @@
 import 'package:flutter/material.dart';
 import 'package:peersglobleeventapp/modelClass/mynetwork_model.dart';
 
-class MyNetworkWidget extends StatefulWidget {
-  final Mynetwork mynetwork;
+class PeopleknowsListWidgets extends StatefulWidget {
+  final Mynetwork peopleknows;
 
-  const MyNetworkWidget({super.key, required this.mynetwork});
+  const PeopleknowsListWidgets({super.key, required this.peopleknows});
 
   @override
-  State<MyNetworkWidget> createState() => _MyNetworkWidgetState();
+  State<PeopleknowsListWidgets> createState() => _PeopleknowsListWidgetsState();
 }
 
-class _MyNetworkWidgetState extends State<MyNetworkWidget> {
+class _PeopleknowsListWidgetsState extends State<PeopleknowsListWidgets> {
   bool isFollowed = false;
   bool isLoading = false;
 
   void handleFollowToggle() async {
     setState(() => isLoading = true);
 
-    // 🔁 Yahan aap API call ya custom logic kar sakte ho
+
     await Future.delayed(const Duration(milliseconds: 600));
 
     setState(() {
       isFollowed = !isFollowed;
       isLoading = false;
     });
+
+
+    if (isFollowed) {
+      print("Followed ${widget.peopleknows.username}");
+    } else {
+      print("Unfollowed ${widget.peopleknows.username}");
+    }
   }
 
   @override
@@ -44,40 +51,40 @@ class _MyNetworkWidgetState extends State<MyNetworkWidget> {
           // 👤 Profile Avatar
           CircleAvatar(
             radius: 24,
-            backgroundImage: widget.mynetwork.ImageUrl != null
-                ? NetworkImage(widget.mynetwork.ImageUrl!)
+            backgroundImage: widget.peopleknows.ImageUrl != null
+                ? NetworkImage(widget.peopleknows.ImageUrl!)
                 : null,
-            child: widget.mynetwork.ImageUrl == null
+            child: widget.peopleknows.ImageUrl == null
                 ? const Icon(Icons.person, size: 28)
                 : null,
           ),
           const SizedBox(width: 12),
 
-          // 🧑 Name & Designation
+
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  widget.mynetwork.username,
+                  widget.peopleknows.username,
                   style: const TextStyle(
                     fontWeight: FontWeight.bold,
                     fontSize: 15,
                   ),
                 ),
                 Text(
-                  widget.mynetwork.Designnation ?? "No Designation",
+                  widget.peopleknows.Designnation ?? "No Designation",
                   style: const TextStyle(color: Colors.grey, fontSize: 13),
                 ),
               ],
             ),
           ),
 
-          // ✅ ElevatedButton with toggle text
+
           ElevatedButton(
             onPressed: isLoading ? null : handleFollowToggle,
             style: ElevatedButton.styleFrom(
-              backgroundColor: isFollowed ? Colors.blue : Colors.blue,
+              backgroundColor: Colors.blue,
             ),
             child: isLoading
                 ? const SizedBox(
@@ -89,8 +96,8 @@ class _MyNetworkWidgetState extends State<MyNetworkWidget> {
               ),
             )
                 : Text(
-              isFollowed ? "Follow Back" : "Conform",
-              style: const TextStyle(fontSize: 14,color:Colors.white),
+              isFollowed ? "Requested" : "Follow",
+              style: const TextStyle(fontSize: 14, color: Colors.white),
             ),
           ),
         ],
