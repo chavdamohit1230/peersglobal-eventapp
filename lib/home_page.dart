@@ -210,12 +210,12 @@ class _HomePageState extends State<HomePage> {
               ListTile(
                 leading: const Icon(Icons.home,size:28,),
                 title: const Text('Home',style:TextStyle(fontSize:18),),
-                onTap: () => context.push('/userProfile_screen'),
+                onTap: () => Navigator.pop(context),
               ),
               ListTile(
                 leading: const Icon(Icons.person,size:28),
                 title: const Text('Profile',style:TextStyle(fontSize:18)),
-                onTap: () => Navigator.pop(context),
+                onTap: () => context.push('/userProfile_screen'),
               ),
 
               ListTile(
