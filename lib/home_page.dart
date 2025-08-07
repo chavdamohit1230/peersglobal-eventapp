@@ -1,5 +1,6 @@
 import 'dart:ffi';
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:peersglobleeventapp/exhibiter_screen.dart';
 import 'package:peersglobleeventapp/my_network.dart';
 import 'package:peersglobleeventapp/qr_Scanner.dart';
@@ -209,7 +210,7 @@ class _HomePageState extends State<HomePage> {
               ListTile(
                 leading: const Icon(Icons.home,size:28,),
                 title: const Text('Home',style:TextStyle(fontSize:18),),
-                onTap: () => Navigator.pop(context),
+                onTap: () => context.push('/userProfile_screen'),
               ),
               ListTile(
                 leading: const Icon(Icons.person,size:28),
