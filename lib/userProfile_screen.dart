@@ -15,7 +15,7 @@ class _UserprofileScreenState extends State<UserprofileScreen>
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 2, vsync: this);
+    _tabController = TabController(length: 3, vsync: this);
   }
 
   @override
@@ -26,6 +26,10 @@ class _UserprofileScreenState extends State<UserprofileScreen>
 
   @override
   Widget build(BuildContext context) {
+
+      double screenHeight=MediaQuery.of(context).size.height;
+      double screenWidth=MediaQuery.of(context).size.width;
+
     return Scaffold(
       appBar: AppBar(
         backgroundColor: const Color(0xFFF3F8FE),
@@ -92,11 +96,12 @@ class _UserprofileScreenState extends State<UserprofileScreen>
           TabBar(
             controller: _tabController,
             labelColor: const Color(0xFF535D97),
-            unselectedLabelColor: Colors.grey,
+             unselectedLabelColor: Colors.grey,
             indicatorColor: const Color(0xFF535D97),
             tabs: const [
-              Tab(text: "Overview"),
+              Tab(text: "Profile Detail"),
               Tab(text: "Posts"),
+              Tab(text: "Connections",)
             ],
           ),
 
@@ -104,9 +109,85 @@ class _UserprofileScreenState extends State<UserprofileScreen>
           Expanded(
             child: TabBarView(
               controller: _tabController,
-              children: const [
-                Center(child: Text("Overview Content")),
-                Center(child: Text("Posts Content")),
+              children:  [
+                Column(
+                  children: [
+                    Padding(
+                      padding: EdgeInsets.symmetric(horizontal:screenWidth*0.035,vertical:screenHeight*0.015),
+                      child: Row(
+                        children: [
+                          Icon(Icons.call),
+                          SizedBox(width:screenWidth*0.031,),
+                          Text("Mobile Number",style:TextStyle(fontSize:18,color:Colors.grey),)
+                        ],
+                      ),
+                    ),
+                    Padding(
+                      padding: EdgeInsets.only(left:screenWidth*0.1),
+                      child: Row(
+                        children: [
+                          Text("+9023022212",style:TextStyle(fontSize:16),)
+                        ],
+                      ),
+                    ),
+                    Padding(
+                      padding: EdgeInsets.symmetric(horizontal:screenWidth*0.035,vertical:screenHeight*0.015),
+                      child: Row(
+                        children: [
+                          Icon(Icons.email_sharp),
+                          SizedBox(width:screenWidth*0.031,),
+                          Text("Email",style:TextStyle(fontSize:18,color:Colors.grey),)
+                        ],
+                      ),
+                    ),
+                    Padding(
+                      padding: EdgeInsets.only(left:49),
+                      child: Row(
+                        children: [
+                          Text("mohitchavda1241@gmail.com",style:TextStyle(fontSize:16),)
+                        ],
+                      ),
+                    ),
+                    Padding(
+                      padding: EdgeInsets.symmetric(horizontal:screenWidth*0.035,vertical:screenHeight*0.015),
+                      child: Row(
+                        children: [
+                          Icon(Icons.account_balance_outlined ),
+                          SizedBox(width:screenWidth*0.031,),
+                          Text("State",style:TextStyle(fontSize:18,color:Colors.grey),)
+                        ],
+                      ),
+                    ),
+                    Padding(
+                      padding: EdgeInsets.only(left:49),
+                      child: Row(
+                        children: [
+                          Text("Gujarat",style:TextStyle(fontSize:16),)
+                        ],
+                      ),
+                    ),
+                    Padding(
+                      padding: EdgeInsets.symmetric(horizontal:screenWidth*0.035,vertical:screenHeight*0.015),
+                      child: Row(
+                        children: [
+                          Icon(Icons.area_chart_outlined),
+                          SizedBox(width:screenWidth*0.031,),
+                          Text("City",style:TextStyle(fontSize:18,color:Colors.grey),)
+                        ],
+                      ),
+                    ),
+                    Padding(
+                      padding: EdgeInsets.only(left:49),
+                      child: Row(
+                        children: [
+                          Text("Ahmedabad",style:TextStyle(fontSize:16),)
+                        ],
+                      ),
+                    )
+                  ],
+                ),
+                Center(child: Text("Posts")),
+                Center(child:Text("Connections"),)
               ],
             ),
           ),
