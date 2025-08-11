@@ -1,10 +1,12 @@
-import 'dart:ffi';
+
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:peersglobleeventapp/exhibiter_screen.dart';
+import 'package:peersglobleeventapp/modelClass/user_PostModel.dart';
 import 'package:peersglobleeventapp/my_network.dart';
 import 'package:peersglobleeventapp/qr_Scanner.dart';
-import 'package:peersglobleeventapp/widgets/postcard.dart';
+import 'package:peersglobleeventapp/widgets/userpostCard.dart';
+
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -118,23 +120,41 @@ class _HomePageState extends State<HomePage> {
   }
 
 
-  final List<Map<String, dynamic>> posts = List.generate(5, (index) => {
-    'companyName': 'AppsRow Solutions LLP',
-    'boothInfo': 'Booth S-11 | Meet the Best Webflow Agency.',
-    'timeAgo': '${index + 1} months ago',
-    'postText':
-    '🎉 Fly to Win: A Contest Full of Excitement! 🎉\nThe Fly to Win Contest at our booth brought fun and engagement.',
-    'imageUrl': [
-      'https://images.unsplash.com/photo-1603791440384-56cd371ee9a7',
-      'https://images.unsplash.com/photo-1522199755839-a2bacb67c546',
-      'https://images.unsplash.com/photo-1522199755839-a2bacb67c546',
-      'https://images.unsplash.com/photo-1504384308090-c894fdcc538d',
-      'https://images.unsplash.com/photo-1531482615713-2afd69097998',
-    ][index],
-    'likes': 20 + index,
-    'comments': 2 + index,
-    'shares': 5 + index,
-  });
+  final List<userPostModel> UserPost =[
+    userPostModel(username: "Demo",
+        profileImageUrl:"https://randomuser.me/api/portraits/men/1.jpg",
+        caption:"Exploring the Mountain",
+        ImageUrls:[
+          "https://picsum.photos/500/300",
+          "https://picsum.photos/500/300",
+          "https://picsum.photos/500/300",
+        ],
+        likes:20,
+        comments:21,
+        timeago:"46"),
+
+    userPostModel(
+      username: "Jane Smith",
+      profileImageUrl:
+      "https://example.com/profile2.jpg",
+      caption: "Travel diaries 🏖️",
+      videoUrl: "https://example.com/video2.mp4",
+      likes: 340,
+      comments: 42,
+      timeago: "5h ago",
+    ),
+    userPostModel(
+      username: "Alex Johnson",
+      profileImageUrl:
+      "https://example.com/profile3.jpg",
+      caption: "Workout grind 💪",
+      videoUrl: "https://example.com/video3.mp4",
+      likes: 220,
+      comments: 30,
+      timeago: "1d ago",
+    ),
+
+  ];
 
   double safeFontSize(double size, double min, double max) {
     return size.clamp(min, max);
@@ -311,21 +331,16 @@ class _HomePageState extends State<HomePage> {
           // 0: Home Screen
           SingleChildScrollView(
             child: Column(
-              children: posts.map((post) {
-                return Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 0),
-                  child: LinkedInPostCard(
-                    companyName: post['companyName'],
-                    boothInfo: post['boothInfo'],
-                    timeAgo: post['timeAgo'],
-                    postText: post['postText'],
-                    imageUrl: post['imageUrl'],
-                    likes: post['likes'],
-                    comments: post['comments'],
-                    shares: post['shares'],
-                  ),
-                );
-              }).toList(),
+              children: [
+                ListView.builder(
+                  shrinkWrap: true,
+                  physics: NeverScrollableScrollPhysics(),
+                    itemCount:UserPost.length,
+                    itemBuilder:(context, index){
+                     return Userpostcard(post: UserPost[index]) ;
+                    },)
+              ],
+
             ),
           ),
 
