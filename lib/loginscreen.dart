@@ -3,8 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:lottie/lottie.dart';
 import 'package:peersglobleeventapp/otpverification_screen.dart';
-import 'package:peersglobleeventapp/registration_screen.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:peersglobleeventapp/widgets/autocomplatetextbox.dart';
 
 class Loginscreen extends StatefulWidget {
   const Loginscreen({super.key});
@@ -16,6 +16,8 @@ class Loginscreen extends StatefulWidget {
 class _LoginscreenState extends State<Loginscreen> {
   final TextEditingController _usernameController = TextEditingController();
   final TextEditingController _mobileController = TextEditingController();
+  final TextEditingController _countryCodeController = TextEditingController(text: '+91');
+
   final _formKey = GlobalKey<FormState>();
   bool ischeck = false;
 
@@ -31,8 +33,12 @@ class _LoginscreenState extends State<Loginscreen> {
     double screenWidth = MediaQuery.of(context).size.width;
     double screenHeight = MediaQuery.of(context).size.height;
 
+      List<String> countrycode=[
+        '+91','+81','+71','+61'
+      ];
+
     return Scaffold(
-      backgroundColor:Color(0xFFF0F4FD),
+      backgroundColor: Color(0xFFF0F4FD),
       body: SafeArea(
         child: SingleChildScrollView(
           child: Padding(
@@ -55,7 +61,7 @@ class _LoginscreenState extends State<Loginscreen> {
                     children: [
                       Text(
                         "Welcome Back!",
-                        style: TextStyle(fontSize: screenWidth * 0.060, fontWeight: FontWeight.bold,color:Color(0xFF535D97)),
+                        style: TextStyle(fontSize: screenWidth * 0.060, fontWeight: FontWeight.bold, color: Color(0xFF535D97)),
                       ),
                       Text(
                         "Please enter your Mobile Number",
@@ -73,6 +79,7 @@ class _LoginscreenState extends State<Loginscreen> {
                   key: _formKey,
                   child: Column(
                     children: [
+                      // Username field
                       TextFormField(
                         controller: _usernameController,
                         decoration: InputDecoration(
@@ -91,26 +98,51 @@ class _LoginscreenState extends State<Loginscreen> {
                         },
                       ),
                       SizedBox(height: screenHeight * 0.020),
-                      TextFormField(
-                        controller: _mobileController,
-                        keyboardType: TextInputType.phone,
-                        decoration: InputDecoration(
-                          contentPadding: EdgeInsets.symmetric(vertical: screenHeight * 0.010),
-                          labelText: 'Mobile Number',
-                          prefixIcon: Icon(Icons.phone, size: screenWidth * 0.060),
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(10),
+
+                      // Country code + Mobile number
+                      Row(
+                        children: [
+                          SizedBox(
+                            width: screenWidth * 0.22,
+                            height: screenHeight * 0.050,
+                            child: /// State
+                            AutocompleteTextbox(
+                              options:countrycode ,
+                              controller:_countryCodeController,
+                              validator: (value) =>
+                              value == null || value.isEmpty ? 'Please select State' : null,
+                            ),
+
                           ),
-                        ),
-                        validator: (value) {
-                          if (value == null || value.isEmpty) {
-                            return 'Please enter mobile number';
-                          } else if (value.length != 10) {
-                            return 'Mobile number must be 10 digits';
-                          }
-                          return null;
-                        },
+                          SizedBox(width: 8),
+                          Expanded(
+                            child: SizedBox(
+                              height: screenHeight * 0.055,
+                              child: TextFormField(
+                                controller: _mobileController,
+                                keyboardType: TextInputType.phone,
+                                decoration: InputDecoration(
+                                  contentPadding: EdgeInsets.symmetric(vertical: screenHeight * 0.010),
+                                  labelText: 'Mobile Number',
+                                  prefixIcon: Icon(Icons.phone, size: screenWidth * 0.060),
+                                  border: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(10),
+                                  ),
+                                ),
+                                validator: (value) {
+                                  if (value == null || value.isEmpty) {
+                                    return 'Please enter mobile number';
+                                  } else if (value.length != 10) {
+                                    return 'Mobile number must be 10 digits';
+                                  }
+                                  return null;
+                                },
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
+
                       SizedBox(height: screenHeight * 0.01),
                       Row(
                         children: [
@@ -174,51 +206,50 @@ class _LoginscreenState extends State<Loginscreen> {
                               context,
                               MaterialPageRoute(
                                 builder: (context) => OtpverificationScreen(
-                                  mobile: _mobileController.text,
+                                  mobile: "${_countryCodeController.text}${_mobileController.text}",
                                 ),
                               ),
                             );
                           }
                         },
-                        child: Text('Login', style: TextStyle(color:Colors.white,fontSize: screenWidth * 0.050)),
+                        child: Text('Login', style: TextStyle(color: Colors.white, fontSize: screenWidth * 0.050)),
                         style: ElevatedButton.styleFrom(
-                          backgroundColor:Color(0xFF2E356A),
+                          backgroundColor: Color(0xFF2E356A),
                           minimumSize: Size(double.infinity, screenHeight * 0.050),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(10),
                           ),
                         ),
                       ),
-                      SizedBox(height:screenHeight*0.06,),
+                      SizedBox(height: screenHeight * 0.06),
                       Row(
                         mainAxisAlignment: MainAxisAlignment.end,
                         children: [
                           RichText(
                             text: TextSpan(
-                                children: [
-                                  TextSpan(
-                                    text: "Don't have an account?  ",
-                                    style: TextStyle(
-                                      color: Colors.black,
-                                      fontSize: screenWidth * 0.04,
-                                    ),
+                              children: [
+                                TextSpan(
+                                  text: "Don't have an account?  ",
+                                  style: TextStyle(
+                                    color: Colors.black,
+                                    fontSize: screenWidth * 0.04,
                                   ),
-                                  TextSpan(
-                                    text: "Register here",
-                                    style: TextStyle(
-                                      color: Colors.blue,
-                                      decoration: TextDecoration.underline,
-                                      fontSize: screenWidth * 0.04,
-                                    ),
-                                      recognizer:TapGestureRecognizer()
-                                        ..onTap=(){
-                                         context.go('/registration_screen');
-                                        }
+                                ),
+                                TextSpan(
+                                  text: "Register here",
+                                  style: TextStyle(
+                                    color: Colors.blue,
+                                    decoration: TextDecoration.underline,
+                                    fontSize: screenWidth * 0.04,
                                   ),
-                                ],
+                                  recognizer: TapGestureRecognizer()
+                                    ..onTap = () {
+                                      context.go('/registration_screen');
+                                    },
+                                ),
+                              ],
                             ),
                           )
-
                         ],
                       )
                     ],

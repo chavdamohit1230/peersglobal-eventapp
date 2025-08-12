@@ -2,16 +2,16 @@ import 'package:flutter/material.dart';
 
 class AutocompleteTextbox extends StatelessWidget {
   final List<String> options;
-  final String label;
-  final IconData icon;
+  final String? label;
+  final IconData? icon;
   final TextEditingController controller;
   final String? Function(String?)? validator;
 
   const AutocompleteTextbox({
     Key? key,
     required this.options,
-    required this.label,
-    required this.icon,
+     this.label,
+     this.icon,
     required this.controller,
     this.validator,
   }) : super(key: key);

@@ -53,6 +53,7 @@ class _HomePageState extends State<HomePage> {
             }
 
             return Container(
+              color:const Color(0xFFF0F4FD),
               height: MediaQuery.of(context).size.height * 0.5,
               padding: const EdgeInsets.only(top: 25),
               child: Column(
@@ -125,34 +126,38 @@ class _HomePageState extends State<HomePage> {
         profileImageUrl:"https://randomuser.me/api/portraits/men/1.jpg",
         caption:"Exploring the Mountain",
         ImageUrls:[
-          "https://picsum.photos/500/300",
-          "https://picsum.photos/500/300",
-          "https://picsum.photos/500/300",
+          "https://images.pexels.com/photos/1264210/pexels-photo-1264210.jpeg?cs=srgb&dl=pexels-andre-furtado-43594-1264210.jpg&fm=jpg",
+          "https://images.ctfassets.net/pdf29us7flmy/1FLfD1FtKSVGDyi0G0BQSE/d3a75ce5609c1f021f276e91c29942ca/GettyImages-928146626__1_.jpg",
+          "https://photonify.com/wp-content/uploads/2019/02/freelance-photography-1000x750.jpg",
         ],
         likes:20,
         comments:21,
         timeago:"46"),
 
-    userPostModel(
-      username: "Jane Smith",
-      profileImageUrl:
-      "https://example.com/profile2.jpg",
-      caption: "Travel diaries 🏖️",
-      videoUrl: "https://example.com/video2.mp4",
-      likes: 340,
-      comments: 42,
-      timeago: "5h ago",
-    ),
-    userPostModel(
-      username: "Alex Johnson",
-      profileImageUrl:
-      "https://example.com/profile3.jpg",
-      caption: "Workout grind 💪",
-      videoUrl: "https://example.com/video3.mp4",
-      likes: 220,
-      comments: 30,
-      timeago: "1d ago",
-    ),
+        userPostModel(username: "Demo",
+        profileImageUrl:"https://randomuser.me/api/portraits/men/1.jpg",
+        caption:"Exploring the Mountain",
+        ImageUrls:[
+          "https://dims.apnews.com/dims4/default/1aa9da3/2147483647/strip/true/crop/5116x7670%2B0%2B0/resize/400x599%21/quality/90/?url=https%3A%2F%2Fassets.apnews.com%2F8b%2F85%2F1166c1719950dc708f2d7509dbc5%2Fcf5a0955241c467da04267618a81e301",
+          "https://assets.bwbx.io/images/users/iqjWHBFdfxIU/i.RUss7Xshmc/v0/-1x-1.webp",
+          "https://ew.com/thmb/c-MquAfpllKftCsFwcfla1E3PUc%3D/1500x0/filters%3Ano_upscale%28%29%3Amax_bytes%28150000%29%3Astrip_icc%28%29/000248610hr-2000-76a3cf6dd8054f76bb8dbf9011acbcf0.jpg",
+          "https://ew.com/thmb/c-MquAfpllKftCsFwcfla1E3PUc%3D/1500x0/filters%3Ano_upscale%28%29%3Amax_bytes%28150000%29%3Astrip_icc%28%29/000248610hr-2000-76a3cf6dd8054f76bb8dbf9011acbcf0.jpg",
+
+        ],
+        likes:20,
+        comments:21,
+        timeago:"46"),
+    userPostModel(username: "Demo",
+        profileImageUrl:"https://randomuser.me/api/portraits/men/1.jpg",
+        caption:"Exploring the Mountain",
+        ImageUrls:[
+          "https://images.pexels.com/photos/1264210/pexels-photo-1264210.jpeg?cs=srgb&dl=pexels-andre-furtado-43594-1264210.jpg&fm=jpg",
+          "https://images.ctfassets.net/pdf29us7flmy/1FLfD1FtKSVGDyi0G0BQSE/d3a75ce5609c1f021f276e91c29942ca/GettyImages-928146626__1_.jpg",
+          "https://photonify.com/wp-content/uploads/2019/02/freelance-photography-1000x750.jpg",
+        ],
+        likes:20,
+        comments:21,
+        timeago:"46"),
 
   ];
 

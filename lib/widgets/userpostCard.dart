@@ -81,7 +81,6 @@ class _PostCardState extends State<Userpostcard> {
           else if (widget.post.videoUrl != null)
             _buildVideoPlayer(screenHeight),
 
-          /// Actions Row with Equal Space
           Padding(
             padding: EdgeInsets.symmetric(
               horizontal: screenWidth * 0.03,
@@ -95,6 +94,8 @@ class _PostCardState extends State<Userpostcard> {
                     children: [
                       Icon(Icons.favorite_border, size: screenWidth * 0.07),
                       const SizedBox(width: 4),
+                      const Text("Like"),
+                      const SizedBox(width: 4),
                       Text("${widget.post.likes}"),
                     ],
                   ),
@@ -104,6 +105,8 @@ class _PostCardState extends State<Userpostcard> {
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       Icon(Icons.chat_bubble_outline, size: screenWidth * 0.065),
+                      const SizedBox(width: 4),
+                      const Text("Comment"),
                       const SizedBox(width: 4),
                       Text("${widget.post.comments}"),
                     ],
@@ -171,7 +174,7 @@ class _PostCardState extends State<Userpostcard> {
       children: [
         custom_carousel.CarouselSlider(
           options: custom_carousel.CarouselOptions(
-            height: screenHeight * 0.4,
+            height: screenHeight * 0.5,
             viewportFraction: 1,
             enableInfiniteScroll: false,
             onPageChanged: (index, reason) {
