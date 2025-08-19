@@ -16,7 +16,8 @@ class Loginscreen extends StatefulWidget {
 class _LoginscreenState extends State<Loginscreen> {
   final TextEditingController _usernameController = TextEditingController();
   final TextEditingController _mobileController = TextEditingController();
-  final TextEditingController _countryCodeController = TextEditingController(text: '+91');
+  final TextEditingController _countryCodeController =
+  TextEditingController(text: '+91');
 
   final _formKey = GlobalKey<FormState>();
   bool ischeck = false;
@@ -28,21 +29,39 @@ class _LoginscreenState extends State<Loginscreen> {
     }
   }
 
+  /// Common decoration for all input fields
+  InputDecoration _inputDecoration(String label, IconData icon) {
+    return InputDecoration(
+      labelText: label,
+      prefixIcon: Icon(icon, size: 22, color: Colors.grey[700]),
+      contentPadding: const EdgeInsets.symmetric(vertical: 14, horizontal: 12),
+      border: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(10),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     double screenWidth = MediaQuery.of(context).size.width;
     double screenHeight = MediaQuery.of(context).size.height;
 
-      List<String> countrycode=[
-        '+91','+81','+71','+61'
-      ];
+    List<String> countrycode = [
+      '+91',
+      '+81',
+      '+71',
+      '+61',
+    ];
 
     return Scaffold(
-      backgroundColor: Color(0xFFF0F4FD),
+      backgroundColor: const Color(0xFFF0F4FD),
       body: SafeArea(
         child: SingleChildScrollView(
           child: Padding(
-            padding: EdgeInsets.symmetric(horizontal: screenWidth * 0.050, vertical: screenHeight * 0.02),
+            padding: EdgeInsets.symmetric(
+              horizontal: screenWidth * 0.050,
+              vertical: screenHeight * 0.02,
+            ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -61,15 +80,21 @@ class _LoginscreenState extends State<Loginscreen> {
                     children: [
                       Text(
                         "Welcome Back!",
-                        style: TextStyle(fontSize: screenWidth * 0.060, fontWeight: FontWeight.bold, color: Color(0xFF535D97)),
+                        style: TextStyle(
+                          fontSize: screenWidth * 0.060,
+                          fontWeight: FontWeight.bold,
+                          color: const Color(0xFF535D97),
+                        ),
                       ),
                       Text(
                         "Please enter your Mobile Number",
-                        style: TextStyle(fontSize: screenWidth * 0.030, color: Colors.grey),
+                        style: TextStyle(
+                            fontSize: screenWidth * 0.030, color: Colors.grey),
                       ),
                       Text(
                         "and meet with your Community",
-                        style: TextStyle(fontSize: screenWidth * 0.030, color: Colors.grey),
+                        style: TextStyle(
+                            fontSize: screenWidth * 0.030, color: Colors.grey),
                       ),
                     ],
                   ),
@@ -79,56 +104,45 @@ class _LoginscreenState extends State<Loginscreen> {
                   key: _formKey,
                   child: Column(
                     children: [
-                      // Username field
-                      TextFormField(
-                        controller: _usernameController,
-                        decoration: InputDecoration(
-                          labelText: 'Username',
-                          contentPadding: EdgeInsets.symmetric(vertical: screenHeight * 0.010),
-                          prefixIcon: Icon(Icons.person, size: screenWidth * 0.060),
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(10),
-                          ),
+                      /// Username field
+                      SizedBox(
+                        height: 55,
+                        child: TextFormField(
+                          controller: _usernameController,
+                          decoration: _inputDecoration('Username', Icons.person),
+                          validator: (value) {
+                            if (value == null || value.isEmpty) {
+                              return 'Please enter username';
+                            }
+                            return null;
+                          },
                         ),
-                        validator: (value) {
-                          if (value == null || value.isEmpty) {
-                            return 'Please enter username';
-                          }
-                          return null;
-                        },
                       ),
                       SizedBox(height: screenHeight * 0.020),
 
-                      // Country code + Mobile number
+                      /// Country code + Mobile number
                       Row(
                         children: [
                           SizedBox(
                             width: screenWidth * 0.22,
-                            height: screenHeight * 0.050,
-                            child: /// State
-                            AutocompleteTextbox(
-                              options:countrycode ,
-                              controller:_countryCodeController,
-                              validator: (value) =>
-                              value == null || value.isEmpty ? 'Please select State' : null,
+                            height: 55,
+                            child: AutocompleteTextbox(
+                              options: countrycode,
+                              controller: _countryCodeController,
+                              validator: (value) => value == null || value.isEmpty
+                                  ? 'Please select code'
+                                  : null,
                             ),
-
                           ),
-                          SizedBox(width: 8),
+                          const SizedBox(width: 8),
                           Expanded(
                             child: SizedBox(
-                              height: screenHeight * 0.055,
+                              height: 55,
                               child: TextFormField(
                                 controller: _mobileController,
                                 keyboardType: TextInputType.phone,
-                                decoration: InputDecoration(
-                                  contentPadding: EdgeInsets.symmetric(vertical: screenHeight * 0.010),
-                                  labelText: 'Mobile Number',
-                                  prefixIcon: Icon(Icons.phone, size: screenWidth * 0.060),
-                                  border: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(10),
-                                  ),
-                                ),
+                                decoration: _inputDecoration(
+                                    'Mobile Number', Icons.phone),
                                 validator: (value) {
                                   if (value == null || value.isEmpty) {
                                     return 'Please enter mobile number';
@@ -144,6 +158,8 @@ class _LoginscreenState extends State<Loginscreen> {
                       ),
 
                       SizedBox(height: screenHeight * 0.01),
+
+                      /// Terms Checkbox
                       Row(
                         children: [
                           Checkbox(
@@ -171,7 +187,8 @@ class _LoginscreenState extends State<Loginscreen> {
                                     ),
                                     recognizer: TapGestureRecognizer()
                                       ..onTap = () {
-                                        _launchUrl('https://policies.google.com/terms');
+                                        _launchUrl(
+                                            'https://policies.google.com/terms');
                                       },
                                   ),
                                   const TextSpan(text: ' and '),
@@ -183,7 +200,8 @@ class _LoginscreenState extends State<Loginscreen> {
                                     ),
                                     recognizer: TapGestureRecognizer()
                                       ..onTap = () {
-                                        _launchUrl('https://policies.google.com/privacy');
+                                        _launchUrl(
+                                            'https://policies.google.com/privacy');
                                       },
                                   ),
                                 ],
@@ -193,12 +211,16 @@ class _LoginscreenState extends State<Loginscreen> {
                         ],
                       ),
                       SizedBox(height: screenHeight * 0.01),
+
+                      /// Login Button
                       ElevatedButton(
                         onPressed: () {
                           if (_formKey.currentState!.validate()) {
                             if (!ischeck) {
                               ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(content: Text("Please accept Terms & Privacy Policy")),
+                                const SnackBar(
+                                    content: Text(
+                                        "Please accept Terms & Privacy Policy")),
                               );
                               return;
                             }
@@ -206,22 +228,32 @@ class _LoginscreenState extends State<Loginscreen> {
                               context,
                               MaterialPageRoute(
                                 builder: (context) => OtpverificationScreen(
-                                  mobile: "${_countryCodeController.text}${_mobileController.text}",
+                                  mobile:
+                                  "${_countryCodeController.text}${_mobileController.text}",
                                 ),
                               ),
                             );
                           }
                         },
-                        child: Text('Login', style: TextStyle(color: Colors.white, fontSize: screenWidth * 0.050)),
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: Color(0xFF2E356A),
-                          minimumSize: Size(double.infinity, screenHeight * 0.050),
+                          backgroundColor: const Color(0xFF2E356A),
+                          minimumSize: Size(double.infinity, 55),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(10),
                           ),
                         ),
+                        child: Text(
+                          'Login',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: screenWidth * 0.050,
+                          ),
+                        ),
                       ),
+
                       SizedBox(height: screenHeight * 0.06),
+
+                      /// Register link
                       Row(
                         mainAxisAlignment: MainAxisAlignment.end,
                         children: [

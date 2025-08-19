@@ -114,138 +114,150 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
               physics: const NeverScrollableScrollPhysics(),
               children: [
                 // Step 1
-              Form(
-              key: _formKeys[0],
-              child: SingleChildScrollView(
-                padding: EdgeInsets.all(horizontalPadding),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    SizedBox(height: screenHeight * 0.030),
-
-                    /// Step Title
-                    Text(
-                      "Step 1: Personal Information",
-                      style: TextStyle(
-                        fontSize: headingFontSize,
-                        fontWeight: FontWeight.bold,
-                        color: const Color(0xFF535D97),
-                      ),
-                    ),
-                    SizedBox(height: screenHeight * 0.030),
-
-                    /// Name
-                    Formtextfiled(
-                      controller: _nameController,
-                      labelText: 'Enter Name',
-                      prefixIcon: Icons.person,
-                      keybordType: TextInputType.text,
-                      validator: (value) =>
-                      value == null || value.isEmpty ? 'Please Enter Name' : null,
-                    ),
-                    SizedBox(height: screenHeight * 0.020),
-
-                    /// Mobile + Country Code (Perfect Alignment)
-                    Row(
+                Form(
+                  key: _formKeys[0],
+                  child: SingleChildScrollView(
+                    padding: EdgeInsets.all(horizontalPadding),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        SizedBox(
-                          width: 84,
-                          height: 55, // same height as mobile field
-                          child: TextFormField(
-                            controller: countrycode1,
-                            decoration: InputDecoration(
-                              hintText: '+91',
-                              contentPadding: EdgeInsets.symmetric(horizontal: 8, vertical: 0),
-                              border: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(12),
-                                borderSide: BorderSide(color: Colors.black, width: 1),
-                              ),
-                              enabledBorder: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(12),
-                                borderSide: BorderSide(color: Colors.black, width: 1),
-                              ),
-                              focusedBorder: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(12),
-                                borderSide: BorderSide(color: Colors.black, width: 1.2),
-                              ),
-                            ),
-                            validator: (value) =>
-                            value == null || value.isEmpty ? 'Code' : null,
+                        SizedBox(height: screenHeight * 0.030),
+
+                        /// Step Title
+                        Text(
+                          "Step 1: Personal Information",
+                          style: TextStyle(
+                            fontSize: headingFontSize,
+                            fontWeight: FontWeight.bold,
+                            color: const Color(0xFF535D97),
                           ),
                         ),
-                        const SizedBox(width: 8),
-                        Expanded(
-                          child: SizedBox(
-                            height: 55,
-                            child: Formtextfiled(
-                              controller: _mobileController,
-                              labelText: 'Enter Mobile',
-                              prefixIcon: Icons.call,
-                              keybordType: TextInputType.phone,
-                              validator: (value) => value == null || value.isEmpty
-                                  ? 'Enter Mobile Number'
-                                  : null,
+                        SizedBox(height: screenHeight * 0.030),
+
+                        /// Name
+                        SizedBox(
+                          height: 55,
+                          child: Formtextfiled(
+                            controller: _nameController,
+                            labelText: 'Enter Name',
+                            prefixIcon: Icons.person,
+                            keybordType: TextInputType.text,
+                            validator: (value) =>
+                            value == null || value.isEmpty ? 'Please Enter Name' : null,
+                          ),
+                        ),
+                        SizedBox(height: screenHeight * 0.020),
+
+                        /// Mobile + Country Code (Perfect Alignment)
+                        Row(
+                          children: [
+                            SizedBox(
+                              width: 84,
+                              height: 55,
+                              child: TextFormField(
+                                controller: countrycode1,
+                                decoration: InputDecoration(
+                                  hintText: '+91',
+                                  prefixIcon: Icon(Icons.flag, size: 22, color: Colors.grey[700]),
+                                  contentPadding: const EdgeInsets.symmetric(
+                                      vertical: 14, horizontal: 10),
+                                  border: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                ),
+                                validator: (value) =>
+                                value == null || value.isEmpty ? 'Code' : null,
+                              ),
                             ),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: SizedBox(
+                                height: 55,
+                                child: Formtextfiled(
+                                  controller: _mobileController,
+                                  labelText: 'Enter Mobile',
+                                  prefixIcon: Icons.call,
+                                  keybordType: TextInputType.phone,
+                                  validator: (value) => value == null || value.isEmpty
+                                      ? 'Enter Mobile Number'
+                                      : null,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                        SizedBox(height: screenHeight * 0.020),
+
+                        /// Email
+                        SizedBox(
+                          height: 55,
+                          child: Formtextfiled(
+                            controller: _emailController,
+                            labelText: 'Enter Email',
+                            prefixIcon: Icons.attach_email,
+                            keybordType: TextInputType.emailAddress,
+                            validator: (value) =>
+                            value == null || value.isEmpty ? 'Enter Email' : null,
+                          ),
+                        ),
+                        SizedBox(height: screenHeight * 0.020),
+
+                        /// Country
+                        SizedBox(
+                          height: 55,
+                          child: AutocompleteTextbox(
+                            options: country,
+                            label: 'Select Country',
+                            icon: Icons.flag,
+                            controller: countryController,
+                            validator: (value) =>
+                            value == null || value.isEmpty ? 'Please select a country' : null,
+                          ),
+                        ),
+                        SizedBox(height: screenHeight * 0.020),
+
+                        /// State
+                        SizedBox(
+                          height: 55,
+                          child: AutocompleteTextbox(
+                            options: State,
+                            label: 'Select State',
+                            icon: Icons.map,
+                            controller: statecontroller,
+                            validator: (value) =>
+                            value == null || value.isEmpty ? 'Please select State' : null,
+                          ),
+                        ),
+                        SizedBox(height: screenHeight * 0.020),
+
+                        /// City
+                        SizedBox(
+                          height: 55,
+                          child: AutocompleteTextbox(
+                            options: City,
+                            label: 'Select City',
+                            icon: Icons.home,
+                            controller: citycontroller,
+                            validator: (value) =>
+                            value == null || value.isEmpty ? 'Please select City' : null,
+                          ),
+                        ),
+                        SizedBox(height: screenHeight * 0.020),
+
+                        /// About Me (Multi-line but uniform style)
+                        SizedBox(
+                          height: 110, // bigger but consistent padding
+                          child: MultilineTextarea(
+                            label: 'About Me',
+                            icon: Icons.description,
+                            controller: multilineTextarea,
                           ),
                         ),
                       ],
                     ),
-                    SizedBox(height: screenHeight * 0.020),
-
-                    /// Email
-                    Formtextfiled(
-                      controller: _emailController,
-                      labelText: 'Enter Email',
-                      prefixIcon: Icons.attach_email,
-                      keybordType: TextInputType.emailAddress,
-                      validator: (value) =>
-                      value == null || value.isEmpty ? 'Enter Email' : null,
-                    ),
-                    SizedBox(height: screenHeight * 0.020),
-
-                    /// Country
-                    AutocompleteTextbox(
-                      options: country,
-                      label: 'Select Country',
-                      icon: Icons.flag,
-                      controller: countryController,
-                      validator: (value) =>
-                      value == null || value.isEmpty ? 'Please select a country' : null,
-                    ),
-                    SizedBox(height: screenHeight * 0.020),
-
-                    /// State
-                    AutocompleteTextbox(
-                      options: State,
-                      label: 'Select State',
-                      icon: Icons.map,
-                      controller: statecontroller,
-                      validator: (value) =>
-                      value == null || value.isEmpty ? 'Please select State' : null,
-                    ),
-                    SizedBox(height: screenHeight * 0.020),
-
-                    /// City
-                    AutocompleteTextbox(
-                      options: City,
-                      label: 'Select City',
-                      icon: Icons.home,
-                      controller: citycontroller,
-                      validator: (value) =>
-                      value == null || value.isEmpty ? 'Please select City' : null,
-                    ),
-                    SizedBox(height: screenHeight * 0.020),
-
-                    /// About Me
-                    MultilineTextarea(
-                      label: 'About Me',
-                      icon: Icons.description,
-                      controller: multilineTextarea,
-                    ),
-                  ],
+                  ),
                 ),
-              ),
-            ),
+
 
             // Step 2
                 Form(
