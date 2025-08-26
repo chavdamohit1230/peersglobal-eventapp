@@ -44,7 +44,20 @@ class userRegister{
           "fields":{
             "name":{"Stringvalue":name},
             "email":{"Stringvalue":email},
-            "mobile":{""}
+            "mobile":{"Strigvalue":mobile},
+            "countrycode":{"Stringvalue":countrycode},
+            "country":{"Stringvalue":country},
+            "state":{"Stringvalue":state},
+            "city":{"Strignvalue":city},
+            "aboutme":{"Stringvalue":aboutme},
+            "organization":{"Stringvalue":organization},
+            "designation":{"Stringvalue":designation},
+            "businessLocation":{"Stringvalue":businessLocation},
+            "companywebsite":{"Stringvalue":companywebsite},
+            "industry":{"Stringvalue":industry},
+            "purposeOfAttending":{"Stringvalue":purposeOfAttending},
+            "hearAboutUs":{"Stringvalue":hearAboutUs},
+            "otherInfo":{"Stringvalue":otherInfo}
 
           }
 
