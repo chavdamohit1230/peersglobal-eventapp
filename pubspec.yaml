@@ -46,13 +46,21 @@ dependencies:
   video_player: ^2.9.1
   carousel_slider: ^5.1.1
   flutter_cache_manager: ^3.3.1
-
+  http: ^1.2.0
+  dio: ^5.9.0
+  retrofit: ^4.6.0
+  firebase_core: ^4.0.0
+  json_serializable: ^6.9.5
+  json_annotation: ^4.9.0
+  build_runner: ^2.5.4
+  cloud_firestore: ^6.0.0
 
 
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
+  retrofit_generator:
 
   # The "flutter_lints" package below contains a set of recommended lints to
   # encourage good coding practices. The lint set provided by the package is
