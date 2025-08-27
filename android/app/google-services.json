@@ -1,0 +1,46 @@
+{
+  "project_info": {
+    "project_number": "548351194654",
+    "project_id": "event-9da2e",
+    "storage_bucket": "event-9da2e.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:548351194654:android:062889cf7200438d3ba00f",
+        "android_client_info": {
+          "package_name": "com.example.peersglobleeventapp"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "548351194654-kg4vj3p8h2icktmtppl1hquucjealrbc.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyB4YmrfV34kNF2p7PF_ubkk5mA71L5k-3M"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "548351194654-kg4vj3p8h2icktmtppl1hquucjealrbc.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "548351194654-9hp5k1pbn7ceg89d9800o0vas87ev2gn.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.peersglobleeventapp.RunnerTests"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

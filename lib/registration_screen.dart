@@ -5,7 +5,10 @@ import 'package:peersglobleeventapp/home_page.dart';
 import 'package:peersglobleeventapp/widgets/autocomplatetextbox.dart';
 import 'package:peersglobleeventapp/widgets/dropdown.dart';
 import 'package:peersglobleeventapp/widgets/multiline_textarea.dart';
+import 'package:dio/dio.dart';
 import 'package:peersglobleeventapp/widgets/formtextfiled.dart';
+import 'package:peersglobleeventapp/modelClass/model/userregister_model.dart';
+import 'package:peersglobleeventapp/Api/api_userRegister.dart';
 
 class RegistrationScreen extends StatefulWidget {
   const RegistrationScreen({super.key});
@@ -46,6 +49,8 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
   final TextEditingController  businessLocationControler=TextEditingController();
   final TextEditingController  CompanyWebsiteurlControler = TextEditingController();
   final TextEditingController  IndustryControler =TextEditingController();
+  final TextEditingController   PurposeofAttendee =TextEditingController();
+  final TextEditingController hearAboutus=TextEditingController();
   final TextEditingController  Otherinfomultiline =TextEditingController();
   final TextEditingController countrycode1= TextEditingController();
 
@@ -73,13 +78,62 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
     }
   }
 
-  void _submitForm() {
+  void _submitForm() async {
     if (_formKeys[_currentPage].currentState!.validate()) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Registration Complete!')),
-      );
+      try {
+        // Pehle snackbar show karega
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Submitting registration...')),
+        );
+
+        // User model banayenge
+        final user = UserRegister(
+          name: _nameController.text,
+          email: _emailController.text,
+          mobile: _mobileController.text,
+          countrycode: countrycode1.text,
+          country: countryController.text,
+          state: statecontroller.text,
+          city: citycontroller.text,
+          aboutme: multilineTextarea.text,
+          organization: orgenationNameControler.text,
+          designation: DesignationControler.text,
+          businessLocation: businessLocationControler.text,
+          companywebsite: CompanyWebsiteurlControler.text,
+          industry: IndustryControler.text,
+          purposeOfAttending: Selectedpurpose ?? '',
+          hearAboutUs: Hearaboutus ?? '',
+          otherInfo: Otherinfomultiline.text,
+        );
+
+        // Dio + ApiClient instance
+        final dio = Dio();
+        final apiClient = ApiClient(dio);
+
+        // Retrofit POST call
+        final response = await apiClient.registerUser(user.toJson());
+
+        if (response.response.statusCode == 200) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('✅ Registration Successful!')),
+          );
+          context.go("/home_page");
+          // Redirect to home page agar chahiye:
+          // context.go('/home_page');
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('⚠️ Failed: ${response.response.statusMessage}')),
+          );
+        }
+      } catch (e) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error: $e')),
+        );
+      }
     }
   }
+
+
 
   @override
   Widget build(BuildContext context) {
@@ -409,7 +463,6 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                       child: ElevatedButton(
                         onPressed:(){
                           _submitForm();
-                          context.go('/home_page');
                         },
                         style:ElevatedButton.styleFrom(
                             backgroundColor:Color(0xFF2E356A),
