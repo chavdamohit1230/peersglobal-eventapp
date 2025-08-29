@@ -54,7 +54,7 @@ dependencies:
   json_annotation: ^4.9.0
   build_runner: ^2.5.4
   cloud_firestore: ^6.0.0
-
+  firebase_auth:
 
 
 dev_dependencies:

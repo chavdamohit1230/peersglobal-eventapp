@@ -2,9 +2,14 @@ import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:lottie/lottie.dart';
+import 'package:peersglobleeventapp/home_page.dart';
 import 'package:peersglobleeventapp/otpverification_screen.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:peersglobleeventapp/widgets/autocomplatetextbox.dart';
+import 'package:peersglobleeventapp/modelClass/model/auth_User_model.dart';
+import 'package:peersglobleeventapp/data_repository/user_auth_repository.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+
 
 class Loginscreen extends StatefulWidget {
   const Loginscreen({super.key});
@@ -22,12 +27,83 @@ class _LoginscreenState extends State<Loginscreen> {
   final _formKey = GlobalKey<FormState>();
   bool ischeck = false;
 
+  final AuthRepository _repo = AuthRepository();
+
   Future<void> _launchUrl(String url) async {
     final Uri uri = Uri.parse(url);
     if (!await launchUrl(uri, mode: LaunchMode.externalApplication)) {
       throw 'Could not launch $url';
     }
   }
+  Future<void> _loginUser() async {
+    if (_formKey.currentState!.validate()) {
+      if (!ischeck) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("Please accept Terms & Privacy Policy")),
+        );
+        return;
+      }
+
+      // Fetch users from Firestore
+      List<AuthUserModel> users = await _repo.fetchUsers();
+
+      final username = _usernameController.text.trim().toLowerCase();
+      final mobile = _mobileController.text.trim();
+
+      final matchUser = users.firstWhere(
+            (u) =>
+        u.name.toLowerCase() == username &&
+            u.mobile.trim() == mobile,
+        orElse: () => AuthUserModel(id: '', name: '', mobile: ''),
+      );
+
+      if (matchUser.id.isNotEmpty) {
+        print("✅ User found: ${matchUser.mobile}");
+
+        // 🔹 Send OTP via Firebase (remove await)
+        FirebaseAuth.instance.verifyPhoneNumber(
+          phoneNumber: '+91${matchUser.mobile}', // Testing number
+          verificationCompleted: (PhoneAuthCredential credential) async {
+            print("✅ Auto verification completed");
+            await FirebaseAuth.instance.signInWithCredential(credential);
+            if (!mounted) return;
+            Navigator.pushReplacement(
+                context, MaterialPageRoute(builder: (_) => HomePage()));
+          },
+          verificationFailed: (FirebaseAuthException e) {
+            print("❌ Verification failed: ${e.message}");
+            ScaffoldMessenger.of(context)
+                .showSnackBar(SnackBar(content: Text(e.message ?? "Error")));
+          },
+          codeSent: (String verificationId, int? resendToken) {
+            print("✅ codeSent triggered with verificationId: $verificationId");
+            if (!mounted) return;
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => OtpverificationScreen(
+                  mobile: matchUser.mobile,
+                  verificationId: verificationId,
+                ),
+              ),
+            );
+          },
+          codeAutoRetrievalTimeout: (String verificationId) {
+            print("⏳ codeAutoRetrievalTimeout: $verificationId");
+          },
+        );
+      } else {
+        // Invalid user
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text("Invalid username or mobile number!"),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
 
   /// Common decoration for all input fields
   InputDecoration _inputDecoration(String label, IconData icon) {
@@ -211,46 +287,27 @@ class _LoginscreenState extends State<Loginscreen> {
                         ],
                       ),
                       SizedBox(height: screenHeight * 0.01),
-
-                      /// Login Button
-                      ElevatedButton(
-                        onPressed: () {
-                          if (_formKey.currentState!.validate()) {
-                            if (!ischeck) {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(
-                                    content: Text(
-                                        "Please accept Terms & Privacy Policy")),
-                              );
-                              return;
-                            }
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) => OtpverificationScreen(
-                                  mobile:
-                                  "${_countryCodeController.text}${_mobileController.text}",
-                                ),
-                              ),
-                            );
-                          }
-                        },
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFF2E356A),
-                          minimumSize: Size(double.infinity, 55),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(10),
+                      SizedBox(
+                        width: double.infinity, //  Full width
+                        height:screenHeight*0.062,
+                        child: ElevatedButton(
+                          onPressed: _loginUser,
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: const Color(0xFF2E356A),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            padding: const EdgeInsets.symmetric(vertical: 16), // height control
                           ),
-                        ),
-                        child: Text(
-                          'Login',
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: screenWidth * 0.050,
+                          child: Text(
+                            'Login',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: screenWidth * 0.050,
+                            ),
                           ),
                         ),
                       ),
-
                       SizedBox(height: screenHeight * 0.06),
 
                       /// Register link

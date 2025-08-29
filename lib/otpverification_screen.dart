@@ -1,19 +1,69 @@
 import 'package:flutter/material.dart';
 import 'package:lottie/lottie.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'home_page.dart'; // Ensure HomePage is imported
 
 class OtpverificationScreen extends StatefulWidget {
   final String mobile;
+  final String verificationId;
 
-  const OtpverificationScreen({super.key, required this.mobile});
+  const OtpverificationScreen({
+    super.key,
+    required this.mobile,
+    required this.verificationId,
+  });
 
   @override
   State<OtpverificationScreen> createState() => _OtpverificationScreenState();
 }
 
 class _OtpverificationScreenState extends State<OtpverificationScreen> {
-  final _formKey = GlobalKey<FormState>();
+  // 6 TextEditingControllers for OTP digits
   final List<TextEditingController> _otpControllers =
   List.generate(6, (_) => TextEditingController());
+
+  bool _isLoading = false;
+
+  void verifyOtp() async {
+    String otp = _otpControllers.map((c) => c.text).join();
+
+    if (otp.length < 6) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please enter complete 6-digit OTP')),
+      );
+      return;
+    }
+
+    setState(() => _isLoading = true);
+
+    try {
+      PhoneAuthCredential credential = PhoneAuthProvider.credential(
+          verificationId: widget.verificationId, smsCode: otp);
+
+      await FirebaseAuth.instance.signInWithCredential(credential);
+
+      // OTP verified → Navigate to HomePage
+      if (!mounted) return;
+      Navigator.pushReplacement(
+          context, MaterialPageRoute(builder: (_) => const HomePage()));
+    } on FirebaseAuthException catch (e) {
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text(e.message ?? 'Invalid OTP')));
+    } catch (_) {
+      ScaffoldMessenger.of(context)
+          .showSnackBar(const SnackBar(content: Text('Something went wrong')));
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
+
+  @override
+  void dispose() {
+    for (var c in _otpControllers) {
+      c.dispose();
+    }
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -21,15 +71,20 @@ class _OtpverificationScreenState extends State<OtpverificationScreen> {
     double screenWidth = MediaQuery.of(context).size.width;
 
     return Scaffold(
-      backgroundColor:Color(0xFFF0F4FD),
+      backgroundColor: const Color(0xFFF0F4FD),
       body: SafeArea(
         child: SingleChildScrollView(
           child: Padding(
-            padding:  EdgeInsets.symmetric(horizontal:screenHeight*0.030, vertical:screenHeight*0.090),
+            padding: EdgeInsets.symmetric(
+              horizontal: screenHeight * 0.03,
+              vertical: screenHeight * 0.09,
+            ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 SizedBox(height: screenHeight * 0.05),
+
+                // Lottie Animation
                 Center(
                   child: Lottie.asset(
                     'assets/Otpverification.json',
@@ -38,6 +93,8 @@ class _OtpverificationScreenState extends State<OtpverificationScreen> {
                     fit: BoxFit.contain,
                   ),
                 ),
+
+                // Heading
                 Center(
                   child: Column(
                     children: [
@@ -46,11 +103,12 @@ class _OtpverificationScreenState extends State<OtpverificationScreen> {
                         style: TextStyle(
                           fontWeight: FontWeight.bold,
                           fontSize: screenWidth * 0.05,
-                            color:Color(0xFF535D97)
+                          color: const Color(0xFF535D97),
                         ),
                       ),
+                      const SizedBox(height: 4),
                       Text(
-                        "Otp Sent To",
+                        "OTP sent to",
                         style: TextStyle(
                           fontWeight: FontWeight.bold,
                           fontSize: screenWidth * 0.04,
@@ -61,66 +119,66 @@ class _OtpverificationScreenState extends State<OtpverificationScreen> {
                         "+${widget.mobile}",
                         style: TextStyle(
                           fontWeight: FontWeight.bold,
-                          fontSize: screenWidth * 0.03,
+                          fontSize: screenWidth * 0.035,
                           color: Colors.grey,
                         ),
                       ),
                     ],
                   ),
                 ),
-                SizedBox(height: screenHeight * 0.03),
-                Form(
-                  key: _formKey,
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                    children: List.generate(6, (index) {
-                      return SizedBox(
-                        width:screenWidth*0.1,
-                        height:screenHeight*0.07,
-                        child: TextFormField(
-                          controller: _otpControllers[index],
-                          textAlign: TextAlign.center,
-                          keyboardType: TextInputType.number,
-                          maxLength: 1,
-                          decoration: const InputDecoration(
-                            counterText: '',
-                            border: OutlineInputBorder(),
-                          ),
-                          validator: (value) {
-                            if (value == null || value.isEmpty) {
-                              return 'Enter Opt';
-                            }
-                            return null;
-                          },
-                        ),
-                      );
-                    }),
-                  ),
-                ),
-                 SizedBox(height:screenWidth*0.11),
-                ElevatedButton(
-                  onPressed: () {
-                    // Custom validation: Check if all 6 fields are filled
-                    bool allFilled = _otpControllers.every((controller) => controller.text.isNotEmpty);
 
-                    if (!allFilled) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text("Please enter complete 6-digit OTP")),
-                      );
-                      return;
-                    }
-                    String otp = _otpControllers.map((c) => c.text).join();
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text("Verifying OTP: $otp")),
+                SizedBox(height: screenHeight * 0.03),
+
+                // OTP Input Fields
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: List.generate(6, (index) {
+                    return SizedBox(
+                      width: screenWidth * 0.12,
+                      height: screenHeight * 0.07,
+                      child: TextField(
+                        controller: _otpControllers[index],
+                        textAlign: TextAlign.center,
+                        keyboardType: TextInputType.number,
+                        maxLength: 1,
+                        decoration: const InputDecoration(
+                          counterText: '',
+                          border: OutlineInputBorder(),
+                        ),
+                        onChanged: (value) {
+                          if (value.isNotEmpty && index < 5) {
+                            FocusScope.of(context).nextFocus();
+                          }
+                          if (value.isEmpty && index > 0) {
+                            FocusScope.of(context).previousFocus();
+                          }
+                          if (index == 5 && value.isNotEmpty) {
+                            FocusScope.of(context).unfocus();
+                          }
+                        },
+                      ),
                     );
-                  },
-                  child: const Text("Verify OTP",style:TextStyle(color:Colors.white),),
+                  }),
+                ),
+
+                SizedBox(height: screenWidth * 0.11),
+
+                // Verify Button
+                _isLoading
+                    ? const Center(child: CircularProgressIndicator())
+                    : ElevatedButton(
+                  onPressed: verifyOtp,
                   style: ElevatedButton.styleFrom(
-                    backgroundColor:Color(0xFF2E356A),
-                    minimumSize: Size(screenWidth*1,screenHeight*0.060),
+                    backgroundColor: const Color(0xFF2E356A),
+                    minimumSize:
+                    Size(screenWidth, screenHeight * 0.06),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(10),
                     ),
+                  ),
+                  child: const Text(
+                    "Verify OTP",
+                    style: TextStyle(color: Colors.white),
                   ),
                 ),
               ],

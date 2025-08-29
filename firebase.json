@@ -1,1 +1,20 @@
-{"flutter":{"platforms":{"dart":{"lib/firebase_options.dart":{"projectId":"event-9da2e","configurations":{"ios":"1:548351194654:ios:1a1abc5888683eb33ba00f","macos":"1:548351194654:ios:8e8c64c1eebe7e853ba00f","web":"1:548351194654:web:af323a0a994c53863ba00f","windows":"1:548351194654:web:0d46ff977f7986ad3ba00f"}}}}}}
+{
+  "flutter": {
+    "platforms": {
+      "dart": {
+        "lib/firebase_options.dart": {
+          "projectId": "event-9da2e",
+          "configurations": {
+            "ios": "1:548351194654:ios:1a1abc5888683eb33ba00f",
+            "macos": "1:548351194654:ios:8e8c64c1eebe7e853ba00f",
+            "web": "1:548351194654:web:af323a0a994c53863ba00f",
+            "windows": "1:548351194654:web:0d46ff977f7986ad3ba00f"
+          }
+        }
+      }
+    }
+  },
+  "emulators": {
+    "singleProjectMode": true
+  }
+}

@@ -9,4 +9,9 @@ import 'package:retrofit/retrofit.dart';
 
     @POST("userregister")
     Future<HttpResponse> registerUser(@Body() Map<String, dynamic> body);
+    
+    @GET("userregister")
+    Future<HttpResponse<dynamic>> VerifyUser();
+
+
   }
