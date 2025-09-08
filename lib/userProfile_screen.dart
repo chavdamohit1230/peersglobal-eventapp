@@ -16,7 +16,7 @@ class UserprofileScreen extends StatefulWidget {
 class _UserprofileScreenState extends State<UserprofileScreen>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
-  late Future<AuthUserModel?> _userFuture;
+  Future<AuthUserModel?>? _userFuture;
   late String docId;
 
   @override
@@ -34,14 +34,15 @@ class _UserprofileScreenState extends State<UserprofileScreen>
 
     _tabController = TabController(length: tabLength, vsync: this);
 
-    if (widget.userId != null && widget.userId!.isNotEmpty) {
+    //  Agar login se aaye ho to Firestore se fetch
+    if (widget.user == null && widget.userId != null) {
       docId = widget.userId!.split("/").last;
+      _userFuture = fetchUser(docId);
     } else {
-      docId = "";
+      docId = widget.userId ?? "";
     }
 
-    print("✅ Extracted Firestore docId: $docId");
-    _userFuture = fetchUser(docId);
+    print(" Extracted Firestore docId: $docId");
   }
 
   Future<AuthUserModel?> fetchUser(String userId) async {
@@ -52,14 +53,14 @@ class _UserprofileScreenState extends State<UserprofileScreen>
           .get();
 
       if (doc.exists) {
-        print("✅ User data: ${doc.data()}");
+        print(" User data: ${doc.data()}");
         return AuthUserModel.fromFirestore(doc);
       } else {
-        print("❌ User not found with id: $userId");
+        print("User not found with id: $userId");
         return null;
       }
     } catch (e) {
-      print("🔥 Firestore error: $e");
+      print("Firestore error: $e");
       return null;
     }
   }
@@ -75,26 +76,27 @@ class _UserprofileScreenState extends State<UserprofileScreen>
     double screenHeight = MediaQuery.of(context).size.height;
     double screenWidth = MediaQuery.of(context).size.width;
 
+    //  CASE 1: Register se aaya ho (widget.user non-null hai)
+    if (widget.user != null) {
+      final localUser = AuthUserModel(
+        id: widget.userId ?? "",
+        name: widget.user!.name ?? "",
+        mobile: widget.user!.mobile ?? "",
+        email: widget.user!.email,
+        role: widget.user!.role,
+        city: widget.user!.city,
+        designation: widget.user!.designation ?? "",
+      );
+
+      return Scaffold(
+        appBar: _buildAppBar(),
+        body: _buildProfileUI(localUser, screenHeight, screenWidth),
+      );
+    }
+
+    //  CASE 2: Login se aaya ho (Firestore se fetch)
     return Scaffold(
-      appBar: AppBar(
-        backgroundColor: const Color(0xFFF3F8FE),
-        title: const Center(
-          child: Text(
-            "Profile",
-            style: TextStyle(color: Color(0xFF535D97)),
-          ),
-        ),
-        leading: IconButton(
-          onPressed: () => context.pop(),
-          icon: const Icon(Icons.arrow_back),
-        ),
-        actions: [
-          IconButton(
-            onPressed: () {},
-            icon: const Icon(Icons.edit),
-          ),
-        ],
-      ),
+      appBar: _buildAppBar(),
       body: FutureBuilder<AuthUserModel?>(
         future: _userFuture,
         builder: (context, snapshot) {
@@ -104,141 +106,164 @@ class _UserprofileScreenState extends State<UserprofileScreen>
           if (!snapshot.hasData || snapshot.data == null) {
             return const Center(child: Text("User not found"));
           }
+          return _buildProfileUI(snapshot.data!, screenHeight, screenWidth);
+        },
+      ),
+    );
+  }
 
-          final user = snapshot.data!;
+  // ✅ Common AppBar
+  AppBar _buildAppBar() {
+    return AppBar(
+      backgroundColor: const Color(0xFFF3F8FE),
+      title: const Center(
+        child: Text(
+          "Profile",
+          style: TextStyle(color: Color(0xFF535D97)),
+        ),
+      ),
+      leading: IconButton(
+        onPressed: () => context.pop(),
+        icon: const Icon(Icons.arrow_back),
+      ),
+      actions: [
+        IconButton(
+          onPressed: () {},
+          icon: const Icon(Icons.edit),
+        ),
+      ],
+    );
+  }
 
-          return Column(
+  // ✅ Common Profile UI (register + login dono ke liye)
+  Widget _buildProfileUI(
+      AuthUserModel user, double screenHeight, double screenWidth) {
+    return Column(
+      children: [
+        Container(
+          padding: const EdgeInsets.all(16),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Container(
-                padding: const EdgeInsets.all(16),
-                child: Row(
+              const CircleAvatar(
+                radius: 41,
+                backgroundImage: NetworkImage(
+                    "https://imgv3.fotor.com/images/slider-image/A-clear-close-up-photo-of-a-woman.jpg"),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const CircleAvatar(
-                      radius: 41,
-                      backgroundImage: NetworkImage(
-                          "https://imgv3.fotor.com/images/slider-image/A-clear-close-up-photo-of-a-woman.jpg"),
+                    Text(
+                      user.name.isNotEmpty ? user.name : "No Name",
+                      style: const TextStyle(
+                          fontSize: 20, fontWeight: FontWeight.bold),
                     ),
-                    const SizedBox(width: 16),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            user.name.isNotEmpty
-                                ? user.name
-                                : widget.user?.name ?? '',
-                            style: const TextStyle(
-                                fontSize: 20, fontWeight: FontWeight.bold),
-                          ),
-                          const SizedBox(height: 4),
-                          Text(
-                            user.role ?? "Attendee",
-                            style: const TextStyle(
-                                fontSize: 16, color: Colors.grey),
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                          const SizedBox(height: 4),
-                          Text(
-                            "User ID: $docId",
-                            style: const TextStyle(fontSize: 14),
-                          ),
-                        ],
-                      ),
+                    const SizedBox(height: 4),
+                    Text(
+                      user.role ?? "Attendee",
+                      style: const TextStyle(
+                          fontSize: 16, color: Colors.grey),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
                     ),
-                  ],
-                ),
-              ),
-
-              // 🧭 TabBar
-              TabBar(
-                controller: _tabController,
-                labelColor: const Color(0xFF535D97),
-                unselectedLabelColor: Colors.grey,
-                indicatorColor: const Color(0xFF535D97),
-                tabs: [
-                  const Tab(text: "Profile Detail"),
-                  if (user.role?.toLowerCase() == "exhibiter" ||
-                      user.role?.toLowerCase() == "sponsor")
-                    const Tab(text: "Posts"),
-                  const Tab(text: "Connections"),
-                ],
-              ),
-
-              // 📄 TabBarView
-              Expanded(
-                child: TabBarView(
-                  controller: _tabController,
-                  children: [
-                    // Profile Detail
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        _infoRow(
-                          icon: Icons.call,
-                          title: "Mobile Number",
-                          value: user.mobile,
-                          screenHeight: screenHeight,
-                          screenWidth: screenWidth,
-                        ),
-                        _infoRow(
-                          icon: Icons.email_sharp,
-                          title: "Email",
-                          value: user.email ?? "Not Provided",
-                          screenHeight: screenHeight,
-                          screenWidth: screenWidth,
-                        ),
-                        _infoRow(
-                          icon: Icons.area_chart_outlined,
-                          title: "City",
-                          value: user.city ?? "Not Provided",
-                          screenHeight: screenHeight,
-                          screenWidth: screenWidth,
-                        ),
-                      ],
+                    const SizedBox(height: 4),
+                    Text(
+                      "User ID: ${user.id}",
+                      style: const TextStyle(fontSize: 14),
                     ),
-
-                    // ✅ Posts tab (sirf exhibiter/sponsor ke liye)
-                    if (user.role?.toLowerCase() == "exhibiter" ||
-                        user.role?.toLowerCase() == "sponsor")
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.end,
-                        children: [
-                          Padding(
-                            padding: const EdgeInsets.all(12.0),
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                const Text(
-                                  "Posts",
-                                  style: TextStyle(
-                                      fontSize: 18,
-                                      fontWeight: FontWeight.bold),
-                                ),
-                                ElevatedButton(
-                                  onPressed: () {},
-                                  child: const Text("Create Post Here"),
-                                ),
-                              ],
-                            ),
-                          ),
-                          const Divider(),
-                          const Expanded(
-                            child: Center(child: Text("No posts yet")),
-                          ),
-                        ],
-                      ),
-
-                    // Connections tab
-                    const Center(child: Text("Connections")),
                   ],
                 ),
               ),
             ],
-          );
-        },
-      ),
+          ),
+        ),
+
+        // 🧭 TabBar
+        TabBar(
+          controller: _tabController,
+          labelColor: const Color(0xFF535D97),
+          unselectedLabelColor: Colors.grey,
+          indicatorColor: const Color(0xFF535D97),
+          tabs: [
+            const Tab(text: "Profile Detail"),
+            if (user.role?.toLowerCase() == "exhibiter" ||
+                user.role?.toLowerCase() == "sponsor")
+              const Tab(text: "Posts"),
+            const Tab(text: "Connections"),
+          ],
+        ),
+
+        // 📄 TabBarView
+        Expanded(
+          child: TabBarView(
+            controller: _tabController,
+            children: [
+              // Profile Detail
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _infoRow(
+                    icon: Icons.call,
+                    title: "Mobile Number",
+                    value: user.mobile,
+                    screenHeight: screenHeight,
+                    screenWidth: screenWidth,
+                  ),
+                  _infoRow(
+                    icon: Icons.email_sharp,
+                    title: "Email",
+                    value: user.email ?? "Not Provided",
+                    screenHeight: screenHeight,
+                    screenWidth: screenWidth,
+                  ),
+                  _infoRow(
+                    icon: Icons.area_chart_outlined,
+                    title: "City",
+                    value: user.city ?? "Not Provided",
+                    screenHeight: screenHeight,
+                    screenWidth: screenWidth,
+                  ),
+                ],
+              ),
+
+              // ✅ Posts tab (sirf exhibiter/sponsor ke liye)
+              if (user.role?.toLowerCase() == "exhibiter" ||
+                  user.role?.toLowerCase() == "sponsor")
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.all(12.0),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          const Text(
+                            "Posts",
+                            style: TextStyle(
+                                fontSize: 18, fontWeight: FontWeight.bold),
+                          ),
+                          ElevatedButton(
+                            onPressed: () {},
+                            child: const Text("Create Post Here"),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const Divider(),
+                    const Expanded(
+                      child: Center(child: Text("No posts yet")),
+                    ),
+                  ],
+                ),
+
+              // Connections tab
+              const Center(child: Text("Connections")),
+            ],
+          ),
+        ),
+      ],
     );
   }
 

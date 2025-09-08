@@ -37,7 +37,7 @@ class UserRegister {
     this.role
   });
 
-  Map<String, dynamic> toJson() {
+  Map<String, dynamic> toJsonFirestore() {
     return {
       "fields": {
         "name": {"stringValue": name ?? ""},
@@ -56,8 +56,10 @@ class UserRegister {
         "purposeOfAttending": {"stringValue": purposeOfAttending ?? ""},
         "hearAboutUs": {"stringValue": hearAboutUs ?? ""},
         "otherInfo": {"stringValue": otherInfo ?? ""},
-        "role":{"stringValue":role}
+        "role": {"stringValue": role ?? ""}
       }
     };
   }
+
 }
+

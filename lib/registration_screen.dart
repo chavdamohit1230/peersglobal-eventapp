@@ -110,7 +110,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
         final dio = Dio();
         final apiClient = ApiClient(dio);
 
-        final response = await apiClient.registerUser(user.toJson());
+        final response = await apiClient.registerUser(user.toJsonFirestore());
         if (response.response.statusCode == 200) {
           final userId = response.response.data["id"]?.toString() ?? "";
 
@@ -181,7 +181,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                       children: [
                         SizedBox(height: screenHeight * 0.030),
 
-                        /// Step Title
+
                         Text(
                           "Step 1: Personal Information",
                           style: TextStyle(

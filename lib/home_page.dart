@@ -222,6 +222,8 @@ class _HomePageState extends State<HomePage> {
         role: widget.user!.role ?? "",
         name: widget.user!.name ?? "",
         mobile: widget.user!.mobile ?? "",
+        designation: widget.user!.designation?? "",
+
         // agar role bhi hai
       );
       isLoading = false;
