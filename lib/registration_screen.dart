@@ -110,21 +110,25 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
         final dio = Dio();
         final apiClient = ApiClient(dio);
 
-        // Retrofit POST call
         final response = await apiClient.registerUser(user.toJson());
-
         if (response.response.statusCode == 200) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('✅ Registration Successful!')),
-          );
-          context.go("/home_page");
-          // Redirect to home page agar chahiye:
-          // context.go('/home_page');
-        } else {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('⚠️ Failed: ${response.response.statusMessage}')),
+          final userId = response.response.data["id"]?.toString() ?? "";
+
+          // yahi bhejo: pura user + userId
+          context.go(
+            "/home_page",
+            extra: {
+              'user': user,      // UserRegister object
+              'userId': userId,  // backend id
+            },
           );
         }
+        else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('⚠️ Failed: ${response.response.statusMessage ?? "Unknown error"}')),
+          );
+        }
+
       } catch (e) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Error: $e')),

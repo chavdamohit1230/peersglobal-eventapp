@@ -15,6 +15,7 @@ class UserRegister {
   final String? purposeOfAttending;
   final String? hearAboutUs;
   final String? otherInfo;
+  final String? role;
 
   UserRegister({
     this.name,
@@ -33,6 +34,7 @@ class UserRegister {
     this.purposeOfAttending,
     this.hearAboutUs,
     this.otherInfo,
+    this.role
   });
 
   Map<String, dynamic> toJson() {
@@ -53,7 +55,8 @@ class UserRegister {
         "industry": {"stringValue": industry ?? ""},
         "purposeOfAttending": {"stringValue": purposeOfAttending ?? ""},
         "hearAboutUs": {"stringValue": hearAboutUs ?? ""},
-        "otherInfo": {"stringValue": otherInfo ?? ""}
+        "otherInfo": {"stringValue": otherInfo ?? ""},
+        "role":{"stringValue":role}
       }
     };
   }

@@ -8,8 +8,8 @@ import 'package:retrofit/retrofit.dart';
     factory ApiClient(Dio dio, {String baseUrl}) = _ApiClient;
 
     @POST("userregister")
-    Future<HttpResponse> registerUser(@Body() Map<String, dynamic> body);
-    
+    Future<HttpResponse<dynamic>> registerUser(@Body() Map<String, dynamic> body);
+
     @GET("userregister")
     Future<HttpResponse<dynamic>> VerifyUser();
 

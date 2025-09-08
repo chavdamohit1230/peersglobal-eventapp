@@ -1,16 +1,20 @@
 import 'package:flutter/material.dart';
 import 'package:lottie/lottie.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'home_page.dart'; // Ensure HomePage is imported
+import 'home_page.dart'; // Ensure HomePage is imported correctly
+import 'package:shared_preferences/shared_preferences.dart';
+
 
 class OtpverificationScreen extends StatefulWidget {
   final String mobile;
   final String verificationId;
+  final String userId; // ✅ This will come from login/register page
 
   const OtpverificationScreen({
     super.key,
     required this.mobile,
     required this.verificationId,
+    required this.userId,
   });
 
   @override
@@ -18,7 +22,6 @@ class OtpverificationScreen extends StatefulWidget {
 }
 
 class _OtpverificationScreenState extends State<OtpverificationScreen> {
-  // 6 TextEditingControllers for OTP digits
   final List<TextEditingController> _otpControllers =
   List.generate(6, (_) => TextEditingController());
 
@@ -38,20 +41,37 @@ class _OtpverificationScreenState extends State<OtpverificationScreen> {
 
     try {
       PhoneAuthCredential credential = PhoneAuthProvider.credential(
-          verificationId: widget.verificationId, smsCode: otp);
+        verificationId: widget.verificationId,
+        smsCode: otp,
+      );
 
+      // 🔹 Sign in with OTP credential
       await FirebaseAuth.instance.signInWithCredential(credential);
 
-      // OTP verified → Navigate to HomePage
       if (!mounted) return;
+
+      print("✅ OTP Verified. UserId: ${widget.userId}");
+
+       // save state in sharedpreference
+
+      final pref = await SharedPreferences.getInstance();
+      await pref.setBool('isLoggedIn',true);
+      await pref.setString('userId', widget.userId);
+
+      // ✅ Directly navigate to HomePage with userId
       Navigator.pushReplacement(
-          context, MaterialPageRoute(builder: (_) => const HomePage()));
+        context,
+        MaterialPageRoute(
+          builder: (_) => HomePage(userId: widget.userId),
+        ),
+      );
     } on FirebaseAuthException catch (e) {
       ScaffoldMessenger.of(context)
           .showSnackBar(SnackBar(content: Text(e.message ?? 'Invalid OTP')));
-    } catch (_) {
-      ScaffoldMessenger.of(context)
-          .showSnackBar(const SnackBar(content: Text('Something went wrong')));
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Something went wrong')),
+      );
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
@@ -83,8 +103,6 @@ class _OtpverificationScreenState extends State<OtpverificationScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 SizedBox(height: screenHeight * 0.05),
-
-                // Lottie Animation
                 Center(
                   child: Lottie.asset(
                     'assets/Otpverification.json',
@@ -93,8 +111,6 @@ class _OtpverificationScreenState extends State<OtpverificationScreen> {
                     fit: BoxFit.contain,
                   ),
                 ),
-
-                // Heading
                 Center(
                   child: Column(
                     children: [
@@ -126,10 +142,7 @@ class _OtpverificationScreenState extends State<OtpverificationScreen> {
                     ],
                   ),
                 ),
-
                 SizedBox(height: screenHeight * 0.03),
-
-                // OTP Input Fields
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                   children: List.generate(6, (index) {
@@ -160,18 +173,14 @@ class _OtpverificationScreenState extends State<OtpverificationScreen> {
                     );
                   }),
                 ),
-
                 SizedBox(height: screenWidth * 0.11),
-
-                // Verify Button
                 _isLoading
                     ? const Center(child: CircularProgressIndicator())
                     : ElevatedButton(
                   onPressed: verifyOtp,
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color(0xFF2E356A),
-                    minimumSize:
-                    Size(screenWidth, screenHeight * 0.06),
+                    minimumSize: Size(screenWidth, screenHeight * 0.06),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(10),
                     ),

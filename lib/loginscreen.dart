@@ -44,7 +44,7 @@ class _LoginscreenState extends State<Loginscreen> {
         return;
       }
 
-      // Fetch users from Firestore
+      // 🔹 Fetch users from Firestore
       List<AuthUserModel> users = await _repo.fetchUsers();
 
       final username = _usernameController.text.trim().toLowerCase();
@@ -59,16 +59,21 @@ class _LoginscreenState extends State<Loginscreen> {
 
       if (matchUser.id.isNotEmpty) {
         print("✅ User found: ${matchUser.mobile}");
+        print("userid: ${matchUser.id}");
 
-        // 🔹 Send OTP via Firebase (remove await)
+        // 🔹 Send OTP via Firebase
         FirebaseAuth.instance.verifyPhoneNumber(
-          phoneNumber: '+91${matchUser.mobile}', // Testing number
+          phoneNumber: '+91${matchUser.mobile}',
           verificationCompleted: (PhoneAuthCredential credential) async {
             print("✅ Auto verification completed");
             await FirebaseAuth.instance.signInWithCredential(credential);
             if (!mounted) return;
             Navigator.pushReplacement(
-                context, MaterialPageRoute(builder: (_) => HomePage()));
+              context,
+              MaterialPageRoute(
+                builder: (_) => HomePage(userId:matchUser.id,),
+              ),
+            );
           },
           verificationFailed: (FirebaseAuthException e) {
             print("❌ Verification failed: ${e.message}");
@@ -84,6 +89,7 @@ class _LoginscreenState extends State<Loginscreen> {
                 builder: (context) => OtpverificationScreen(
                   mobile: matchUser.mobile,
                   verificationId: verificationId,
+                  userId:matchUser.id, // ✅ Pass user data
                 ),
               ),
             );
@@ -93,7 +99,7 @@ class _LoginscreenState extends State<Loginscreen> {
           },
         );
       } else {
-        // Invalid user
+        // ❌ Invalid user
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text("Invalid username or mobile number!"),

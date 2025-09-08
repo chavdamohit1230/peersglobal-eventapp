@@ -55,6 +55,7 @@ dependencies:
   build_runner: ^2.5.4
   cloud_firestore: ^6.0.0
   firebase_auth:
+  shared_preferences:
 
 
 dev_dependencies:

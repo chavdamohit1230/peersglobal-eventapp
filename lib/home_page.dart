@@ -2,14 +2,21 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:peersglobleeventapp/exhibiter_screen.dart';
+import 'package:peersglobleeventapp/modelClass/model/userregister_model.dart';
 import 'package:peersglobleeventapp/modelClass/user_PostModel.dart';
 import 'package:peersglobleeventapp/my_network.dart';
 import 'package:peersglobleeventapp/qr_Scanner.dart';
 import 'package:peersglobleeventapp/widgets/userpostCard.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:peersglobleeventapp/modelClass/model/auth_User_model.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 
 class HomePage extends StatefulWidget {
-  const HomePage({super.key});
+  final String? userId;
+  final UserRegister?  user;
+  const HomePage({super.key,this.userId,this.user});
 
   @override
   State<HomePage> createState() => _HomePageState();
@@ -17,6 +24,12 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   int selectedIndex = 0;
+
+  Map<String, dynamic>? userData;
+  AuthUserModel? user;
+  bool isLoading = true;
+
+
   void onTabTapped(int index) {
     setState(() {
       selectedIndex = index;
@@ -164,7 +177,59 @@ class _HomePageState extends State<HomePage> {
   double safeFontSize(double size, double min, double max) {
     return size.clamp(min, max);
   }
+  Future<void> fetchUserData() async {
+    try {
+      if (widget.userId == null || widget.userId!.isEmpty) {
+        print("⚠️ userId is null or empty");
+        setState(() => isLoading = false);
+        return;
+      }
 
+      // Sirf doc ID extract karna (agar userId pura path hua ho)
+      String docId = widget.userId!.contains("/")
+          ? widget.userId!.split("/").last
+          : widget.userId!;
+
+      DocumentSnapshot snapshot = await FirebaseFirestore.instance
+          .collection("userregister")
+          .doc(docId)
+          .get();
+
+      if (snapshot.exists) {
+        setState(() {
+          user = AuthUserModel.fromJson(snapshot.data() as Map<String, dynamic>);
+          isLoading = false;
+        });
+
+        print("✅ User data fetched: ${user?.toJson()}");
+      } else {
+        setState(() => isLoading = false);
+        print("❌ User not found with id: $docId");
+      }
+    } catch (e) {
+      setState(() => isLoading = false);
+      print("⚠️ Error fetching user data: $e");
+    }
+  }
+
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.user != null) {
+      user = AuthUserModel(
+        id: widget.userId ?? "",
+        role: widget.user!.role ?? "",
+        name: widget.user!.name ?? "",
+        mobile: widget.user!.mobile ?? "",
+        // agar role bhi hai
+      );
+      isLoading = false;
+    } else {
+      // login case me Firestore se fetch karna hai
+      fetchUserData();
+    }
+  }
   @override
   Widget build(BuildContext context) {
     final screenWidth = MediaQuery.of(context).size.width;
@@ -173,93 +238,128 @@ class _HomePageState extends State<HomePage> {
     return Scaffold(
       backgroundColor: const Color(0xFFF0F4FD),
       drawer: Drawer(
-        backgroundColor:Color(0xFFF0F4FD),
+        backgroundColor: const Color(0xFFF0F4FD),
         child: SafeArea(
-          child: ListView(
-            padding: EdgeInsets.zero,
+          child: Column(
             children: [
-              // Custom flexible header
-              Container(
-                color: const Color(0xFFF0F4FD),
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
+              // Upar ka header + menu
+              Expanded(
+                child: ListView(
+                  padding: EdgeInsets.zero,
                   children: [
-                    const CircleAvatar(
-                      radius: 35,
-                      backgroundImage: AssetImage('assets/peersgloblelogo.png'),
-                    ),
-                    const SizedBox(height: 10),
-                    Text(
-                      "Chavda Mohit",
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: safeFontSize(
-                            MediaQuery.of(context).size.width * 0.080, 18, 24),
+                    // Custom flexible header
+                    Container(
+                      color: const Color(0xFFF0F4FD),
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const CircleAvatar(
+                            radius: 35,
+                            backgroundImage: AssetImage('assets/peersgloblelogo.png'),
+                          ),
+                          const SizedBox(height: 10),
+                          Text(
+                            user!=null ?
+                                user!.name :widget.user?.name?? '',
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: safeFontSize(
+                                MediaQuery.of(context).size.width * 0.080, 18, 24,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(user!=null ?
+                          (user!.designation?? ''):(widget.user?.designation?? ''),
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              color: Colors.grey,
+                              fontSize: safeFontSize(
+                                  MediaQuery.of(context).size.width * 0.030, 11, 15),
+                            ),
+                          ),
+                          Text(
+                            "Attendee : Business Information",
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              color: Colors.grey,
+                              fontSize: safeFontSize(
+                                  MediaQuery.of(context).size.width * 0.040, 13, 17),
+                            ),
+                          ),
+                        ],
                       ),
                     ),
-                    const SizedBox(height: 4),
-                 Text(
-                      "Co-Founder of Sarda Dairy Farm",
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        color: Colors.grey,
-                        fontSize: safeFontSize(
-                            MediaQuery.of(context).size.width * 0.030, 11, 15),
+                    const Divider(
+                      thickness: 2,
+                      indent: 20,
+                      endIndent: 20,
+                    ),
+                    // Navigation Items
+                    ListTile(
+                      leading: const Icon(Icons.home, size: 28),
+                      title: const Text('Home', style: TextStyle(fontSize: 18)),
+                      onTap: () => Navigator.pop(context),
+                    ),
+                    ListTile(
+                      leading: const Icon(Icons.person, size: 28),
+                      title: const Text('Profile', style: TextStyle(fontSize: 18)),
+                      onTap: () => context.push(
+                        '/userProfile_screen',
+                        extra:{
+                          'userId':widget.userId,
+                          'user':widget.user
+                        }// ✅ constructor से मिला userId पास हो रहा है
                       ),
                     ),
-                    Text(
-                      "Attendee : Business Information",
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        color: Colors.grey,
-                        fontSize: safeFontSize(
-                            MediaQuery.of(context).size.width * 0.040, 13, 17),
-                      ),
+                    ListTile(
+                      leading: const Icon(Icons.people_alt_outlined, size: 28),
+                      title: const Text('Meeting', style: TextStyle(fontSize: 18)),
+                      onTap: () => Navigator.pop(context),
+                    ),
+                    ListTile(
+                      leading: const Icon(Icons.settings, size: 28),
+                      title: const Text('Settings', style: TextStyle(fontSize: 18)),
+                      onTap: () => Navigator.pop(context),
                     ),
                   ],
                 ),
               ),
-                Divider(
-                  thickness:2,
-                  indent:20,
-                  endIndent:20,
+              const Divider(thickness: 2),
+              ListTile(
+                leading: const Icon(Icons.logout, color: Colors.red, size: 28),
+                title: const Text(
+                  'Logout',
+                  style: TextStyle(fontSize: 18, color: Colors.red),
                 ),
-              // Navigation Items
-              ListTile(
-                leading: const Icon(Icons.home,size:28,),
-                title: const Text('Home',style:TextStyle(fontSize:18),),
-                onTap: () => Navigator.pop(context),
-              ),
-              ListTile(
-                leading: const Icon(Icons.person,size:28),
-                title: const Text('Profile',style:TextStyle(fontSize:18)),
-                onTap: () => context.push('/userProfile_screen'),
-              ),
+                onTap: () async {
+                  // 🔹 Firebase logout (agar Firebase Auth use kar rahe ho)
+                  await FirebaseAuth.instance.signOut();
 
-              ListTile(
-                leading: const Icon(Icons.people_alt_outlined,size:28),
-                title: const Text('Meeting',style:TextStyle(fontSize:18)),
-                onTap: () => Navigator.pop(context),
-              ),
+                  // 🔹 SharedPreferences clear karo
+                  final prefs = await SharedPreferences.getInstance();
+                  await prefs.remove('isLoggedIn');
+                  await prefs.remove('userId');
+                  // ya fir puri clear karna ho to: await prefs.clear();
 
-              ListTile(
-                leading: const Icon(Icons.settings,size:28),
-                title: const Text('Settings',style:TextStyle(fontSize:18)),
-                onTap: () => Navigator.pop(context),
+                  // 🔹 Login screen pe redirect
+                  if (context.mounted) {
+                    context.go('/loginscreen');
+                  }
+                },
               ),
 
             ],
           ),
         ),
       ),
-
 
       //  AppBar with Drawer Menu
       appBar: AppBar(
@@ -322,6 +422,7 @@ class _HomePageState extends State<HomePage> {
                     color: Colors.black87, size: screenHeight * 0.030),
                 SizedBox(width: screenWidth * 0.02),
                 Icon(Icons.notifications_none_rounded,
+
                     color: Colors.black87, size: screenHeight * 0.028),
               ],
             ),
