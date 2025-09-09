@@ -453,7 +453,8 @@ class _HomePageState extends State<HomePage> {
           ),
 
           // 1: My Network
-          MyNetwork(),
+          MyNetwork(currentUserId:(widget.userId !=null && widget.userId!.isNotEmpty)
+              ?widget.userId!:user?.id??""),
 
           // 2: QR Scanner
           QrScanner(),
