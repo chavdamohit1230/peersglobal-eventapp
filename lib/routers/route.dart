@@ -1,6 +1,9 @@
 import 'package:go_router/go_router.dart';
 import 'package:peersglobleeventapp/home_page.dart';
+import 'package:peersglobleeventapp/invitaion.dart';
+
 import 'package:peersglobleeventapp/loginscreen.dart';
+import 'package:peersglobleeventapp/people_knows.dart';
 import 'package:peersglobleeventapp/qr_scanResult.dart';
 import 'package:peersglobleeventapp/registration_screen.dart';
 import 'package:peersglobleeventapp/splashscreen.dart';
@@ -26,6 +29,26 @@ class AppRouter {
         GoRoute(
           path: "/registration_screen",
           builder: (context, state) => const RegistrationScreen(),
+        ),
+        GoRoute(
+          path: '/people_knows',
+          builder: (context, state) {
+          final currentUserId = state.extra != null && state.extra is Map<String, dynamic>
+          ? (state.extra as Map<String, dynamic>)['currentUserId'] as String
+              : "";
+
+          return PeopleKnows(currentUserId: currentUserId);
+          },
+        ),
+        GoRoute(path: "/invitaion",
+          builder: (context, state) {
+            final currentUserId = state.extra != null && state.extra is Map<String, dynamic>
+                ? (state.extra as Map<String, dynamic>)['currentUserId'] as String
+                : "";
+
+            return Invitaion(currentUserId: currentUserId);
+          },
+
         ),
 
         GoRoute(

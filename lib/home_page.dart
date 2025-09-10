@@ -318,13 +318,43 @@ class _HomePageState extends State<HomePage> {
                         extra:{
                           'userId':widget.userId,
                           'user':widget.user
-                        }// ✅ constructor से मिला userId पास हो रहा है
+                        }
                       ),
                     ),
                     ListTile(
                       leading: const Icon(Icons.people_alt_outlined, size: 28),
                       title: const Text('Meeting', style: TextStyle(fontSize: 18)),
                       onTap: () => Navigator.pop(context),
+                    ),
+                    ListTile(
+                      leading: const Icon(Icons.people_outline, size: 28),
+                      title: const Text('People You May Know', style: TextStyle(fontSize: 18)),
+                      onTap: () {
+                        // Determine current userId: login se ya register se
+                        String currentUserId = widget.userId ?? user?.id ?? "";
+
+                        context.push(
+                          '/people_knows',
+                          extra: {
+                            'currentUserId': currentUserId,
+                          },
+                        );
+                      },
+                    ),
+                    ListTile(
+                      leading: const Icon(Icons.person_add_alt_1, size: 28),
+                      title: const Text('Invitation', style: TextStyle(fontSize: 18)),
+                      onTap: () {
+                        // Determine current userId: login se ya register se
+                        String currentUserId = widget.userId ?? user?.id ?? "";
+
+                        context.push(
+                          '/invitaion',
+                          extra: {
+                            'currentUserId': currentUserId,
+                          },
+                        );
+                      },
                     ),
                     ListTile(
                       leading: const Icon(Icons.settings, size: 28),
