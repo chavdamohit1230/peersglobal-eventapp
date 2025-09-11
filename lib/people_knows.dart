@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:peersglobleeventapp/modelClass/mynetwork_model.dart';
 
 class PeopleKnows extends StatefulWidget {
   final String currentUserId;
@@ -10,9 +11,9 @@ class PeopleKnows extends StatefulWidget {
 }
 
 class _PeopleKnowsState extends State<PeopleKnows> {
-  Map<String, String> requestStatus = {}; // userId => status (none/pending/approved/rejected)
+  Map<String, String> requestStatus = {}; // userId => status
   bool isLoading = true;
-  List<Map<String, dynamic>> users = [];
+  List<Mynetwork> users = [];
 
   @override
   void initState() {
@@ -33,12 +34,21 @@ class _PeopleKnowsState extends State<PeopleKnows> {
           .where((doc) => doc.id != currentUserDocId)
           .map((doc) {
         final data = doc.data();
-        return {
-          "id": doc.id,
-          "name": data['name'] ?? '',
-          "designation": data['designation'] ?? '',
-          "image": data['profileImage'] ?? "https://via.placeholder.com/150",
-        };
+        return Mynetwork(
+          id: doc.id,
+          username: data['name'] ?? '',
+          Designnation: data['designation'] ?? '',
+          ImageUrl: data['profileImage'] ?? "https://via.placeholder.com/150",
+          email: data['email'] ?? '',
+          mobile: data['mobile'] ?? '',
+          organization: data['organization'] ?? '',
+          businessLocation: data['businessLocation'] ?? '',
+          companywebsite: data['companywebsite'] ?? '',
+          industry: data['industry'] ?? '',
+          contry:data['country']?? '',
+          city:data['city']?? ''  ,
+          aboutme: data['aboutme'] ?? '',
+        );
       }).toList();
 
       setState(() {
@@ -67,8 +77,7 @@ class _PeopleKnowsState extends State<PeopleKnows> {
         requestStatus[toUserId] = status;
 
         if (status == "approved") {
-          // ✅ remove approved users from list
-          users.removeWhere((user) => user["id"] == toUserId);
+          users.removeWhere((user) => user.id == toUserId);
         }
       }
       setState(() {});
@@ -82,7 +91,6 @@ class _PeopleKnowsState extends State<PeopleKnows> {
       String status = requestStatus[targetUserId] ?? "none";
 
       if (status == "pending") {
-        // Cancel request
         final snapshot = await FirebaseFirestore.instance
             .collection("requests")
             .where("from", isEqualTo: widget.currentUserId)
@@ -97,7 +105,6 @@ class _PeopleKnowsState extends State<PeopleKnows> {
           requestStatus[targetUserId] = "none";
         });
       } else {
-        // Send request
         await FirebaseFirestore.instance.collection("requests").add({
           "from": widget.currentUserId,
           "to": targetUserId,
@@ -114,10 +121,24 @@ class _PeopleKnowsState extends State<PeopleKnows> {
     }
   }
 
+  Color getStatusColor(String status) {
+    switch (status) {
+      case "pending":
+        return const Color(0xFFFFF9C4); // हल्का पीला
+      case "approved":
+        return const Color(0xFFC8E6C9); // हल्का हरा
+      default:
+        return Colors.white;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text("People You May Know")),
+      appBar: AppBar(
+        title: const Text("People You May Know"),
+        backgroundColor: const Color(0xFFF0F4FD),
+      ),
       backgroundColor: Colors.white,
       body: isLoading
           ? const Center(child: CircularProgressIndicator())
@@ -126,7 +147,7 @@ class _PeopleKnowsState extends State<PeopleKnows> {
         separatorBuilder: (_, __) => const Divider(height: 1),
         itemBuilder: (context, index) {
           final user = users[index];
-          final status = requestStatus[user["id"]] ?? "none";
+          final status = requestStatus[user.id ?? ""] ?? "none";
 
           String buttonText;
           bool isDisabled;
@@ -135,62 +156,62 @@ class _PeopleKnowsState extends State<PeopleKnows> {
             buttonText = "Request Sent";
             isDisabled = true;
           } else if (status == "approved") {
-            return const SizedBox.shrink(); // already removed
+            return const SizedBox.shrink();
           } else {
             buttonText = "Connect";
             isDisabled = false;
           }
 
-          return ListTile(
-            contentPadding:
-            const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
-            leading: CircleAvatar(
-              radius: 30,
-              backgroundImage: NetworkImage(user["image"]),
-            ),
-            title: Text(
-              user["name"],
-              style: const TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.black),
-            ),
-            subtitle: Text(
-              user["designation"],
-              style: const TextStyle(fontSize: 14, color: Colors.black54),
-            ),
-            trailing: ElevatedButton(
-              onPressed: isDisabled
-                  ? null
-                  : () => toggleRequest(user["id"]),
-              style: ElevatedButton.styleFrom(
-                backgroundColor:
-                isDisabled ? Colors.grey : Colors.blue,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8),
-                ),
+          return Container(
+            color: getStatusColor(status),
+            child: ListTile(
+              contentPadding: const EdgeInsets.symmetric(
+                  vertical: 12, horizontal: 16),
+              leading: CircleAvatar(
+                radius: 30,
+                backgroundImage: NetworkImage(user.ImageUrl),
               ),
-              child: Text(
-                buttonText,
-                style:
-                const TextStyle(color: Colors.white, fontSize: 14),
+              title: Text(
+                user.username,
+                style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.black),
               ),
-            ),
-            onTap: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (_) => UserDetailView(
-                    userId: user["id"],
-                    name: user["name"],
-                    designation: user["designation"],
-                    imageUrl: user["image"],
-                    status: status,
-                    onRequestToggle: () => toggleRequest(user["id"]),
+              subtitle: Text(
+                user.Designnation,
+                style: const TextStyle(
+                    fontSize: 14, color: Colors.black54),
+              ),
+              trailing: ElevatedButton(
+                onPressed:
+                isDisabled ? null : () => toggleRequest(user.id!),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor:
+                  isDisabled ? Colors.grey : Colors.blue,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
                   ),
                 ),
-              );
-            },
+                child: Text(
+                  buttonText,
+                  style:
+                  const TextStyle(color: Colors.white, fontSize: 14),
+                ),
+              ),
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => UserDetailView(
+                      user: user,
+                      status: status,
+                      onRequestToggle: () => toggleRequest(user.id!),
+                    ),
+                  ),
+                );
+              },
+            ),
           );
         },
       ),
@@ -199,19 +220,13 @@ class _PeopleKnowsState extends State<PeopleKnows> {
 }
 
 class UserDetailView extends StatelessWidget {
-  final String userId;
-  final String name;
-  final String designation;
-  final String imageUrl;
-  final String status; // none/pending/approved/rejected
+  final Mynetwork user;
+  final String status;
   final VoidCallback onRequestToggle;
 
   const UserDetailView({
     super.key,
-    required this.userId,
-    required this.name,
-    required this.designation,
-    required this.imageUrl,
+    required this.user,
     required this.status,
     required this.onRequestToggle,
   });
@@ -240,7 +255,7 @@ class UserDetailView extends StatelessWidget {
         backgroundColor: Colors.white,
         elevation: 1,
         iconTheme: const IconThemeData(color: Colors.black87),
-        title: Text(name,
+        title: Text(user.username,
             style: const TextStyle(
                 color: Colors.black87, fontWeight: FontWeight.w600)),
       ),
@@ -265,16 +280,16 @@ class UserDetailView extends StatelessWidget {
                   CircleAvatar(
                     radius: 60,
                     backgroundColor: Colors.white,
-                    backgroundImage: NetworkImage(imageUrl),
+                    backgroundImage: NetworkImage(user.ImageUrl),
                   ),
                   const SizedBox(height: 12),
-                  Text(name,
+                  Text(user.username,
                       style: const TextStyle(
                           fontSize: 22,
                           fontWeight: FontWeight.bold,
                           color: Colors.black87)),
                   const SizedBox(height: 6),
-                  Text(designation,
+                  Text(user.Designnation,
                       style: const TextStyle(
                           fontSize: 16,
                           color: Colors.black54,
@@ -299,9 +314,27 @@ class UserDetailView extends StatelessWidget {
               ),
               child: Column(
                 children: [
-                  _buildInfoRow(Icons.person, "Name", name),
+                  _buildInfoRow(Icons.person, "Name", user.username),
                   const Divider(),
-                  _buildInfoRow(Icons.work_outline, "Designation", designation),
+                  _buildInfoRow(Icons.work_outline, "Designation",
+                      user.Designnation),
+                  const Divider(),
+                  _buildInfoRow(Icons.phone, "Mobile", user.mobile ?? "N/A"),
+                  const Divider(),
+                  _buildInfoRow(Icons.email_outlined, "Email", user.email ?? "N/A"),
+                  const Divider(),
+                  _buildInfoRow(Icons.language, "CompanyUrl", user.companywebsite ?? "N/A"),
+                  const Divider(),
+                  _buildInfoRow(Icons.location_history, "BusinessLocation", user.businessLocation ?? "N/A"),
+                  const Divider(),
+                  _buildInfoRow(Icons.business_sharp, "Industry",
+                      user.industry ?? "N/A"),
+                  const Divider(),
+                  _buildInfoRow(Icons.map, "Country",
+                      user.contry ?? "N/A"),
+                  const Divider(),
+                  _buildInfoRow(Icons.location_city_sharp,"City",
+                      user.city ?? "N/A"),
                 ],
               ),
             ),
@@ -311,8 +344,7 @@ class UserDetailView extends StatelessWidget {
               child: ElevatedButton(
                 onPressed: isDisabled ? null : onRequestToggle,
                 style: ElevatedButton.styleFrom(
-                  backgroundColor:
-                  isDisabled ? Colors.grey : Colors.blue,
+                  backgroundColor: isDisabled ? Colors.grey : Colors.blue,
                   padding: const EdgeInsets.symmetric(
                       vertical: 14, horizontal: 20),
                   shape: RoundedRectangleBorder(

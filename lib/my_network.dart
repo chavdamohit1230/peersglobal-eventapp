@@ -56,8 +56,15 @@ class _MyNetworkState extends State<MyNetwork> {
           final data = userDoc.data()!;
           fetchedConnections.add(Mynetwork(
             id: userDoc.id,
-            username: data['name'] ?? "No Name",
-            Designnation: data['designation'] ?? "",
+            username: data['name'] ?? "N/A",
+            Designnation: data['designation'] ?? "N/A",
+            mobile:data['mobile']?? "N/A",
+            email:data['email']?? "N/A",
+            companywebsite:data['companywebsite']?? "N/A",
+            businessLocation:data['businessLocation']?? "N/A",
+            industry:data['industry']?? "N/A",
+            contry:data['country']?? "N/A",
+            city:data['city']?? "N/A",
             ImageUrl: data['profileImage'] ?? "https://via.placeholder.com/150",
           ));
         }
@@ -77,7 +84,7 @@ class _MyNetworkState extends State<MyNetwork> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
-      appBar: AppBar(title: const Text("My Connections")),
+      appBar: AppBar(title: const Text("My Connections"),backgroundColor:Color(0xFFF0F4FD),),
       body: isLoading
           ? const Center(child: CircularProgressIndicator())
           : connections.isEmpty
@@ -194,6 +201,27 @@ class UserDetailScreen extends StatelessWidget {
                   const Divider(),
                   _buildInfoRow(Icons.work_outline, "Designation",
                       mynetwork.Designnation),
+                  const Divider(),
+                  _buildInfoRow(Icons.call, "Mobile",
+                      mynetwork.mobile ?? "N/A"),
+                  const Divider(),
+                  _buildInfoRow(Icons.email_outlined, "Email",
+                      mynetwork.email ?? "N/A"),
+                  const Divider(),
+                  _buildInfoRow(Icons.language, "CompanyUrl",
+                      mynetwork.companywebsite ?? "N/A"),
+                  const Divider(),
+                  _buildInfoRow(Icons.location_history, "BusinessLocation",
+                      mynetwork.businessLocation ?? "N/A"),
+                  const Divider(),
+                  _buildInfoRow(Icons.business, "Industry",
+                      mynetwork.industry?? "N/A"),
+                  const Divider(),
+                  _buildInfoRow(Icons.map, "Country",
+                      mynetwork.contry?? "N/A"),
+                  const Divider(),
+                  _buildInfoRow(Icons.location_city_sharp, "City",
+                      mynetwork.city?? "N/A"),
                 ],
               ),
             ),

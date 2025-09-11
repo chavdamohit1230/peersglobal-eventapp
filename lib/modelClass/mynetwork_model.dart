@@ -14,6 +14,8 @@ class Mynetwork{
   final String? mobile;
   final String? businessLocation;
   final String? companywebsite;
+  final String? contry;
+  final String? city;
    final String? industry;
    final String? purposeOfAttending;
 
@@ -32,6 +34,8 @@ class Mynetwork{
     this.purposeOfAttending,
     this.industry,
     this.companywebsite,
+    this.contry,
+    this.city,
     this.businessLocation
 
 });
