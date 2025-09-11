@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:peersglobleeventapp/widgets/ConnectionListWidget.dart';
 import 'modelClass/mynetwork_model.dart';
 
@@ -11,53 +12,85 @@ class MyNetwork extends StatefulWidget {
 }
 
 class _MyNetworkState extends State<MyNetwork> {
-  final List<Mynetwork> connection = [
-    Mynetwork(
-      id: "4",
-      username: "Aman",
-      Designnation: "Flutter Dev",
-      ImageUrl:
-      "https://imgv3.fotor.com/images/slider-image/A-clear-close-up-photo-of-a-woman.jpg",
-    ),
-    Mynetwork(
-      id: "5",
-      username: "Ravi",
-      Designnation: "Backend Dev",
-      ImageUrl:
-      "https://imgv3.fotor.com/images/slider-image/A-clear-close-up-photo-of-a-woman.jpg",
-    ),
-    Mynetwork(
-      id: "6",
-      username: "Pooja",
-      Designnation: "Designer",
-      ImageUrl:
-      "https://imgv3.fotor.com/images/slider-image/A-clear-close-up-photo-of-a-woman.jpg",
-    ),
-    Mynetwork(
-      id: "7",
-      username: "Sneha",
-      Designnation: "Tester",
-      ImageUrl:
-      "https://imgv3.fotor.com/images/slider-image/A-clear-close-up-photo-of-a-woman.jpg",
-    ),
-  ];
+  List<Mynetwork> connections = [];
+  bool isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    fetchConnections();
+  }
+
+  Future<void> fetchConnections() async {
+    try {
+      // ✅ Get approved requests
+      final snapshot = await FirebaseFirestore.instance
+          .collection("requests")
+          .where("status", isEqualTo: "approved")
+          .where("from", isEqualTo: widget.currentUserId)
+          .get();
+
+      final snapshot2 = await FirebaseFirestore.instance
+          .collection("requests")
+          .where("status", isEqualTo: "approved")
+          .where("to", isEqualTo: widget.currentUserId)
+          .get();
+
+      List<String> connectedUserIds = [];
+
+      // Collect "to" users where I am the sender
+      connectedUserIds.addAll(snapshot.docs.map((doc) => doc['to'] as String));
+
+      // Collect "from" users where I am the receiver
+      connectedUserIds.addAll(snapshot2.docs.map((doc) => doc['from'] as String));
+
+      // ✅ Now fetch user details
+      List<Mynetwork> fetchedConnections = [];
+      for (String userId in connectedUserIds) {
+        final userDoc = await FirebaseFirestore.instance
+            .collection("userregister")
+            .doc(userId)
+            .get();
+
+        if (userDoc.exists) {
+          final data = userDoc.data()!;
+          fetchedConnections.add(Mynetwork(
+            id: userDoc.id,
+            username: data['name'] ?? "No Name",
+            Designnation: data['designation'] ?? "",
+            ImageUrl: data['profileImage'] ?? "https://via.placeholder.com/150",
+          ));
+        }
+      }
+
+      setState(() {
+        connections = fetchedConnections;
+        isLoading = false;
+      });
+    } catch (e) {
+      print("Error fetching connections: $e");
+      setState(() => isLoading = false);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
-    double screenHeight = MediaQuery.of(context).size.height;
-
     return Scaffold(
       backgroundColor: Colors.white,
-      body: SingleChildScrollView(
-        child: _buildSection(
-          context,
-          title: "Connections",
-          list: connection,
-          itemBuilder: (m) => GestureDetector(
-            onTap: () => _openUserDetail(m),
-            child: ConnectionListWidget(connection: m),
-          ),
-        ),
+      appBar: AppBar(title: const Text("My Connections")),
+      body: isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : connections.isEmpty
+          ? const Center(child: Text("No connections yet"))
+          : ListView.builder(
+        itemCount: connections.length,
+        itemBuilder: (context, index) {
+          final user = connections[index];
+          return GestureDetector(
+            onTap: () => _openUserDetail(user),
+            child: ConnectionListWidget(connection: user),
+          );
+        },
       ),
     );
   }
@@ -74,43 +107,9 @@ class _MyNetworkState extends State<MyNetwork> {
       ),
     );
   }
-
-  // 🔹 Dummy Section Widget
-  Widget _buildSection(BuildContext context,
-      {required String title,
-        required List<Mynetwork> list,
-        required Widget Function(Mynetwork) itemBuilder}) {
-    double screenHeight = MediaQuery.of(context).size.height;
-
-    return Container(
-      width: double.infinity,
-      color: const Color(0xFFF3F8FE),
-      padding: EdgeInsets.symmetric(horizontal: 16, vertical: screenHeight * 0.02),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
-            Text(title,
-                style:
-                const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-            if (list.length > 3)
-              const Text("View All",
-                  style: TextStyle(fontSize: 16, color: Colors.blue)),
-          ]),
-          const SizedBox(height: 10),
-          ListView.builder(
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            itemCount: list.length > 3 ? 3 : list.length,
-            itemBuilder: (context, index) => itemBuilder(list[index]),
-          ),
-        ],
-      ),
-    );
-  }
 }
 
-// 🔹 User Detail Screen (Same Design)
+// 🔹 User Detail Screen (Same as before)
 class UserDetailScreen extends StatelessWidget {
   final Mynetwork mynetwork;
   final String currentUserId;
@@ -193,8 +192,8 @@ class UserDetailScreen extends StatelessWidget {
                 children: [
                   _buildInfoRow(Icons.person, "Name", mynetwork.username),
                   const Divider(),
-                  _buildInfoRow(
-                      Icons.work_outline, "Designation", mynetwork.Designnation),
+                  _buildInfoRow(Icons.work_outline, "Designation",
+                      mynetwork.Designnation),
                 ],
               ),
             ),

@@ -10,7 +10,7 @@ class PeopleKnows extends StatefulWidget {
 }
 
 class _PeopleKnowsState extends State<PeopleKnows> {
-  Map<String, bool> requestStatus = {}; // userId => requestSent
+  Map<String, String> requestStatus = {}; // userId => status (none/pending/approved/rejected)
   bool isLoading = true;
   List<Map<String, dynamic>> users = [];
 
@@ -37,8 +37,7 @@ class _PeopleKnowsState extends State<PeopleKnows> {
           "id": doc.id,
           "name": data['name'] ?? '',
           "designation": data['designation'] ?? '',
-          "image": data['profileImage'] ??
-              "https://via.placeholder.com/150", // default
+          "image": data['profileImage'] ?? "https://via.placeholder.com/150",
         };
       }).toList();
 
@@ -63,7 +62,14 @@ class _PeopleKnowsState extends State<PeopleKnows> {
 
       for (var doc in snapshot.docs) {
         String toUserId = doc['to'];
-        requestStatus[toUserId] = true;
+        String status = doc['status'] ?? "pending";
+
+        requestStatus[toUserId] = status;
+
+        if (status == "approved") {
+          // ✅ remove approved users from list
+          users.removeWhere((user) => user["id"] == toUserId);
+        }
       }
       setState(() {});
     } catch (e) {
@@ -73,9 +79,9 @@ class _PeopleKnowsState extends State<PeopleKnows> {
 
   Future<void> toggleRequest(String targetUserId) async {
     try {
-      final isSent = requestStatus[targetUserId] ?? false;
+      String status = requestStatus[targetUserId] ?? "none";
 
-      if (isSent) {
+      if (status == "pending") {
         // Cancel request
         final snapshot = await FirebaseFirestore.instance
             .collection("requests")
@@ -88,7 +94,7 @@ class _PeopleKnowsState extends State<PeopleKnows> {
         }
 
         setState(() {
-          requestStatus[targetUserId] = false;
+          requestStatus[targetUserId] = "none";
         });
       } else {
         // Send request
@@ -100,7 +106,7 @@ class _PeopleKnowsState extends State<PeopleKnows> {
         });
 
         setState(() {
-          requestStatus[targetUserId] = true;
+          requestStatus[targetUserId] = "pending";
         });
       }
     } catch (e) {
@@ -120,7 +126,20 @@ class _PeopleKnowsState extends State<PeopleKnows> {
         separatorBuilder: (_, __) => const Divider(height: 1),
         itemBuilder: (context, index) {
           final user = users[index];
-          final isRequested = requestStatus[user["id"]] ?? false;
+          final status = requestStatus[user["id"]] ?? "none";
+
+          String buttonText;
+          bool isDisabled;
+
+          if (status == "pending") {
+            buttonText = "Request Sent";
+            isDisabled = true;
+          } else if (status == "approved") {
+            return const SizedBox.shrink(); // already removed
+          } else {
+            buttonText = "Connect";
+            isDisabled = false;
+          }
 
           return ListTile(
             contentPadding:
@@ -141,16 +160,20 @@ class _PeopleKnowsState extends State<PeopleKnows> {
               style: const TextStyle(fontSize: 14, color: Colors.black54),
             ),
             trailing: ElevatedButton(
-              onPressed: () => toggleRequest(user["id"]),
+              onPressed: isDisabled
+                  ? null
+                  : () => toggleRequest(user["id"]),
               style: ElevatedButton.styleFrom(
-                backgroundColor: isRequested ? Colors.grey : Colors.blue,
+                backgroundColor:
+                isDisabled ? Colors.grey : Colors.blue,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(8),
                 ),
               ),
               child: Text(
-                isRequested ? "Request Sent" : "Connect",
-                style: const TextStyle(color: Colors.white, fontSize: 14),
+                buttonText,
+                style:
+                const TextStyle(color: Colors.white, fontSize: 14),
               ),
             ),
             onTap: () {
@@ -162,7 +185,7 @@ class _PeopleKnowsState extends State<PeopleKnows> {
                     name: user["name"],
                     designation: user["designation"],
                     imageUrl: user["image"],
-                    isRequested: isRequested,
+                    status: status,
                     onRequestToggle: () => toggleRequest(user["id"]),
                   ),
                 ),
@@ -180,7 +203,7 @@ class UserDetailView extends StatelessWidget {
   final String name;
   final String designation;
   final String imageUrl;
-  final bool isRequested;
+  final String status; // none/pending/approved/rejected
   final VoidCallback onRequestToggle;
 
   const UserDetailView({
@@ -189,13 +212,27 @@ class UserDetailView extends StatelessWidget {
     required this.name,
     required this.designation,
     required this.imageUrl,
-    required this.isRequested,
+    required this.status,
     required this.onRequestToggle,
   });
 
   @override
   Widget build(BuildContext context) {
-    bool requestState = isRequested;
+    String currentStatus = status;
+
+    String buttonText;
+    bool isDisabled;
+
+    if (currentStatus == "pending") {
+      buttonText = "Request Sent";
+      isDisabled = true;
+    } else if (currentStatus == "approved") {
+      buttonText = "Connected";
+      isDisabled = true;
+    } else {
+      buttonText = "Connect";
+      isDisabled = false;
+    }
 
     return Scaffold(
       backgroundColor: const Color(0xFFF3F8FE),
@@ -220,7 +257,8 @@ class UserDetailView extends StatelessWidget {
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                 ),
-                borderRadius: BorderRadius.vertical(bottom: Radius.circular(30)),
+                borderRadius:
+                BorderRadius.vertical(bottom: Radius.circular(30)),
               ),
               child: Column(
                 children: [
@@ -271,19 +309,17 @@ class UserDetailView extends StatelessWidget {
             SizedBox(
               width: 200,
               child: ElevatedButton(
-                onPressed: () {
-                  onRequestToggle();
-                  requestState = !requestState;
-                },
+                onPressed: isDisabled ? null : onRequestToggle,
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: requestState ? Colors.grey : Colors.blue,
-                  padding:
-                  const EdgeInsets.symmetric(vertical: 14, horizontal: 20),
+                  backgroundColor:
+                  isDisabled ? Colors.grey : Colors.blue,
+                  padding: const EdgeInsets.symmetric(
+                      vertical: 14, horizontal: 20),
                   shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12)),
                 ),
                 child: Text(
-                  requestState ? "Request Sent" : "Connect",
+                  buttonText,
                   style: const TextStyle(color: Colors.white, fontSize: 16),
                 ),
               ),
@@ -304,11 +340,13 @@ class UserDetailView extends StatelessWidget {
         SizedBox(
           width: 120,
           child: Text("$title:",
-              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
+              style:
+              const TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
         ),
         Expanded(
             child: Text(value,
-                style: const TextStyle(fontSize: 15, color: Colors.black87))),
+                style:
+                const TextStyle(fontSize: 15, color: Colors.black87))),
       ]),
     );
   }
