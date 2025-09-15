@@ -23,13 +23,14 @@ class _MyNetworkState extends State<MyNetwork> {
 
   Future<void> fetchConnections() async {
     try {
-      // ✅ Get approved requests
+      //  Get approved requests where I am sender
       final snapshot = await FirebaseFirestore.instance
           .collection("requests")
           .where("status", isEqualTo: "approved")
           .where("from", isEqualTo: widget.currentUserId)
           .get();
 
+      //  Get approved requests where I am receiver
       final snapshot2 = await FirebaseFirestore.instance
           .collection("requests")
           .where("status", isEqualTo: "approved")
@@ -38,13 +39,10 @@ class _MyNetworkState extends State<MyNetwork> {
 
       List<String> connectedUserIds = [];
 
-      // Collect "to" users where I am the sender
       connectedUserIds.addAll(snapshot.docs.map((doc) => doc['to'] as String));
-
-      // Collect "from" users where I am the receiver
       connectedUserIds.addAll(snapshot2.docs.map((doc) => doc['from'] as String));
 
-      // ✅ Now fetch user details
+      //  Now fetch user details
       List<Mynetwork> fetchedConnections = [];
       for (String userId in connectedUserIds) {
         final userDoc = await FirebaseFirestore.instance
@@ -58,13 +56,13 @@ class _MyNetworkState extends State<MyNetwork> {
             id: userDoc.id,
             username: data['name'] ?? "N/A",
             Designnation: data['designation'] ?? "N/A",
-            mobile:data['mobile']?? "N/A",
-            email:data['email']?? "N/A",
-            companywebsite:data['companywebsite']?? "N/A",
-            businessLocation:data['businessLocation']?? "N/A",
-            industry:data['industry']?? "N/A",
-            contry:data['country']?? "N/A",
-            city:data['city']?? "N/A",
+            mobile: data['mobile'] ?? "N/A",
+            email: data['email'] ?? "N/A",
+            companywebsite: data['companywebsite'] ?? "N/A",
+            businessLocation: data['businessLocation'] ?? "N/A",
+            industry: data['industry'] ?? "N/A",
+            contry: data['country'] ?? "N/A",
+            city: data['city'] ?? "N/A",
             ImageUrl: data['profileImage'] ?? "https://via.placeholder.com/150",
           ));
         }
@@ -80,11 +78,36 @@ class _MyNetworkState extends State<MyNetwork> {
     }
   }
 
+  // 🔹 Remove Connection (delete request doc where status=approved)
+  Future<void> removeConnection(String friendId) async {
+    try {
+      final snapshot = await FirebaseFirestore.instance
+          .collection("requests")
+          .where("status", isEqualTo: "approved")
+          .get();
+
+      for (var doc in snapshot.docs) {
+        if ((doc['from'] == widget.currentUserId && doc['to'] == friendId) ||
+            (doc['from'] == friendId && doc['to'] == widget.currentUserId)) {
+          await doc.reference.delete();
+        }
+      }
+
+      //  Refresh list
+      await fetchConnections();
+    } catch (e) {
+      print("Error removing connection: $e");
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
-      appBar: AppBar(title: const Text("My Connections"),backgroundColor:Color(0xFFF0F4FD),),
+      appBar: AppBar(
+        title: const Text("My Connections"),
+        backgroundColor: Color(0xFFF0F4FD),
+      ),
       body: isLoading
           ? const Center(child: CircularProgressIndicator())
           : connections.isEmpty
@@ -110,18 +133,28 @@ class _MyNetworkState extends State<MyNetwork> {
         builder: (_) => UserDetailScreen(
           mynetwork: user,
           currentUserId: widget.currentUserId,
+          onRemove: () async {
+            await removeConnection(user.id!);
+            Navigator.pop(context); // close detail screen
+          },
         ),
       ),
-    );
+    ).then((_) => fetchConnections()); // refresh when back
   }
 }
 
-// 🔹 User Detail Screen (Same as before)
+// 🔹 User Detail Screen
 class UserDetailScreen extends StatelessWidget {
   final Mynetwork mynetwork;
   final String currentUserId;
-  const UserDetailScreen(
-      {super.key, required this.mynetwork, required this.currentUserId});
+  final Future<void> Function() onRemove;
+
+  const UserDetailScreen({
+    super.key,
+    required this.mynetwork,
+    required this.currentUserId,
+    required this.onRemove,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -202,8 +235,7 @@ class UserDetailScreen extends StatelessWidget {
                   _buildInfoRow(Icons.work_outline, "Designation",
                       mynetwork.Designnation),
                   const Divider(),
-                  _buildInfoRow(Icons.call, "Mobile",
-                      mynetwork.mobile ?? "N/A"),
+                  _buildInfoRow(Icons.call, "Mobile", mynetwork.mobile ?? "N/A"),
                   const Divider(),
                   _buildInfoRow(Icons.email_outlined, "Email",
                       mynetwork.email ?? "N/A"),
@@ -215,17 +247,41 @@ class UserDetailScreen extends StatelessWidget {
                       mynetwork.businessLocation ?? "N/A"),
                   const Divider(),
                   _buildInfoRow(Icons.business, "Industry",
-                      mynetwork.industry?? "N/A"),
+                      mynetwork.industry ?? "N/A"),
                   const Divider(),
-                  _buildInfoRow(Icons.map, "Country",
-                      mynetwork.contry?? "N/A"),
+                  _buildInfoRow(Icons.map, "Country", mynetwork.contry ?? "N/A"),
                   const Divider(),
-                  _buildInfoRow(Icons.location_city_sharp, "City",
-                      mynetwork.city?? "N/A"),
+                  _buildInfoRow(
+                      Icons.location_city_sharp, "City", mynetwork.city ?? "N/A"),
                 ],
               ),
             ),
             const SizedBox(height: 20),
+
+            // 🔹 Remove Connection Button
+            SizedBox(
+              width: 220,
+              child: ElevatedButton(
+                onPressed: () async {
+                  await onRemove();
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text("Connection removed")),
+                  );
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.red,
+                  padding:
+                  const EdgeInsets.symmetric(vertical: 14, horizontal: 20),
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12)),
+                ),
+                child: const Text(
+                  "Remove Connection",
+                  style: TextStyle(color: Colors.white, fontSize: 16),
+                ),
+              ),
+            ),
+            const SizedBox(height: 30),
           ],
         ),
       ),
@@ -246,8 +302,7 @@ class UserDetailScreen extends StatelessWidget {
         ),
         Expanded(
             child: Text(value,
-                style:
-                const TextStyle(fontSize: 15, color: Colors.black87))),
+                style: const TextStyle(fontSize: 15, color: Colors.black87))),
       ]),
     );
   }

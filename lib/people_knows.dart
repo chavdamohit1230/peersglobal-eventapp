@@ -45,8 +45,8 @@ class _PeopleKnowsState extends State<PeopleKnows> {
           businessLocation: data['businessLocation'] ?? '',
           companywebsite: data['companywebsite'] ?? '',
           industry: data['industry'] ?? '',
-          contry:data['country']?? '',
-          city:data['city']?? ''  ,
+          contry: data['country'] ?? '',
+          city: data['city'] ?? '',
           aboutme: data['aboutme'] ?? '',
         );
       }).toList();
@@ -73,14 +73,13 @@ class _PeopleKnowsState extends State<PeopleKnows> {
       for (var doc in snapshot.docs) {
         String toUserId = doc['to'];
         String status = doc['status'] ?? "pending";
-
         requestStatus[toUserId] = status;
-
-        if (status == "approved") {
-          users.removeWhere((user) => user.id == toUserId);
-        }
       }
-      setState(() {});
+
+      // ✅ Remove approved users
+      setState(() {
+        users.removeWhere((u) => requestStatus[u.id] == "approved");
+      });
     } catch (e) {
       print("Error fetching sent requests: $e");
     }
@@ -91,6 +90,7 @@ class _PeopleKnowsState extends State<PeopleKnows> {
       String status = requestStatus[targetUserId] ?? "none";
 
       if (status == "pending") {
+        // Cancel request
         final snapshot = await FirebaseFirestore.instance
             .collection("requests")
             .where("from", isEqualTo: widget.currentUserId)
@@ -105,6 +105,7 @@ class _PeopleKnowsState extends State<PeopleKnows> {
           requestStatus[targetUserId] = "none";
         });
       } else {
+        // Send request
         await FirebaseFirestore.instance.collection("requests").add({
           "from": widget.currentUserId,
           "to": targetUserId,
@@ -118,17 +119,6 @@ class _PeopleKnowsState extends State<PeopleKnows> {
       }
     } catch (e) {
       print("Error toggling request: $e");
-    }
-  }
-
-  Color getStatusColor(String status) {
-    switch (status) {
-      case "pending":
-        return const Color(0xFFFFF9C4); // हल्का पीला
-      case "approved":
-        return const Color(0xFFC8E6C9); // हल्का हरा
-      default:
-        return Colors.white;
     }
   }
 
@@ -149,69 +139,63 @@ class _PeopleKnowsState extends State<PeopleKnows> {
           final user = users[index];
           final status = requestStatus[user.id ?? ""] ?? "none";
 
+          // ✅ Agar approved hai to skip
+          if (status == "approved") return const SizedBox();
+
           String buttonText;
-          bool isDisabled;
+          Color buttonColor;
 
           if (status == "pending") {
-            buttonText = "Request Sent";
-            isDisabled = true;
-          } else if (status == "approved") {
-            return const SizedBox.shrink();
+            buttonText = "Cancel Request";
+            buttonColor = Colors.blue;
           } else {
             buttonText = "Connect";
-            isDisabled = false;
+            buttonColor = Colors.blue;
           }
 
-          return Container(
-            color: getStatusColor(status),
-            child: ListTile(
-              contentPadding: const EdgeInsets.symmetric(
-                  vertical: 12, horizontal: 16),
-              leading: CircleAvatar(
-                radius: 30,
-                backgroundImage: NetworkImage(user.ImageUrl),
-              ),
-              title: Text(
-                user.username,
-                style: const TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.black),
-              ),
-              subtitle: Text(
-                user.Designnation,
-                style: const TextStyle(
-                    fontSize: 14, color: Colors.black54),
-              ),
-              trailing: ElevatedButton(
-                onPressed:
-                isDisabled ? null : () => toggleRequest(user.id!),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor:
-                  isDisabled ? Colors.grey : Colors.blue,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                ),
-                child: Text(
-                  buttonText,
-                  style:
-                  const TextStyle(color: Colors.white, fontSize: 14),
-                ),
-              ),
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (_) => UserDetailView(
-                      user: user,
-                      status: status,
-                      onRequestToggle: () => toggleRequest(user.id!),
-                    ),
-                  ),
-                );
-              },
+          return ListTile(
+            contentPadding:
+            const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+            leading: CircleAvatar(
+              radius: 30,
+              backgroundImage: NetworkImage(user.ImageUrl),
             ),
+            title: Text(
+              user.username,
+              style: const TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.black),
+            ),
+            subtitle: Text(
+              user.Designnation,
+              style: const TextStyle(fontSize: 14, color: Colors.black54),
+            ),
+            trailing: ElevatedButton(
+              onPressed: () => toggleRequest(user.id!),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: buttonColor,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+              ),
+              child: Text(
+                buttonText,
+                style: const TextStyle(color: Colors.white, fontSize: 14),
+              ),
+            ),
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => UserDetailView(
+                    user: user,
+                    status: status,
+                    onRequestToggle: () => toggleRequest(user.id!),
+                  ),
+                ),
+              ).then((_) => setState(() {}));
+            },
           );
         },
       ),
@@ -219,10 +203,10 @@ class _PeopleKnowsState extends State<PeopleKnows> {
   }
 }
 
-class UserDetailView extends StatelessWidget {
+class UserDetailView extends StatefulWidget {
   final Mynetwork user;
   final String status;
-  final VoidCallback onRequestToggle;
+  final Future<void> Function() onRequestToggle;
 
   const UserDetailView({
     super.key,
@@ -232,21 +216,36 @@ class UserDetailView extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) {
-    String currentStatus = status;
+  State<UserDetailView> createState() => _UserDetailViewState();
+}
 
+class _UserDetailViewState extends State<UserDetailView> {
+  late String currentStatus;
+
+  @override
+  void initState() {
+    super.initState();
+    currentStatus = widget.status;
+  }
+
+  Future<void> handleRequestToggle() async {
+    await widget.onRequestToggle();
+    setState(() {
+      currentStatus = (currentStatus == "pending") ? "none" : "pending";
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
     String buttonText;
-    bool isDisabled;
+    Color buttonColor;
 
     if (currentStatus == "pending") {
-      buttonText = "Request Sent";
-      isDisabled = true;
-    } else if (currentStatus == "approved") {
-      buttonText = "Connected";
-      isDisabled = true;
+      buttonText = "Cancel Request";
+      buttonColor = Colors.blue;
     } else {
       buttonText = "Connect";
-      isDisabled = false;
+      buttonColor = Colors.blue;
     }
 
     return Scaffold(
@@ -255,7 +254,7 @@ class UserDetailView extends StatelessWidget {
         backgroundColor: Colors.white,
         elevation: 1,
         iconTheme: const IconThemeData(color: Colors.black87),
-        title: Text(user.username,
+        title: Text(widget.user.username,
             style: const TextStyle(
                 color: Colors.black87, fontWeight: FontWeight.w600)),
       ),
@@ -280,16 +279,16 @@ class UserDetailView extends StatelessWidget {
                   CircleAvatar(
                     radius: 60,
                     backgroundColor: Colors.white,
-                    backgroundImage: NetworkImage(user.ImageUrl),
+                    backgroundImage: NetworkImage(widget.user.ImageUrl),
                   ),
                   const SizedBox(height: 12),
-                  Text(user.username,
+                  Text(widget.user.username,
                       style: const TextStyle(
                           fontSize: 22,
                           fontWeight: FontWeight.bold,
                           color: Colors.black87)),
                   const SizedBox(height: 6),
-                  Text(user.Designnation,
+                  Text(widget.user.Designnation,
                       style: const TextStyle(
                           fontSize: 16,
                           color: Colors.black54,
@@ -314,27 +313,30 @@ class UserDetailView extends StatelessWidget {
               ),
               child: Column(
                 children: [
-                  _buildInfoRow(Icons.person, "Name", user.username),
+                  _buildInfoRow(Icons.person, "Name", widget.user.username),
                   const Divider(),
-                  _buildInfoRow(Icons.work_outline, "Designation",
-                      user.Designnation),
+                  _buildInfoRow(
+                      Icons.work_outline, "Designation", widget.user.Designnation),
                   const Divider(),
-                  _buildInfoRow(Icons.phone, "Mobile", user.mobile ?? "N/A"),
+                  _buildInfoRow(Icons.phone, "Mobile",
+                      widget.user.mobile ?? "N/A"),
                   const Divider(),
-                  _buildInfoRow(Icons.email_outlined, "Email", user.email ?? "N/A"),
+                  _buildInfoRow(Icons.email_outlined, "Email",
+                      widget.user.email ?? "N/A"),
                   const Divider(),
-                  _buildInfoRow(Icons.language, "CompanyUrl", user.companywebsite ?? "N/A"),
+                  _buildInfoRow(Icons.language, "CompanyUrl",
+                      widget.user.companywebsite ?? "N/A"),
                   const Divider(),
-                  _buildInfoRow(Icons.location_history, "BusinessLocation", user.businessLocation ?? "N/A"),
+                  _buildInfoRow(Icons.location_history, "BusinessLocation",
+                      widget.user.businessLocation ?? "N/A"),
                   const Divider(),
                   _buildInfoRow(Icons.business_sharp, "Industry",
-                      user.industry ?? "N/A"),
+                      widget.user.industry ?? "N/A"),
                   const Divider(),
-                  _buildInfoRow(Icons.map, "Country",
-                      user.contry ?? "N/A"),
+                  _buildInfoRow(Icons.map, "Country", widget.user.contry ?? "N/A"),
                   const Divider(),
-                  _buildInfoRow(Icons.location_city_sharp,"City",
-                      user.city ?? "N/A"),
+                  _buildInfoRow(Icons.location_city_sharp, "City",
+                      widget.user.city ?? "N/A"),
                 ],
               ),
             ),
@@ -342,11 +344,11 @@ class UserDetailView extends StatelessWidget {
             SizedBox(
               width: 200,
               child: ElevatedButton(
-                onPressed: isDisabled ? null : onRequestToggle,
+                onPressed: handleRequestToggle,
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: isDisabled ? Colors.grey : Colors.blue,
-                  padding: const EdgeInsets.symmetric(
-                      vertical: 14, horizontal: 20),
+                  backgroundColor: buttonColor,
+                  padding:
+                  const EdgeInsets.symmetric(vertical: 14, horizontal: 20),
                   shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12)),
                 ),
@@ -372,8 +374,8 @@ class UserDetailView extends StatelessWidget {
         SizedBox(
           width: 120,
           child: Text("$title:",
-              style:
-              const TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
+              style: const TextStyle(
+                  fontWeight: FontWeight.bold, fontSize: 15)),
         ),
         Expanded(
             child: Text(value,

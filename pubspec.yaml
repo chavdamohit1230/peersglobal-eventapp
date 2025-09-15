@@ -57,6 +57,7 @@ dependencies:
   firebase_auth:
   shared_preferences:
   shimmer:
+  firebase_storage:
 
 
 dev_dependencies:

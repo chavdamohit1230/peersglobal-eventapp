@@ -1,3 +1,4 @@
+
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -23,10 +24,7 @@ class _UserprofileScreenState extends State<UserprofileScreen>
   void initState() {
     super.initState();
 
-    // Default length 2 (Profile + Connections)
     int tabLength = 2;
-
-    // Agar exhibiter ya sponsor hai to ek extra tab
     if (widget.user?.role?.toLowerCase() == "exhibiter" ||
         widget.user?.role?.toLowerCase() == "sponsor") {
       tabLength = 3;
@@ -34,15 +32,12 @@ class _UserprofileScreenState extends State<UserprofileScreen>
 
     _tabController = TabController(length: tabLength, vsync: this);
 
-    //  Agar login se aaye ho to Firestore se fetch
     if (widget.user == null && widget.userId != null) {
       docId = widget.userId!.split("/").last;
       _userFuture = fetchUser(docId);
     } else {
       docId = widget.userId ?? "";
     }
-
-    print(" Extracted Firestore docId: $docId");
   }
 
   Future<AuthUserModel?> fetchUser(String userId) async {
@@ -51,12 +46,9 @@ class _UserprofileScreenState extends State<UserprofileScreen>
           .collection("userregister")
           .doc(userId)
           .get();
-
       if (doc.exists) {
-        print(" User data: ${doc.data()}");
         return AuthUserModel.fromFirestore(doc);
       } else {
-        print("User not found with id: $userId");
         return null;
       }
     } catch (e) {
@@ -76,7 +68,6 @@ class _UserprofileScreenState extends State<UserprofileScreen>
     double screenHeight = MediaQuery.of(context).size.height;
     double screenWidth = MediaQuery.of(context).size.width;
 
-    //  CASE 1: Register se aaya ho (widget.user non-null hai)
     if (widget.user != null) {
       final localUser = AuthUserModel(
         id: widget.userId ?? "",
@@ -87,14 +78,12 @@ class _UserprofileScreenState extends State<UserprofileScreen>
         city: widget.user!.city,
         designation: widget.user!.designation ?? "",
       );
-
       return Scaffold(
         appBar: _buildAppBar(),
         body: _buildProfileUI(localUser, screenHeight, screenWidth),
       );
     }
 
-    //  CASE 2: Login se aaya ho (Firestore se fetch)
     return Scaffold(
       appBar: _buildAppBar(),
       body: FutureBuilder<AuthUserModel?>(
@@ -112,7 +101,6 @@ class _UserprofileScreenState extends State<UserprofileScreen>
     );
   }
 
-  // ✅ Common AppBar
   AppBar _buildAppBar() {
     return AppBar(
       backgroundColor: const Color(0xFFF3F8FE),
@@ -135,132 +123,150 @@ class _UserprofileScreenState extends State<UserprofileScreen>
     );
   }
 
-  // ✅ Common Profile UI (register + login dono ke liye)
   Widget _buildProfileUI(
       AuthUserModel user, double screenHeight, double screenWidth) {
     return Column(
       children: [
+        // 🔹 Profile + TabBar ek hi background ke andar
         Container(
-          padding: const EdgeInsets.all(16),
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
+          color: const Color(0xFFF3F8FE),
+          child: Column(
             children: [
-              const CircleAvatar(
-                radius: 41,
-                backgroundImage: NetworkImage(
-                    "https://imgv3.fotor.com/images/slider-image/A-clear-close-up-photo-of-a-woman.jpg"),
-              ),
-              const SizedBox(width: 16),
-              Expanded(
-                child: Column(
+              // Profile info
+              Container(
+                padding: const EdgeInsets.all(16),
+                child: Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      user.name.isNotEmpty ? user.name : "No Name",
-                      style: const TextStyle(
-                          fontSize: 20, fontWeight: FontWeight.bold),
+                    const CircleAvatar(
+                      radius: 41,
+                      backgroundImage: NetworkImage(
+                          "https://imgv3.fotor.com/images/slider-image/A-clear-close-up-photo-of-a-woman.jpg"),
                     ),
-                    const SizedBox(height: 4),
-                    Text(
-                      user.role ?? "Attendee",
-                      style: const TextStyle(
-                          fontSize: 16, color: Colors.grey),
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      "User ID: ${user.id}",
-                      style: const TextStyle(fontSize: 14),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ),
-
-        // 🧭 TabBar
-        TabBar(
-          controller: _tabController,
-          labelColor: const Color(0xFF535D97),
-          unselectedLabelColor: Colors.grey,
-          indicatorColor: const Color(0xFF535D97),
-          tabs: [
-            const Tab(text: "Profile Detail"),
-            if (user.role?.toLowerCase() == "exhibiter" ||
-                user.role?.toLowerCase() == "sponsor")
-              const Tab(text: "Posts"),
-            const Tab(text: "Connections"),
-          ],
-        ),
-
-        // 📄 TabBarView
-        Expanded(
-          child: TabBarView(
-            controller: _tabController,
-            children: [
-              // Profile Detail
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  _infoRow(
-                    icon: Icons.call,
-                    title: "Mobile Number",
-                    value: user.mobile,
-                    screenHeight: screenHeight,
-                    screenWidth: screenWidth,
-                  ),
-                  _infoRow(
-                    icon: Icons.email_sharp,
-                    title: "Email",
-                    value: user.email ?? "Not Provided",
-                    screenHeight: screenHeight,
-                    screenWidth: screenWidth,
-                  ),
-                  _infoRow(
-                    icon: Icons.area_chart_outlined,
-                    title: "City",
-                    value: user.city ?? "Not Provided",
-                    screenHeight: screenHeight,
-                    screenWidth: screenWidth,
-                  ),
-                ],
-              ),
-
-              // ✅ Posts tab (sirf exhibiter/sponsor ke liye)
-              if (user.role?.toLowerCase() == "exhibiter" ||
-                  user.role?.toLowerCase() == "sponsor")
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.end,
-                  children: [
-                    Padding(
-                      padding: const EdgeInsets.all(12.0),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const Text(
-                            "Posts",
-                            style: TextStyle(
-                                fontSize: 18, fontWeight: FontWeight.bold),
+                          Text(
+                            user.name.isNotEmpty ? user.name : "No Name",
+                            style: const TextStyle(
+                                fontSize: 20, fontWeight: FontWeight.bold),
                           ),
-                          ElevatedButton(
-                            onPressed: () {},
-                            child: const Text("Create Post Here"),
+                          const SizedBox(height: 4),
+                          Text(
+                            user.role ?? "Attendee",
+                            style: const TextStyle(
+                                fontSize: 16, color: Colors.grey),
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            "User ID: ${user.id}",
+                            style: const TextStyle(fontSize: 14),
                           ),
                         ],
                       ),
                     ),
-                    const Divider(),
-                    const Expanded(
-                      child: Center(child: Text("No posts yet")),
-                    ),
                   ],
                 ),
+              ),
 
-              // Connections tab
-              const Center(child: Text("Connections")),
+              // TabBar
+              TabBar(
+                controller: _tabController,
+                isScrollable: false, // 🔹 tabs evenly space honge
+                indicatorColor: const Color(0xFF535D97),
+                indicatorWeight: 3, // 🔹 thickness of indicator
+                indicatorSize: TabBarIndicatorSize.tab, // 🔹 full tab ke niche chalega
+                labelColor: const Color(0xFF535D97),
+                unselectedLabelColor: Colors.grey,
+                tabs: [
+                  const Tab(text: "Profile Detail"),
+                  if (user.role?.toLowerCase() == "exhibiter" ||
+                      user.role?.toLowerCase() == "sponsor")
+                    const Tab(text: "Posts"),
+                  const Tab(text: "Connections"),
+                ],
+              ),
+
             ],
+          ),
+        ),
+
+        // 🔹 TabBarView with same background
+        Expanded(
+          child: Container(
+            color: const Color(0xFFF3F8FE), // same background
+            child: TabBarView(
+              controller: _tabController,
+              physics: const BouncingScrollPhysics(),
+              children: [
+                // Profile Detail
+                SingleChildScrollView(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      _infoRow(
+                        icon: Icons.call,
+                        title: "Mobile Number",
+                        value: user.mobile,
+                        screenHeight: screenHeight,
+                        screenWidth: screenWidth,
+                      ),
+                      _infoRow(
+                        icon: Icons.email_sharp,
+                        title: "Email",
+                        value: user.email ?? "Not Provided",
+                        screenHeight: screenHeight,
+                        screenWidth: screenWidth,
+                      ),
+                      _infoRow(
+                        icon: Icons.area_chart_outlined,
+                        title: "City",
+                        value: user.city ?? "Not Provided",
+                        screenHeight: screenHeight,
+                        screenWidth: screenWidth,
+                      ),
+                    ],
+                  ),
+                ),
+
+                // Posts tab (only for exhibiter/sponsor)
+                if (user.role?.toLowerCase() == "exhibiter" ||
+                    user.role?.toLowerCase() == "sponsor")
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    children: [
+                      Padding(
+                        padding: const EdgeInsets.all(12.0),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            const Text(
+                              "Posts",
+                              style: TextStyle(
+                                  fontSize: 18, fontWeight: FontWeight.bold),
+                            ),
+                            ElevatedButton(
+                              onPressed: () {},
+                              child: const Text("Create Post Here"),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const Divider(),
+                      const Expanded(
+                        child: Center(child: Text("No posts yet")),
+                      ),
+                    ],
+                  ),
+
+                // Connections
+                const Center(child: Text("Connections")),
+              ],
+            ),
           ),
         ),
       ],
