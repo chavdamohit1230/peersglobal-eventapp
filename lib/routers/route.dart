@@ -1,7 +1,7 @@
 import 'package:go_router/go_router.dart';
+import 'package:peersglobleeventapp/FloorPlanPage.dart';
 import 'package:peersglobleeventapp/home_page.dart';
 import 'package:peersglobleeventapp/invitaion.dart';
-
 import 'package:peersglobleeventapp/loginscreen.dart';
 import 'package:peersglobleeventapp/people_knows.dart';
 import 'package:peersglobleeventapp/qr_scanResult.dart';
@@ -13,7 +13,6 @@ import 'package:peersglobleeventapp/modelClass/model/userregister_model.dart';
 class AppRouter {
   static GoRouter getRouter({required bool isLoggedIn, String? userId}) {
     return GoRouter(
-      // 🔹 Agar logged in hai to home, warna login
       initialLocation: isLoggedIn && userId != null ? "/home_page" : "/loginscreen",
       routes: [
         GoRoute(
@@ -25,7 +24,8 @@ class AppRouter {
           path: "/loginscreen",
           builder: (context, state) => const Loginscreen(),
         ),
-
+        GoRoute(path: "/floorplan",
+        builder: (context, state) => FloorPlanPage(),),
         GoRoute(
           path: "/registration_screen",
           builder: (context, state) => const RegistrationScreen(),

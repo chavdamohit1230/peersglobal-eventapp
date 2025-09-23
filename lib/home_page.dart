@@ -96,32 +96,39 @@ class _HomePageState extends State<HomePage> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                     children: [
-                      buildAction("My Briefcase", Icons.work_outline, () {
-                        print("My Briefcase tapped");
-                      }),
-                      buildAction("My Favorite", Icons.star_border_outlined, () {
-                        print("My Favorite tapped");
-                      }),
-                      buildAction("Floor Plan", Icons.grid_on, () {
-                        print("Floor Plan tapped");
-                      }),
+                      InkWell(
+                        onTap: () => context.push(''),
+                        child: buildAction("My Briefcase", Icons.work_outline, () {}),
+                      ),
+                      InkWell(
+                        onTap: () => context.push(''),
+                        child: buildAction("My Favorite", Icons.star_border_outlined, () {}),
+                      ),
+                      InkWell(
+                        onTap: () =>context.push('/floorplan'),
+                        child: buildAction("Floor Plan", Icons.grid_on, () {}),
+                      ),
                     ],
                   ),
                   SizedBox(height: spacing * 2),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                     children: [
-                      buildAction("Sponsors\n& Partners", Icons.handshake_outlined, () {
-                        print("Sponsors & Partners tapped");
-                      }),
-                      buildAction("Selfie Plan", Icons.photo_camera_front_outlined, () {
-                        print("Selfie Plan tapped");
-                      }),
-                      buildAction("Agenda", Icons.event_note_outlined, () {
-                        print("Agenda tapped");
-                      }),
+                      InkWell(
+                        onTap: () =>context.push(''),
+                        child: buildAction("Sponsors\n& Partners", Icons.handshake_outlined, () {}),
+                      ),
+                      InkWell(
+                        onTap: () => context.push(''),
+                        child: buildAction("Selfie Plan", Icons.photo_camera_front_outlined, () {}),
+                      ),
+                      InkWell(
+                        onTap: () => context.push(''),
+                        child: buildAction("Agenda", Icons.event_note_outlined, () {}),
+                      ),
                     ],
                   ),
+
                 ],
               ),
             );
@@ -244,7 +251,6 @@ class _HomePageState extends State<HomePage> {
         child: SafeArea(
           child: Column(
             children: [
-              // Upar ka header + menu
               Expanded(
                 child: ListView(
                   padding: EdgeInsets.zero,

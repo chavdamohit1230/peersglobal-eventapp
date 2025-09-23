@@ -184,7 +184,7 @@ class _UserprofileScreenState extends State<UserprofileScreen>
                 unselectedLabelColor: Colors.grey,
                 tabs: [
                   const Tab(text: "Profile Detail"),
-                  if (user.role?.toLowerCase() == "exhibiter" ||
+                  if (user.role?.toLowerCase() == "exhibitor" ||
                       user.role?.toLowerCase() == "sponsor")
                     const Tab(text: "Posts"),
                   const Tab(text: "Connections"),
@@ -198,7 +198,7 @@ class _UserprofileScreenState extends State<UserprofileScreen>
         // 🔹 TabBarView with same background
         Expanded(
           child: Container(
-            color: const Color(0xFFF3F8FE), // same background
+            color: const Color(0xFFF3F8FE),
             child: TabBarView(
               controller: _tabController,
               physics: const BouncingScrollPhysics(),

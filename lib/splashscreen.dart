@@ -1,6 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart'; // ✅ Required for context.go
+import 'package:go_router/go_router.dart';
 
 class Splashscreen extends StatefulWidget {
   const Splashscreen({super.key});
