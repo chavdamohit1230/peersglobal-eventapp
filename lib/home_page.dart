@@ -11,6 +11,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:peersglobleeventapp/modelClass/model/auth_User_model.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:peersglobleeventapp/eventagenda.dart';
 
 
 class HomePage extends StatefulWidget {
@@ -123,7 +124,7 @@ class _HomePageState extends State<HomePage> {
                         child: buildAction("Selfie Plan", Icons.photo_camera_front_outlined, () {}),
                       ),
                       InkWell(
-                        onTap: () => context.push(''),
+                        onTap: () => context.push('/eventagenda'),
                         child: buildAction("Agenda", Icons.event_note_outlined, () {}),
                       ),
                     ],
