@@ -1,6 +1,7 @@
 import 'package:go_router/go_router.dart';
 import 'package:peersglobleeventapp/FloorPlanPage.dart';
 import 'package:peersglobleeventapp/eventagenda.dart';
+import 'package:peersglobleeventapp/eventprofile.dart';
 import 'package:peersglobleeventapp/home_page.dart';
 import 'package:peersglobleeventapp/invitaion.dart';
 import 'package:peersglobleeventapp/loginscreen.dart';
@@ -88,7 +89,10 @@ class AppRouter {
         ),
 
         GoRoute(path:'/eventagenda',
-         builder: (context, state) => Eventagenda(),)
+         builder: (context, state) => Eventagenda(),),
+        
+        GoRoute(path: '/eventprofile',
+          builder: (context, state) => Eventprofile(),)
       ],
     );
   }

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:peersglobleeventapp/color/colorfile.dart';
 
 class Eventagenda extends StatefulWidget {
@@ -11,88 +12,19 @@ class Eventagenda extends StatefulWidget {
 class _EventagendaState extends State<Eventagenda>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
-
   final Color primaryColor = const Color(0xFFDCEAF4);
 
-  // ---------- Dummy Data ----------
-  final List<Map<String, dynamic>> day1Sessions = [
-    {
-      "id": "1",
-      "title": "Opening Ceremony",
-      "timeStart": "10:00 AM",
-      "timeEnd": "10:45 AM",
-      "description":
-      "Welcome speech and event introduction. A detailed introduction about the event, sponsors, and upcoming sessions.",
-      "speakers": [
-        {
-          "name": "Mr. John Doe",
-          "designation": "CEO of ABC Ltd.",
-          "image": null,
-          "bio": "John Doe is a seasoned entrepreneur with 20 years of experience."
-        }
-      ]
-    },
-    {
-      "id": "2",
-      "title": "Tech Innovations",
-      "timeStart": "11:30 AM",
-      "timeEnd": "12:30 PM",
-      "description":
-      "This session covers AI, ML, Blockchain and their real-world applications.",
-      "speakers": [
-        {
-          "name": "Ms. Jane Smith",
-          "designation": "CTO of XYZ Tech",
-          "image": null,
-          "bio": "Jane Smith has been leading tech innovations for the past decade."
-        },
-        {
-          "name": "Mr. Alex Ray",
-          "designation": "AI Researcher at PQR Labs",
-          "image": null,
-          "bio":
-          "Alex has been contributing in AI/ML research and published 30+ papers."
-        }
-      ]
-    },
-  ];
+  @override
+  void initState() {
+    super.initState();
+    _tabController = TabController(length: 2, vsync: this);
+  }
 
-  final List<Map<String, dynamic>> day2Sessions = [
-    {
-      "id": "3",
-      "title": "Business Networking",
-      "timeStart": "10:00 AM",
-      "timeEnd": "11:30 AM",
-      "description":
-      "Opportunity to connect with industry experts, investors and entrepreneurs.",
-      "speakers": [
-        {
-          "name": "Panel of Industry Experts",
-          "designation": "",
-          "image": null,
-          "bio": null
-        }
-      ]
-    },
-    {
-      "id": "4",
-      "title": "Closing Ceremony",
-      "timeStart": "04:00 PM",
-      "timeEnd": "05:00 PM",
-      "description": "Vote of thanks and announcement of future events.",
-      "speakers": [
-        {
-          "name": "Organizing Committee",
-          "designation": "",
-          "image": null,
-          "bio": null
-        }
-      ]
-    },
-  ];
-  // --------------------------------
-
+  /// ---------- UI for each session card ----------
   Widget buildSessionCard(Map<String, dynamic> data) {
+    final List speakers = data['speakers'] ?? [];
+    final List images = data['images'] ?? [];
+
     return Card(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       color: Colors.white,
@@ -127,29 +59,56 @@ class _EventagendaState extends State<Eventagenda>
             ),
             const SizedBox(height: 8),
 
-            // Full Description
-            Text(
-              data['description'] ?? '',
-              style: const TextStyle(fontSize: 14),
-            ),
+            // Description
+            if (data['description'] != null)
+              Text(
+                data['description'],
+                style: const TextStyle(fontSize: 14),
+              ),
             const SizedBox(height: 12),
 
-            // Multiple Speakers
-            if (data['speakers'] != null)
+            // Images (if available)
+            if (images.isNotEmpty)
+              SizedBox(
+                height: 150,
+                child: ListView.builder(
+                  scrollDirection: Axis.horizontal,
+                  itemCount: images.length,
+                  itemBuilder: (context, index) {
+                    return Container(
+                      margin: const EdgeInsets.only(right: 10),
+                      width: 200,
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(12),
+                        image: DecorationImage(
+                          image: NetworkImage(images[index]),
+                          fit: BoxFit.cover,
+                        ),
+                      ),
+                    );
+                  },
+                ),
+              ),
+            if (images.isNotEmpty) const SizedBox(height: 12),
+
+            // Speakers (if available)
+            if (speakers.isNotEmpty)
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
-                children: (data['speakers'] as List)
+                children: speakers
                     .map(
                       (speaker) => Padding(
                     padding: const EdgeInsets.only(bottom: 12),
                     child: Row(
                       children: [
                         CircleAvatar(
-                          backgroundImage: speaker['image'] != null
+                          backgroundImage: (speaker['image'] != null &&
+                              speaker['image'].toString().isNotEmpty)
                               ? NetworkImage(speaker['image'])
                               : null,
                           radius: 30,
-                          child: speaker['image'] == null
+                          child: (speaker['image'] == null ||
+                              speaker['image'].toString().isEmpty)
                               ? const Icon(Icons.person, size: 36)
                               : null,
                         ),
@@ -164,13 +123,14 @@ class _EventagendaState extends State<Eventagenda>
                                     fontSize: 15,
                                     fontWeight: FontWeight.bold),
                               ),
-                              if (speaker['designation'] != null &&
-                                  speaker['designation'] != "")
+                              if (speaker['occupation'] != null &&
+                                  speaker['occupation'] != "")
                                 Text(
-                                  speaker['designation'],
+                                  speaker['occupation'],
                                   style: const TextStyle(fontSize: 13),
                                 ),
-                              if (speaker['bio'] != null)
+                              if (speaker['bio'] != null &&
+                                  speaker['bio'] != "")
                                 Padding(
                                   padding: const EdgeInsets.only(top: 6),
                                   child: Text(
@@ -195,12 +155,37 @@ class _EventagendaState extends State<Eventagenda>
     );
   }
 
-  Widget buildDaySessions(List<Map<String, dynamic>> sessions) {
-    return ListView(
-      children: sessions.map((s) => buildSessionCard(s)).toList(),
+  /// ---------- Firestore data fetch ----------
+  Widget buildDaySessions(int day) {
+    return StreamBuilder<QuerySnapshot>(
+      stream: FirebaseFirestore.instance
+          .collection('eventagenda')
+          .where('day', isEqualTo: day)
+          .orderBy('timeStart')
+          .snapshots(),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Center(child: CircularProgressIndicator());
+        }
+        if (snapshot.hasError) {
+          return Center(child: Text("Error: ${snapshot.error}"));
+        }
+        if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+          return const Center(child: Text("No sessions available"));
+        }
+
+        final sessions = snapshot.data!.docs
+            .map((doc) => doc.data() as Map<String, dynamic>)
+            .toList();
+
+        return ListView(
+          children: sessions.map((s) => buildSessionCard(s)).toList(),
+        );
+      },
     );
   }
 
+  /// ---------- Main UI ----------
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -224,16 +209,10 @@ class _EventagendaState extends State<Eventagenda>
       body: TabBarView(
         controller: _tabController,
         children: [
-          buildDaySessions(day1Sessions),
-          buildDaySessions(day2Sessions),
+          buildDaySessions(1),
+          buildDaySessions(2),
         ],
       ),
     );
-  }
-
-  @override
-  void initState() {
-    super.initState();
-    _tabController = TabController(length: 2, vsync: this);
   }
 }
