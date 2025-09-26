@@ -59,6 +59,7 @@ dependencies:
   shimmer:
   firebase_storage:
   intl:
+  timeago:
 
 
 dev_dependencies:

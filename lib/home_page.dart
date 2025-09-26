@@ -27,23 +27,6 @@ class _HomePageState extends State<HomePage> {
   AuthUserModel? user;
   bool isLoading = true;
 
-  final List<userPostModel> UserPost = [
-    userPostModel(
-      username: "Demo",
-      profileImageUrl: "https://randomuser.me/api/portraits/men/1.jpg",
-      caption: "Exploring the Mountain",
-      ImageUrls: [
-        "https://images.pexels.com/photos/1264210/pexels-photo-1264210.jpeg?cs=srgb&dl=pexels-andre-furtado-43594-1264210.jpg&fm=jpg",
-        "https://images.ctfassets.net/pdf29us7flmy/1FLfD1FtKSVGDyi0G0BQSE/d3a75ce5609c1f021f276e91c29942ca/GettyImages-928146626__1_.jpg",
-        "https://photonify.com/wp-content/uploads/2019/02/freelance-photography-1000x750.jpg",
-      ],
-      likes: 20,
-      comments: 21,
-      timeago: "46",
-    ),
-    // Add other posts as needed...
-  ];
-
   double safeFontSize(double size, double min, double max) {
     return size.clamp(min, max);
   }
@@ -191,10 +174,10 @@ class _HomePageState extends State<HomePage> {
     return WillPopScope(
       onWillPop: () async {
         if (isBottomSheetOpen) {
-          Navigator.of(context).maybePop(); // close sheet
-          return false; // prevent default back
+          Navigator.of(context).maybePop();
+          return false;
         }
-        return true; // normal back behavior
+        return true;
       },
       child: Scaffold(
         backgroundColor: const Color(0xFFF0F4FD),
@@ -363,22 +346,46 @@ class _HomePageState extends State<HomePage> {
         body: IndexedStack(
           index: selectedIndex == 4 ? 0 : selectedIndex,
           children: [
+            /// 🔹 Firestore se posts fetch karne ke liye
             SingleChildScrollView(
-              child: Column(
-                children: [
-                  ListView.builder(
+              child: StreamBuilder<QuerySnapshot>(
+                stream: FirebaseFirestore.instance
+                    .collection("userposts")
+                    .orderBy("timestamp", descending: true)
+                    .snapshots(),
+                builder: (context, snapshot) {
+                  if (snapshot.connectionState == ConnectionState.waiting) {
+                    return const Center(child: CircularProgressIndicator());
+                  }
+                  if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+                    return const Center(child: Text("No posts available"));
+                  }
+
+                  final posts = snapshot.data!.docs
+                      .map((doc) => UserPostModel.fromFirestore(doc))
+                      .toList();
+
+                  return ListView.builder(
                     shrinkWrap: true,
                     physics: const NeverScrollableScrollPhysics(),
-                    itemCount: UserPost.length,
-                    itemBuilder: (context, index) => Userpostcard(post: UserPost[index]),
-                  )
-                ],
+                    itemCount: posts.length,
+                    itemBuilder: (context, index) {
+                      final doc = snapshot.data!.docs[index]; // Firestore doc
+                      final post = UserPostModel.fromFirestore(doc);
+
+                      return Userpostcard( post: post,
+                        currentUserId: widget.userId ?? user?.id ?? "",
+                      );
+                    },
+                  );
+
+                },
               ),
             ),
             MyNetwork(currentUserId: widget.userId ?? user?.id ?? ""),
             QrScanner(),
             ExhibiterScreen(),
-            Container(), // More tab handled by modal sheet
+            Container(),
           ],
         ),
         bottomNavigationBar: BottomNavigationBar(

@@ -3,11 +3,17 @@ import 'package:flutter/material.dart';
 import 'package:peersglobleeventapp/modelClass/user_PostModel.dart';
 import 'package:video_player/video_player.dart';
 import 'package:carousel_slider/carousel_slider.dart' as custom_carousel;
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 class Userpostcard extends StatefulWidget {
-  final userPostModel post;
+  final UserPostModel post;
+  final String currentUserId; // Current logged-in user ID
 
-  const Userpostcard({super.key, required this.post});
+  const Userpostcard({
+    super.key,
+    required this.post,
+    required this.currentUserId,
+  });
 
   @override
   State<Userpostcard> createState() => _PostCardState();
@@ -15,26 +21,92 @@ class Userpostcard extends StatefulWidget {
 
 class _PostCardState extends State<Userpostcard> {
   VideoPlayerController? _videoController;
-  int _currentImageIndex = 0; // For image counter
+  int _currentImageIndex = 0;
 
   @override
   void initState() {
     super.initState();
-    if (widget.post.videoUrl != null) {
-      if (widget.post.videoUrl!.startsWith("http")) {
-        _videoController = VideoPlayerController.network(widget.post.videoUrl!)
-          ..initialize().then((_) => setState(() {}));
-      } else {
-        _videoController = VideoPlayerController.file(File(widget.post.videoUrl!))
-          ..initialize().then((_) => setState(() {}));
-      }
+    if (widget.post.videos.isNotEmpty) {
+      _initVideo(widget.post.videos.first);
     }
+  }
+
+  void _initVideo(String url) {
+    _videoController = url.startsWith("http")
+        ? VideoPlayerController.network(url)
+        : VideoPlayerController.file(File(url));
+    _videoController!.initialize().then((_) => setState(() {}));
   }
 
   @override
   void dispose() {
     _videoController?.dispose();
     super.dispose();
+  }
+
+  String getTimeAgo(DateTime? date) {
+    if (date == null) return "";
+    final diff = DateTime.now().difference(date);
+    if (diff.inSeconds < 60) return "${diff.inSeconds}s ago";
+    if (diff.inMinutes < 60) return "${diff.inMinutes}m ago";
+    if (diff.inHours < 24) return "${diff.inHours}h ago";
+    if (diff.inDays < 7) return "${diff.inDays}d ago";
+    return "${date.day}/${date.month}/${date.year}";
+  }
+
+  // Show comments modal
+  void _showCommentsDialog(List<dynamic> comments) {
+    TextEditingController _commentController = TextEditingController();
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text("Comments"),
+        content: SizedBox(
+          width: double.maxFinite,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Expanded(
+                child: ListView.builder(
+                  shrinkWrap: true,
+                  itemCount: comments.length,
+                  itemBuilder: (context, index) {
+                    return ListTile(
+                      title: Text(comments[index].toString()),
+                    );
+                  },
+                ),
+              ),
+              TextField(
+                controller: _commentController,
+                decoration: const InputDecoration(hintText: "Add a comment"),
+              ),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text("Cancel"),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              final comment = _commentController.text.trim();
+              if (comment.isNotEmpty) {
+                await FirebaseFirestore.instance
+                    .collection("userposts")
+                    .doc(widget.post.id)
+                    .update({
+                  'comments': FieldValue.arrayUnion([comment])
+                });
+              }
+              Navigator.pop(context);
+            },
+            child: const Text("Post"),
+          ),
+        ],
+      ),
+    );
   }
 
   @override
@@ -50,7 +122,7 @@ class _PostCardState extends State<Userpostcard> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          /// Header
+          // Header
           ListTile(
             leading: CircleAvatar(
               radius: screenWidth * 0.06,
@@ -66,7 +138,7 @@ class _PostCardState extends State<Userpostcard> {
               ),
             ),
             subtitle: Text(
-              widget.post.timeago,
+              getTimeAgo(widget.post.timestamp),
               style: TextStyle(
                 fontSize: screenWidth * 0.035,
                 color: Colors.grey[600],
@@ -75,59 +147,95 @@ class _PostCardState extends State<Userpostcard> {
             trailing: Icon(Icons.more_vert, size: screenWidth * 0.06),
           ),
 
-          /// Media
-          if (widget.post.ImageUrls != null && widget.post.ImageUrls!.isNotEmpty)
-            _buildImageCarousel(widget.post.ImageUrls!, screenHeight, screenWidth)
-          else if (widget.post.videoUrl != null)
+          // Media
+          if (widget.post.imageUrls.isNotEmpty)
+            _buildImageCarousel(widget.post.imageUrls, screenHeight, screenWidth)
+          else if (widget.post.videos.isNotEmpty)
             _buildVideoPlayer(screenHeight),
 
-          Padding(
-            padding: EdgeInsets.symmetric(
-              horizontal: screenWidth * 0.03,
-              vertical: screenHeight * 0.008,
-            ),
-            child: Row(
-              children: [
-                Expanded(
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(Icons.favorite_border, size: screenWidth * 0.07),
-                      const SizedBox(width: 4),
-                      const Text("Like"),
-                      const SizedBox(width: 4),
-                      Text("${widget.post.likes}"),
-                    ],
-                  ),
+          // Realtime Likes & Comments
+          StreamBuilder<DocumentSnapshot>(
+            stream: FirebaseFirestore.instance
+                .collection("userposts")
+                .doc(widget.post.id)
+                .snapshots(),
+            builder: (context, snapshot) {
+              List<dynamic> likesList = [];
+              List<dynamic> commentsList = [];
+
+              if (snapshot.hasData && snapshot.data!.exists) {
+                final data = snapshot.data!.data() as Map<String, dynamic>? ?? {};
+                final l = data['likes'];
+                final c = data['comments'];
+                if (l != null && l is List) likesList = l;
+                if (c != null && c is List) commentsList = c;
+              }
+
+              final bool isLiked = likesList.contains(widget.currentUserId);
+
+              return Padding(
+                padding: EdgeInsets.symmetric(
+                  horizontal: screenWidth * 0.03,
+                  vertical: screenHeight * 0.008,
                 ),
-                Expanded(
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(Icons.chat_bubble_outline, size: screenWidth * 0.065),
-                      const SizedBox(width: 4),
-                      const Text("Comment"),
-                      const SizedBox(width: 4),
-                      Text("${widget.post.comments}"),
-                    ],
-                  ),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: GestureDetector(
+                        onTap: () async {
+                          final docRef = FirebaseFirestore.instance
+                              .collection("userposts")
+                              .doc(widget.post.id);
+                          if (isLiked) {
+                            await docRef.update({
+                              'likes': FieldValue.arrayRemove([widget.currentUserId])
+                            });
+                          } else {
+                            await docRef.update({
+                              'likes': FieldValue.arrayUnion([widget.currentUserId])
+                            });
+                          }
+                        },
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(
+                              isLiked ? Icons.favorite : Icons.favorite_border,
+                              color: isLiked ? Colors.red : Colors.black,
+                              size: screenWidth * 0.07,
+                            ),
+                            const SizedBox(width: 4),
+                            const Text("Like"),
+                            const SizedBox(width: 4),
+                            Text("${likesList.length}"),
+                          ],
+                        ),
+                      ),
+                    ),
+                    Expanded(
+                      child: GestureDetector(
+                        onTap: () => _showCommentsDialog(commentsList),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(Icons.chat_bubble_outline,
+                                size: screenWidth * 0.065),
+                            const SizedBox(width: 4),
+                            const Text("Comment"),
+                            const SizedBox(width: 4),
+                            Text("${commentsList.length}"),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
-                Expanded(
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(Icons.send, size: screenWidth * 0.065),
-                      const SizedBox(width: 4),
-                      const Text("Share"),
-                    ],
-                  ),
-                ),
-              ],
-            ),
+              );
+            },
           ),
 
-          /// Caption
-          if (widget.post.caption != null && widget.post.caption!.isNotEmpty)
+          // Caption
+          if (widget.post.caption.isNotEmpty)
             Padding(
               padding: EdgeInsets.symmetric(
                 horizontal: screenWidth * 0.035,
@@ -149,32 +257,19 @@ class _PostCardState extends State<Userpostcard> {
                 ),
               ),
             ),
-
-          /// Comments
-          Padding(
-            padding: EdgeInsets.symmetric(
-              horizontal: screenWidth * 0.025,
-              vertical: screenHeight * 0.005,
-            ),
-            child: Text(
-              "View all ${widget.post.comments} comments",
-              style: TextStyle(
-                color: Colors.grey[600],
-                fontSize: screenWidth * 0.038,
-              ),
-            ),
-          ),
         ],
       ),
     );
   }
 
-  Widget _buildImageCarousel(List<String> images, double screenHeight, double screenWidth) {
+  // Image Carousel
+  Widget _buildImageCarousel(
+      List<String> images, double screenHeight, double screenWidth) {
     return Stack(
       children: [
         custom_carousel.CarouselSlider(
           options: custom_carousel.CarouselOptions(
-            height: screenHeight * 0.5,
+            height: screenHeight * 0.45,
             viewportFraction: 1,
             enableInfiniteScroll: false,
             onPageChanged: (index, reason) {
@@ -184,13 +279,17 @@ class _PostCardState extends State<Userpostcard> {
             },
           ),
           items: images.map((url) {
-            return url.startsWith("http")
-                ? Image.network(url, fit: BoxFit.cover, width: double.infinity)
-                : Image.file(File(url), fit: BoxFit.cover, width: double.infinity);
+            return Container(
+              width: double.infinity,
+              decoration: BoxDecoration(
+                color: Colors.grey.shade200,
+              ),
+              child: url.startsWith("http")
+                  ? Image.network(url, fit: BoxFit.cover, width: double.infinity)
+                  : Image.file(File(url), fit: BoxFit.cover, width: double.infinity),
+            );
           }).toList(),
         ),
-
-        /// Top-Right Counter
         if (images.length > 1)
           Positioned(
             top: 8,
@@ -214,6 +313,7 @@ class _PostCardState extends State<Userpostcard> {
     );
   }
 
+  // Video Player
   Widget _buildVideoPlayer(double screenHeight) {
     if (_videoController == null || !_videoController!.value.isInitialized) {
       return SizedBox(
