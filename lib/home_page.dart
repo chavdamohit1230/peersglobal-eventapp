@@ -78,6 +78,11 @@ class _HomePageState extends State<HomePage> {
   }
 
   void onTabTapped(int index) {
+
+    if (index == 2) {
+      return;
+    }
+
     if (index == 4) {
       setState(() => isBottomSheetOpen = true);
 
