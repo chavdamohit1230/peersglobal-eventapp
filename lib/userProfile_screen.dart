@@ -59,6 +59,7 @@ class _UserprofileScreenState extends State<UserprofileScreen>
     }
   }
 
+
   @override
   void dispose() {
     _tabController.dispose();
@@ -84,6 +85,8 @@ class _UserprofileScreenState extends State<UserprofileScreen>
         role: widget.user!.role,
         city: widget.user!.city,
         designation: widget.user!.designation ?? "",
+        organization: widget.user!.organization?? "",
+        aboutme: widget.user!.aboutme?? "",
       );
       return Scaffold(
         appBar: _buildAppBar(),
@@ -140,13 +143,15 @@ class _UserprofileScreenState extends State<UserprofileScreen>
             children: [
               Container(
                 padding: const EdgeInsets.all(16),
+                color: const Color(0xFFF3F8FE),
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const CircleAvatar(
+                    CircleAvatar(
                       radius: 41,
                       backgroundImage: NetworkImage(
-                          "https://imgv3.fotor.com/images/slider-image/A-clear-close-up-photo-of-a-woman.jpg"),
+                        "https://imgv3.fotor.com/images/slider-image/A-clear-close-up-photo-of-a-woman.jpg",
+                      ),
                     ),
                     const SizedBox(width: 16),
                     Expanded(
@@ -156,18 +161,28 @@ class _UserprofileScreenState extends State<UserprofileScreen>
                           Text(
                             user.name.isNotEmpty ? user.name : "No Name",
                             style: const TextStyle(
-                                fontSize: 20, fontWeight: FontWeight.bold),
+                              fontSize: 20,
+                              fontWeight: FontWeight.bold,
+                              color: Color(0xFF2E3A59),
+                            ),
                           ),
                           const SizedBox(height: 4),
                           Text(
                             user.role ?? "Attendee",
                             style: const TextStyle(
-                                fontSize: 16, color: Colors.grey),
+                              fontSize: 16,
+                              color: Color(0xFF7B8BB2),
+                              fontWeight: FontWeight.w500,
+                            ),
                           ),
-                          const SizedBox(height: 4),
+                          const SizedBox(height: 2),
                           Text(
-                            "User ID: ${user.id}",
-                            style: const TextStyle(fontSize: 14),
+                            user.organization ?? "Company Name",
+                            style: const TextStyle(
+                              fontSize: 16,
+                              color: Color(0xFF7B8BB2),
+                              fontWeight: FontWeight.w500,
+                            ),
                           ),
                         ],
                       ),
@@ -175,6 +190,7 @@ class _UserprofileScreenState extends State<UserprofileScreen>
                   ],
                 ),
               ),
+
               TabBar(
                 controller: _tabController,
                 indicatorColor: const Color(0xFF535D97),
@@ -210,33 +226,88 @@ class _UserprofileScreenState extends State<UserprofileScreen>
   Widget _buildProfileDetails(
       AuthUserModel user, double screenHeight, double screenWidth) {
     return SingleChildScrollView(
+      padding: const EdgeInsets.all(16.0),
       child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _infoRow(
-            icon: Icons.call,
-            title: "Mobile Number",
-            value: user.mobile,
-            screenHeight: screenHeight,
-            screenWidth: screenWidth,
+          _simpleInfoRow(
+            icon: Icons.person,
+            title: "Name",
+            value: user.name.isNotEmpty ? user.name : "Not Provided",
           ),
-          _infoRow(
+          _simpleInfoRow(
+            icon: Icons.work,
+            title: "Role",
+            value: user.role ?? "Attendee",
+          ),
+          _simpleInfoRow(
             icon: Icons.email,
             title: "Email",
             value: user.email ?? "Not Provided",
-            screenHeight: screenHeight,
-            screenWidth: screenWidth,
           ),
-          _infoRow(
+            _simpleInfoRow(
+              icon: Icons.business,
+              title: "Organization",
+              value: user.organization ?? "Not Provided",
+            ),
+          _simpleInfoRow(
+            icon: Icons.badge,
+            title: "Designation",
+            value: user.designation ?? "Not Provided",
+          ),
+          _simpleInfoRow(
+            icon: Icons.call,
+            title: "Mobile",
+            value: user.mobile,
+          ),
+          _simpleInfoRow(
             icon: Icons.location_city,
             title: "City",
             value: user.city ?? "Not Provided",
-            screenHeight: screenHeight,
-            screenWidth: screenWidth,
+          ),
+          _simpleInfoRow(
+            icon: Icons.accessibility_sharp,
+            title: "About Me",
+            value: user.aboutme ?? "Not Provided",
           ),
         ],
       ),
     );
   }
+
+  Widget _simpleInfoRow({
+    required IconData icon,
+    required String title,
+    required String value,
+  }) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8.0),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(icon, color: Colors.blueGrey, size: 22),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(title,
+                    style: const TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w500,
+                        color: Colors.grey)),
+                const SizedBox(height: 2),
+                Text(value,
+                    style: const TextStyle(
+                        fontSize: 15, fontWeight: FontWeight.w600)),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
 
   Widget _buildPostsTab(AuthUserModel user) {
     return Column(

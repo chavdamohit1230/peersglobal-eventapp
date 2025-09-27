@@ -8,7 +8,9 @@ import 'package:peersglobleeventapp/loginscreen.dart';
 import 'package:peersglobleeventapp/people_knows.dart';
 import 'package:peersglobleeventapp/qr_scanResult.dart';
 import 'package:peersglobleeventapp/registration_screen.dart';
+import 'package:peersglobleeventapp/speaker.dart';
 import 'package:peersglobleeventapp/splashscreen.dart';
+import 'package:peersglobleeventapp/sponsor.dart';
 import 'package:peersglobleeventapp/userProfile_screen.dart';
 import 'package:peersglobleeventapp/modelClass/model/userregister_model.dart';
 
@@ -92,7 +94,13 @@ class AppRouter {
          builder: (context, state) => Eventagenda(),),
         
         GoRoute(path: '/eventprofile',
-          builder: (context, state) => Eventprofile(),)
+          builder: (context, state) => Eventprofile(),),
+
+        GoRoute(path: '/sponsor',
+          builder: (context, state) => Sponsor(),),
+
+        GoRoute(path: '/speaker',
+          builder: (context, state) => Speaker(),)
       ],
     );
   }

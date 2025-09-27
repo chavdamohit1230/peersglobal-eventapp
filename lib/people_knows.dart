@@ -15,6 +15,12 @@ class _PeopleKnowsState extends State<PeopleKnows> {
   bool isLoading = true;
   List<Mynetwork> users = [];
 
+  String capitalize(String? s) {
+    if (s == null || s.isEmpty) return '';
+    return s[0].toUpperCase() + s.substring(1);
+  }
+
+
   @override
   void initState() {
     super.initState();
@@ -41,7 +47,7 @@ class _PeopleKnowsState extends State<PeopleKnows> {
           ImageUrl: data['profileImage'] ?? "https://via.placeholder.com/150",
           email: data['email'] ?? '',
           mobile: data['mobile'] ?? '',
-          organization: data['organization'] ?? '',
+          organization: data['organization'] ?? 'N/A',
           businessLocation: data['businessLocation'] ?? '',
           companywebsite: data['companywebsite'] ?? '',
           industry: data['industry'] ?? '',
@@ -76,7 +82,6 @@ class _PeopleKnowsState extends State<PeopleKnows> {
         requestStatus[toUserId] = status;
       }
 
-      // ✅ Remove approved users
       setState(() {
         users.removeWhere((u) => requestStatus[u.id] == "approved");
       });
@@ -161,16 +166,35 @@ class _PeopleKnowsState extends State<PeopleKnows> {
               backgroundImage: NetworkImage(user.ImageUrl),
             ),
             title: Text(
-              user.username,
+              capitalize(user.username),
               style: const TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.bold,
                   color: Colors.black),
             ),
-            subtitle: Text(
-              user.Designnation,
-              style: const TextStyle(fontSize: 14, color: Colors.black54),
+            subtitle: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  capitalize(user.organization), // Company name
+                  style: const TextStyle(
+                    fontSize: 14,
+                    color: Colors.black87,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  capitalize(user.Designnation), // Designation
+                  style: const TextStyle(
+                    fontSize: 12,
+                    color: Colors.black54,
+                    fontStyle: FontStyle.italic,
+                  ),
+                ),
+              ],
             ),
+
             trailing: ElevatedButton(
               onPressed: () => toggleRequest(user.id!),
               style: ElevatedButton.styleFrom(

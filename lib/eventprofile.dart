@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 class Eventprofile extends StatefulWidget {
   const Eventprofile({super.key});
@@ -8,12 +9,47 @@ class Eventprofile extends StatefulWidget {
 }
 
 class _EventprofileState extends State<Eventprofile> {
+  Map<String, dynamic>? eventData;
+  bool isLoading = true;
+
+  Future<void> fetchEventData() async {
+    try {
+      final snapshot = await FirebaseFirestore.instance
+          .collection('eventprofile')
+          .orderBy('createdAt', descending: true)
+          .limit(1)
+          .get();
+
+      if (snapshot.docs.isNotEmpty) {
+        setState(() {
+          eventData = snapshot.docs.first.data();
+          isLoading = false;
+        });
+      } else {
+        setState(() => isLoading = false);
+      }
+    } catch (e) {
+      print("Error fetching event data: $e");
+      setState(() => isLoading = false);
+    }
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    fetchEventData();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.grey[100],
       body: SafeArea(
-        child: SingleChildScrollView(
+        child: isLoading
+            ? const Center(child: CircularProgressIndicator())
+            : eventData == null
+            ? const Center(child: Text("No event data available"))
+            : SingleChildScrollView(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -25,8 +61,7 @@ class _EventprofileState extends State<Eventprofile> {
                     width: double.infinity,
                     decoration: BoxDecoration(
                       image: DecorationImage(
-                        image: NetworkImage(
-                            'https://images.unsplash.com/photo-1507525428034-b723cf961d3e'), // temporary image
+                        image: NetworkImage(eventData!['imageUrl']),
                         fit: BoxFit.cover,
                       ),
                     ),
@@ -48,7 +83,7 @@ class _EventprofileState extends State<Eventprofile> {
                     child: CircleAvatar(
                       backgroundColor: Colors.white54,
                       child: IconButton(
-                        icon: Icon(Icons.arrow_back, color: Colors.black),
+                        icon: const Icon(Icons.arrow_back, color: Colors.black),
                         onPressed: () => Navigator.pop(context),
                       ),
                     ),
@@ -56,42 +91,59 @@ class _EventprofileState extends State<Eventprofile> {
                 ],
               ),
 
-              SizedBox(height: 16),
+              const SizedBox(height: 16),
 
               // Event Name
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16),
                 child: Text(
-                  "Tech Expo 2025",
-                  style: TextStyle(
+                  eventData!['name'],
+                  style: const TextStyle(
                     fontSize: 28,
                     fontWeight: FontWeight.bold,
                   ),
                 ),
               ),
 
-              SizedBox(height: 8),
+              const SizedBox(height: 16),
 
-              // Date and Time
+              // Event Start Date
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16),
                 child: Row(
                   children: [
                     Icon(Icons.calendar_today, size: 20, color: Colors.grey[700]),
-                    SizedBox(width: 8),
+                    const SizedBox(width: 8),
                     Text(
-                      "26 Sep 2025, 10:00 AM - 6:00 PM",
+                      "Event Date: ${eventData!['date'].toString().split(' to ').first}",
                       style: TextStyle(fontSize: 16, color: Colors.grey[700]),
                     ),
                   ],
                 ),
               ),
 
-              SizedBox(height: 16),
+              const SizedBox(height: 8),
 
-              // Purpose of Event Title
+              // Starting Time - Ending Time
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16),
+                child: Row(
+                  children: [
+                    Icon(Icons.access_time, size: 20, color: Colors.grey[700]),
+                    const SizedBox(width: 8),
+                    Text(
+                      "Time: ${eventData!['time']}",
+                      style: TextStyle(fontSize: 16, color: Colors.grey[700]),
+                    ),
+                  ],
+                ),
+              ),
+
+              const SizedBox(height: 16),
+
+              // Purpose of Event Title
+              const Padding(
+                padding: EdgeInsets.symmetric(horizontal: 16),
                 child: Text(
                   "Purpose of Event",
                   style: TextStyle(
@@ -101,19 +153,18 @@ class _EventprofileState extends State<Eventprofile> {
                 ),
               ),
 
-              SizedBox(height: 8),
+              const SizedBox(height: 8),
 
               // Event Information
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16),
                 child: Text(
-                  "Join us for Tech Expo 2025 where leading tech companies showcase the latest innovations. "
-                      "Network with professionals, attend workshops, and explore cutting-edge technology.",
+                  eventData!['purpose'],
                   style: TextStyle(fontSize: 16, color: Colors.grey[800], height: 1.5),
                 ),
               ),
 
-              SizedBox(height: 24),
+              const SizedBox(height: 24),
             ],
           ),
         ),

@@ -68,6 +68,7 @@ class _HomePageState extends State<HomePage> {
         role: widget.user!.role ?? "",
         name: widget.user!.name ?? "",
         mobile: widget.user!.mobile ?? "",
+        organization:widget.user!.organization,
         designation: widget.user!.designation ?? "",
       );
       isLoading = false;
@@ -139,7 +140,7 @@ class _HomePageState extends State<HomePage> {
                     mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                     children: [
                       buildAction("Event Profile", Icons.work_outline, () => context.push('/eventprofile')),
-                      buildAction("My Favorite", Icons.star_border_outlined, () {}),
+                      buildAction("Speakers", Icons.account_circle_outlined,()=> context.push('/speaker')),
                       buildAction("Floor Plan", Icons.grid_on, () => context.push('/floorplan')),
                     ],
                   ),
@@ -147,7 +148,7 @@ class _HomePageState extends State<HomePage> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                     children: [
-                      buildAction("Sponsors\n& Partners", Icons.handshake_outlined, () {}),
+                      buildAction("Sponsors\n& Partners", Icons.handshake_outlined,()=> context.push('/sponsor')),
                       buildAction("Selfie Plan", Icons.photo_camera_front_outlined, () {}),
                       buildAction("Agenda", Icons.event_note_outlined, () => context.push('/eventagenda')),
                     ],
@@ -346,7 +347,6 @@ class _HomePageState extends State<HomePage> {
         body: IndexedStack(
           index: selectedIndex == 4 ? 0 : selectedIndex,
           children: [
-            /// 🔹 Firestore se posts fetch karne ke liye
             SingleChildScrollView(
               child: StreamBuilder<QuerySnapshot>(
                 stream: FirebaseFirestore.instance
@@ -370,7 +370,7 @@ class _HomePageState extends State<HomePage> {
                     physics: const NeverScrollableScrollPhysics(),
                     itemCount: posts.length,
                     itemBuilder: (context, index) {
-                      final doc = snapshot.data!.docs[index]; // Firestore doc
+                      final doc = snapshot.data!.docs[index];
                       final post = UserPostModel.fromFirestore(doc);
 
                       return Userpostcard( post: post,

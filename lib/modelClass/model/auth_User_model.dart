@@ -9,6 +9,9 @@ class AuthUserModel {
   final String? designation;
   final String? city;
   final String? email;
+  final String? organization;
+  final String? aboutme;
+  final String? photoUrl;
 
 
   AuthUserModel({
@@ -16,10 +19,13 @@ class AuthUserModel {
     required this.name,
     required this.mobile,
     this.role,
+    this.organization,
     this.countrycode,
     this.designation,
     this.city,
     this.email,
+    this.photoUrl,
+    this.aboutme
 
   });
 
@@ -27,14 +33,17 @@ class AuthUserModel {
   factory AuthUserModel.fromFirestore(DocumentSnapshot doc) {
     final data = doc.data() as Map<String, dynamic>;
     return AuthUserModel(
-      id: doc.id, // 🔑 sirf document.id lena hoga
+      id: doc.id,
       name: data['name'] ?? '',
       mobile: data['mobile'] ?? '',
       role: data['role'] ?? '',
       countrycode: data['countrycode'] ?? '',
-      designation: data['designnation']?? '',
+      designation: data['designation'] ?? '',
       city: data['city']??'',
       email:data['email']?? '',
+      photoUrl:data['photoUrl']?? '',
+      organization: data['orgenigation']?? '',
+      aboutme:data['aboutme']?? '',
 
     );
   }
@@ -49,7 +58,10 @@ class AuthUserModel {
       countrycode: json['countrycode'] ?? '',
       designation: json['designation']?? '',
       email:json['email']?? '',
-      city: json['city']?? ''
+      city: json['city']?? '',
+      photoUrl:json['photoUrl']?? '',
+      organization: json['orgenigation']?? '',
+      aboutme:json['aboutme']?? '',
     );
   }
 
@@ -61,9 +73,12 @@ class AuthUserModel {
       "mobile": mobile,
       "role": role,
       "countrycode": countrycode,
-      "designnation":designation,
+      "designation": designation,
       "city":city,
-      "email":email
+      "email":email,
+      "orgenigation":organization,
+      'aboutme':aboutme,
+      'photoUrl':photoUrl,
     };
   }
 }
