@@ -87,6 +87,7 @@ class _UserprofileScreenState extends State<UserprofileScreen>
         designation: widget.user!.designation ?? "",
         organization: widget.user!.organization?? "",
         aboutme: widget.user!.aboutme?? "",
+        photoUrl: widget.user!.photoUrl?? "",
       );
       return Scaffold(
         appBar: _buildAppBar(),
@@ -149,10 +150,11 @@ class _UserprofileScreenState extends State<UserprofileScreen>
                   children: [
                     CircleAvatar(
                       radius: 41,
-                      backgroundImage: NetworkImage(
-                        "https://imgv3.fotor.com/images/slider-image/A-clear-close-up-photo-of-a-woman.jpg",
-                      ),
+                      backgroundImage: (user.photoUrl?.isNotEmpty ?? false)
+                          ? NetworkImage(user.photoUrl!)
+                          : const AssetImage("assets/images/default_avatar.png"),
                     ),
+
                     const SizedBox(width: 16),
                     Expanded(
                       child: Column(
@@ -234,11 +236,6 @@ class _UserprofileScreenState extends State<UserprofileScreen>
             icon: Icons.person,
             title: "Name",
             value: user.name.isNotEmpty ? user.name : "Not Provided",
-          ),
-          _simpleInfoRow(
-            icon: Icons.work,
-            title: "Role",
-            value: user.role ?? "Attendee",
           ),
           _simpleInfoRow(
             icon: Icons.email,

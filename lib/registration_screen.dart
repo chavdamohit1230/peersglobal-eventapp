@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
@@ -9,6 +11,9 @@ import 'package:dio/dio.dart';
 import 'package:peersglobleeventapp/widgets/formtextfiled.dart';
 import 'package:peersglobleeventapp/modelClass/model/userregister_model.dart';
 import 'package:peersglobleeventapp/Api/api_userRegister.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 
 class RegistrationScreen extends StatefulWidget {
   const RegistrationScreen({super.key});
@@ -23,6 +28,10 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
   String? Selectedvalue;
   String? Selectedpurpose;
   String? Hearaboutus;
+
+  // Step 3: image file
+  File? _profileImage;
+  String? _profileImageUrl;
 
   List<String> country = ['India', 'Pakistan', 'Australia', 'England'];
   List<String> State = ['Gujarat', 'Up', 'Bihar','Kerala','Patna','Raipur'];
@@ -54,6 +63,12 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
   final TextEditingController  Otherinfomultiline =TextEditingController();
   final TextEditingController countrycode1= TextEditingController();
 
+  @override
+  void initState() {
+    super.initState();
+    Firebase.initializeApp();
+  }
+
   void _nextPage() {
     if (_formKeys[_currentPage].currentState!.validate()) {
       if (_currentPage < 2) {
@@ -78,15 +93,45 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
     }
   }
 
+  Future<void> _pickImage() async {
+    final pickedFile =
+    await ImagePicker().pickImage(source: ImageSource.gallery, imageQuality: 80);
+
+    if (pickedFile != null) {
+      setState(() {
+        _profileImage = File(pickedFile.path);
+      });
+    }
+  }
+
+  Future<String?> _uploadImage(File imageFile) async {
+    try {
+      final storageRef = FirebaseStorage.instance
+          .ref()
+          .child('userprofile/${DateTime.now().millisecondsSinceEpoch}.jpg');
+
+      await storageRef.putFile(imageFile);
+      final url = await storageRef.getDownloadURL();
+      return url;
+    } catch (e) {
+      if (kDebugMode) {
+        print('Image upload error: $e');
+      }
+      return null;
+    }
+  }
+
   void _submitForm() async {
     if (_formKeys[_currentPage].currentState!.validate()) {
       try {
-        // Pehle snackbar show karega
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Submitting registration...')),
         );
 
-        // User model banayenge
+        if (_profileImage != null) {
+          _profileImageUrl = await _uploadImage(_profileImage!);
+        }
+
         final user = UserRegister(
           name: _nameController.text,
           email: _emailController.text,
@@ -104,31 +149,29 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
           purposeOfAttending: Selectedpurpose ?? '',
           hearAboutUs: Hearaboutus ?? '',
           otherInfo: Otherinfomultiline.text,
+          photoUrl: _profileImageUrl ?? '', // Add image URL here
         );
 
-        // Dio + ApiClient instance
         final dio = Dio();
         final apiClient = ApiClient(dio);
-
         final response = await apiClient.registerUser(user.toJsonFirestore());
+
         if (response.response.statusCode == 200) {
           final userId = response.response.data["id"]?.toString() ?? "";
-
-          // yahi bhejo: pura user + userId
           context.go(
             "/home_page",
             extra: {
-              'user': user,      // UserRegister object
-              'userId': userId,  // backend id
+              'user': user,
+              'userId': userId,
             },
           );
-        }
-        else {
+        } else {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('⚠️ Failed: ${response.response.statusMessage ?? "Unknown error"}')),
+            SnackBar(
+                content: Text(
+                    '⚠️ Failed: ${response.response.statusMessage ?? "Unknown error"}')),
           );
         }
-
       } catch (e) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Error: $e')),
@@ -137,8 +180,6 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
     }
   }
 
-
-
   @override
   Widget build(BuildContext context) {
     double screenWidth = MediaQuery.of(context).size.width;
@@ -146,17 +187,22 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
     final horizontalPadding = screenWidth * 0.04;
     final verticalPadding = screenHeight * 0.015;
     final headingFontSize = screenWidth * 0.05;
-    final spacing = screenHeight * 0.02;
 
     double progress = (_currentPage + 1) / 3;
 
     return Scaffold(
-      backgroundColor:Color(0xFFF0F4FD),
+      backgroundColor: Color(0xFFF0F4FD),
       resizeToAvoidBottomInset: true,
       appBar: AppBar(
-        title: const Text("Registration",style:TextStyle(fontWeight: FontWeight.bold,color:Color(0xFF535D97),),),
+        title: const Text(
+          "Registration",
+          style: TextStyle(
+            fontWeight: FontWeight.bold,
+            color: Color(0xFF535D97),
+          ),
+        ),
         centerTitle: true,
-        backgroundColor:Color(0xFFC3CCDA),
+        backgroundColor: Color(0xFFC3CCDA),
       ),
       body: Column(
         children: [
@@ -171,7 +217,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
               controller: _pageController,
               physics: const NeverScrollableScrollPhysics(),
               children: [
-                // Step 1
+                // Step 1 (unchanged)
                 Form(
                   key: _formKeys[0],
                   child: SingleChildScrollView(
@@ -180,8 +226,6 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         SizedBox(height: screenHeight * 0.030),
-
-
                         Text(
                           "Step 1: Personal Information",
                           style: TextStyle(
@@ -191,8 +235,6 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                           ),
                         ),
                         SizedBox(height: screenHeight * 0.030),
-
-                        /// Name
                         SizedBox(
                           height: 55,
                           child: Formtextfiled(
@@ -201,24 +243,33 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                             prefixIcon: Icons.person,
                             keybordType: TextInputType.text,
                             validator: (value) =>
-                            value == null || value.isEmpty ? 'Please Enter Name' : null,
+                            value == null || value.isEmpty
+                                ? 'Please Enter Name'
+                                : null,
                           ),
                         ),
                         SizedBox(height: screenHeight * 0.020),
-
-                        /// Mobile + Country Code (Perfect Alignment)
                         Row(
                           children: [
                             SizedBox(
-                              width: 84,
                               height: 55,
+                              width: 90,
                               child: TextFormField(
                                 controller: countrycode1,
+                                textAlignVertical: TextAlignVertical.center,
                                 decoration: InputDecoration(
                                   hintText: '+91',
-                                  prefixIcon: Icon(Icons.flag, size: 22, color: Colors.grey[700]),
-                                  contentPadding: const EdgeInsets.symmetric(
-                                      vertical: 14, horizontal: 10),
+                                  prefixIcon: Padding(
+                                    padding: const EdgeInsets.symmetric(horizontal: 6),
+                                    child:
+                                    Icon(Icons.flag, size: 22, color: Colors.grey[700]),
+                                  ),
+                                  prefixIconConstraints: const BoxConstraints(
+                                    minWidth: 32,
+                                    minHeight: 32,
+                                  ),
+                                  contentPadding:
+                                  const EdgeInsets.symmetric(vertical: 14, horizontal: 8),
                                   border: OutlineInputBorder(
                                     borderRadius: BorderRadius.circular(12),
                                   ),
@@ -236,7 +287,8 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                                   labelText: 'Enter Mobile',
                                   prefixIcon: Icons.call,
                                   keybordType: TextInputType.phone,
-                                  validator: (value) => value == null || value.isEmpty
+                                  validator: (value) =>
+                                  value == null || value.isEmpty
                                       ? 'Enter Mobile Number'
                                       : null,
                                 ),
@@ -245,8 +297,6 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                           ],
                         ),
                         SizedBox(height: screenHeight * 0.020),
-
-                        /// Email
                         SizedBox(
                           height: 55,
                           child: Formtextfiled(
@@ -259,8 +309,6 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                           ),
                         ),
                         SizedBox(height: screenHeight * 0.020),
-
-                        /// Country
                         SizedBox(
                           height: 55,
                           child: AutocompleteTextbox(
@@ -273,8 +321,6 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                           ),
                         ),
                         SizedBox(height: screenHeight * 0.020),
-
-                        /// State
                         SizedBox(
                           height: 55,
                           child: AutocompleteTextbox(
@@ -287,8 +333,6 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                           ),
                         ),
                         SizedBox(height: screenHeight * 0.020),
-
-                        /// City
                         SizedBox(
                           height: 55,
                           child: AutocompleteTextbox(
@@ -301,23 +345,21 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                           ),
                         ),
                         SizedBox(height: screenHeight * 0.020),
-
-                        /// About Me (Multi-line but uniform style)
                         SizedBox(
-                          height: 110, // bigger but consistent padding
+                          height: 110,
                           child: MultilineTextarea(
                             label: 'About Me',
                             icon: Icons.description,
                             controller: multilineTextarea,
                           ),
                         ),
+                        SizedBox(height: screenHeight * 0.020),
                       ],
                     ),
                   ),
                 ),
 
-
-            // Step 2
+                // Step 2 (unchanged)
                 Form(
                   key: _formKeys[1],
                   child: SingleChildScrollView(
@@ -333,23 +375,20 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                               fontWeight: FontWeight.bold),
                         ),
                         SizedBox(height:screenHeight*0.030),
-
-                          Formtextfiled(
-                              controller:orgenationNameControler,
-                              labelText:'Enter Organization',
-                              prefixIcon:Icons.reduce_capacity_outlined,
-                            validator:(value)=> value==null || value.isEmpty? 'Please Enter Organization':null,
-                          ),
-
+                        Formtextfiled(
+                          controller:orgenationNameControler,
+                          labelText:'Enter Organization',
+                          prefixIcon:Icons.reduce_capacity_outlined,
+                          validator:(value)=> value==null || value.isEmpty? 'Please Enter Organization':null,
+                        ),
                         SizedBox(height:screenHeight*0.020),
                         Formtextfiled(controller: DesignationControler,
-                            labelText:'Enter Designation',
-                            prefixIcon:Icons.policy_rounded,
-                            keybordType:TextInputType.text,
+                          labelText:'Enter Designation',
+                          prefixIcon:Icons.policy_rounded,
+                          keybordType:TextInputType.text,
                           validator:(value)=> value==null || value.isEmpty? 'Please Enter Designation':null,
                         ),
                         SizedBox(height:screenHeight*0.020),
-
                         Formtextfiled(controller:businessLocationControler,
                             labelText:'Enter Business Location (Optional)',
                             prefixIcon:Icons.location_history),
@@ -358,7 +397,6 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                             labelText:'Company Website Url (Optional)',
                             prefixIcon:Icons.public),
                         SizedBox(height:screenHeight*0.020),
-
                         Formtextfiled(controller: IndustryControler,
                             labelText:'Enter Industry (Optional)',
                             prefixIcon: Icons.location_city_rounded)
@@ -367,7 +405,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                   ),
                 ),
 
-                // Step 3
+                // Step 3 with Image Upload
                 Form(
                   key: _formKeys[2],
                   child: SingleChildScrollView(
@@ -383,33 +421,52 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                               fontWeight: FontWeight.bold),
                         ),
                         SizedBox(height: screenHeight*0.030),
-                            FormDropdownField(labelText:'Purpose Of Attending',
-                                value:Selectedpurpose,
-                                items:PurposeofAttending,
-                                onChanged:(val){
-                                  setState(() {
-                                    Selectedpurpose = val;
-                                  });
-                                },
-                                validator:(val) => val == null || val.isEmpty? 'Please Select Purpose of Attending': null ,
-                                ),
-                            SizedBox(height: screenHeight*0.020),
-
+                        FormDropdownField(labelText:'Purpose Of Attending',
+                          value:Selectedpurpose,
+                          items:PurposeofAttending,
+                          onChanged:(val){
+                            setState(() {
+                              Selectedpurpose = val;
+                            });
+                          },
+                          validator:(val) => val == null || val.isEmpty? 'Please Select Purpose of Attending': null ,
+                        ),
+                        SizedBox(height: screenHeight*0.020),
                         FormDropdownField(
-                                labelText:''
-                                    'How did you hear about us',
-                                items:HearaboutFrom,
-                                value:Hearaboutus,
-                                onChanged:(val){
-                                  setState(() {
-                                    Hearaboutus=val;
-                                  });
-                                }),
-                          SizedBox(height: screenHeight*0.020),
+                          labelText:'How did you hear about us',
+                          items:HearaboutFrom,
+                          value:Hearaboutus,
+                          onChanged:(val){
+                            setState(() {
+                              Hearaboutus=val;
+                            });
+                          },
+                        ),
+                        SizedBox(height: screenHeight*0.020),
                         MultilineTextarea(
-                                  label:'Anything else we should know?',
-                                  icon:Icons.description,
-                                  controller:Otherinfomultiline)
+                            label:'Anything else we should know?',
+                            icon:Icons.description,
+                            controller:Otherinfomultiline),
+                        SizedBox(height: screenHeight*0.020),
+
+                        // Image picker
+                        Text("Upload Profile Image", style: TextStyle(fontWeight: FontWeight.bold)),
+                        const SizedBox(height: 8),
+                        GestureDetector(
+                          onTap: _pickImage,
+                          child: Container(
+                            height: 150,
+                            width: 150,
+                            decoration: BoxDecoration(
+                              border: Border.all(color: Colors.grey),
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: _profileImage != null
+                                ? Image.file(_profileImage!, fit: BoxFit.cover)
+                                : const Icon(Icons.camera_alt, size: 50, color: Colors.grey),
+                          ),
+                        ),
+                        SizedBox(height: screenHeight*0.020),
                       ],
                     ),
                   ),
@@ -450,8 +507,8 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                         onPressed: _nextPage,
                         style:ElevatedButton.styleFrom(
                             backgroundColor:Color(0xFF2E356A),
-                          foregroundColor:Colors.white,
-                          textStyle:TextStyle(fontSize:screenWidth*0.040)
+                            foregroundColor:Colors.white,
+                            textStyle:TextStyle(fontSize:screenWidth*0.040)
                         ),
                         child: const Text('Next',),
                       ),
@@ -465,9 +522,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                       width:screenWidth*0.37,
                       height:screenHeight*0.05,
                       child: ElevatedButton(
-                        onPressed:(){
-                          _submitForm();
-                        },
+                        onPressed:_submitForm,
                         style:ElevatedButton.styleFrom(
                             backgroundColor:Color(0xFF2E356A),
                             foregroundColor:Colors.white,

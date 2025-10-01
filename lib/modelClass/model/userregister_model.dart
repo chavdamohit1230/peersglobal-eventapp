@@ -16,6 +16,7 @@ class UserRegister {
   final String? hearAboutUs;
   final String? otherInfo;
   final String? role;
+  final String? photoUrl; // <-- Add this line
 
   UserRegister({
     this.name,
@@ -34,7 +35,8 @@ class UserRegister {
     this.purposeOfAttending,
     this.hearAboutUs,
     this.otherInfo,
-    this.role
+    this.role,
+    this.photoUrl, // <-- Add this line
   });
 
   Map<String, dynamic> toJsonFirestore() {
@@ -56,10 +58,9 @@ class UserRegister {
         "purposeOfAttending": {"stringValue": purposeOfAttending ?? ""},
         "hearAboutUs": {"stringValue": hearAboutUs ?? ""},
         "otherInfo": {"stringValue": otherInfo ?? ""},
-        "role": {"stringValue": role ?? ""}
+        "role": {"stringValue": role ?? ""},
+        "photoUrl": {"stringValue": photoUrl ?? ""}, // <-- Add this line
       }
     };
   }
-
 }
-

@@ -10,7 +10,6 @@ import 'package:peersglobleeventapp/modelClass/model/auth_User_model.dart';
 import 'package:peersglobleeventapp/data_repository/user_auth_repository.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
-
 class Loginscreen extends StatefulWidget {
   const Loginscreen({super.key});
 
@@ -26,6 +25,7 @@ class _LoginscreenState extends State<Loginscreen> {
 
   final _formKey = GlobalKey<FormState>();
   bool ischeck = false;
+  bool _isLoading = false; // Loading state for button
 
   final AuthRepository _repo = AuthRepository();
 
@@ -35,6 +35,7 @@ class _LoginscreenState extends State<Loginscreen> {
       throw 'Could not launch $url';
     }
   }
+
   Future<void> _loginUser() async {
     if (_formKey.currentState!.validate()) {
       if (!ischeck) {
@@ -44,74 +45,89 @@ class _LoginscreenState extends State<Loginscreen> {
         return;
       }
 
-      // 🔹 Fetch users from Firestore
-      List<AuthUserModel> users = await _repo.fetchUsers();
+      setState(() {
+        _isLoading = true; // Start loading
+      });
 
-      final username = _usernameController.text.trim().toLowerCase();
-      final mobile = _mobileController.text.trim();
+      try {
+        // 🔹 Fetch users from Firestore
+        List<AuthUserModel> users = await _repo.fetchUsers();
 
-      final matchUser = users.firstWhere(
-            (u) =>
-        u.name.toLowerCase() == username &&
-            u.mobile.trim() == mobile,
-        orElse: () => AuthUserModel(id: '', name: '', mobile: ''),
-      );
+        final username = _usernameController.text.trim().toLowerCase();
+        final mobile = _mobileController.text.trim();
 
-      if (matchUser.id.isNotEmpty) {
-        print("✅ User found: ${matchUser.mobile}");
-        print("userid: ${matchUser.id}");
+        final matchUser = users.firstWhere(
+              (u) => u.name.toLowerCase() == username && u.mobile.trim() == mobile,
+          orElse: () => AuthUserModel(id: '', name: '', mobile: ''),
+        );
 
-        // 🔹 Send OTP via Firebase
-        FirebaseAuth.instance.verifyPhoneNumber(
-          phoneNumber: '+91${matchUser.mobile}',
-          verificationCompleted: (PhoneAuthCredential credential) async {
-            print("✅ Auto verification completed");
-            await FirebaseAuth.instance.signInWithCredential(credential);
-            if (!mounted) return;
-            Navigator.pushReplacement(
-              context,
-              MaterialPageRoute(
-                builder: (_) => HomePage(userId:matchUser.id,),
-              ),
-            );
-          },
-          verificationFailed: (FirebaseAuthException e) {
-            print("❌ Verification failed: ${e.message}");
-            ScaffoldMessenger.of(context)
-                .showSnackBar(SnackBar(content: Text(e.message ?? "Error")));
-          },
-          codeSent: (String verificationId, int? resendToken) {
-            print("✅ codeSent triggered with verificationId: $verificationId");
-            if (!mounted) return;
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (context) => OtpverificationScreen(
-                  mobile: matchUser.mobile,
-                  verificationId: verificationId,
-                  userId:matchUser.id, // ✅ Pass user data
+        if (matchUser.id.isNotEmpty) {
+          print("✅ User found: ${matchUser.mobile}");
+          print("userid: ${matchUser.id}");
+
+          // 🔹 Send OTP via Firebase
+          FirebaseAuth.instance.verifyPhoneNumber(
+            phoneNumber: '+91${matchUser.mobile}',
+            verificationCompleted: (PhoneAuthCredential credential) async {
+              print("✅ Auto verification completed");
+              await FirebaseAuth.instance.signInWithCredential(credential);
+              if (!mounted) return;
+              Navigator.pushReplacement(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => HomePage(userId: matchUser.id),
                 ),
-              ),
-            );
-          },
-          codeAutoRetrievalTimeout: (String verificationId) {
-            print("⏳ codeAutoRetrievalTimeout: $verificationId");
-          },
-        );
-      } else {
-        // ❌ Invalid user
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text("Invalid username or mobile number!"),
-            backgroundColor: Colors.red,
-          ),
-        );
+              );
+            },
+            verificationFailed: (FirebaseAuthException e) {
+              print("❌ Verification failed: ${e.message}");
+              ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text(e.message ?? "Error")));
+              setState(() {
+                _isLoading = false; // Stop loading on error
+              });
+            },
+            codeSent: (String verificationId, int? resendToken) {
+              print("✅ codeSent triggered with verificationId: $verificationId");
+              if (!mounted) return;
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => OtpverificationScreen(
+                    mobile: matchUser.mobile,
+                    verificationId: verificationId,
+                    userId: matchUser.id,
+                  ),
+                ),
+              );
+            },
+            codeAutoRetrievalTimeout: (String verificationId) {
+              print("⏳ codeAutoRetrievalTimeout: $verificationId");
+            },
+          );
+        } else {
+          // ❌ Invalid user
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text("Invalid username or mobile number!"),
+              backgroundColor: Colors.red,
+            ),
+          );
+          setState(() {
+            _isLoading = false; // Stop loading
+          });
+        }
+      } catch (e) {
+        print("❌ Error: $e");
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text("Error: $e")));
+        setState(() {
+          _isLoading = false; // Stop loading
+        });
       }
     }
   }
 
-
-  /// Common decoration for all input fields
   InputDecoration _inputDecoration(String label, IconData icon) {
     return InputDecoration(
       labelText: label,
@@ -186,7 +202,7 @@ class _LoginscreenState extends State<Loginscreen> {
                   key: _formKey,
                   child: Column(
                     children: [
-                      /// Username field
+                      // Username field
                       SizedBox(
                         height: 55,
                         child: TextFormField(
@@ -202,7 +218,7 @@ class _LoginscreenState extends State<Loginscreen> {
                       ),
                       SizedBox(height: screenHeight * 0.020),
 
-                      /// Country code + Mobile number
+                      // Country code + Mobile number
                       Row(
                         children: [
                           SizedBox(
@@ -211,7 +227,8 @@ class _LoginscreenState extends State<Loginscreen> {
                             child: AutocompleteTextbox(
                               options: countrycode,
                               controller: _countryCodeController,
-                              validator: (value) => value == null || value.isEmpty
+                              validator: (value) =>
+                              value == null || value.isEmpty
                                   ? 'Please select code'
                                   : null,
                             ),
@@ -238,10 +255,9 @@ class _LoginscreenState extends State<Loginscreen> {
                           ),
                         ],
                       ),
-
                       SizedBox(height: screenHeight * 0.01),
 
-                      /// Terms Checkbox
+                      // Terms Checkbox
                       Row(
                         children: [
                           Checkbox(
@@ -270,7 +286,7 @@ class _LoginscreenState extends State<Loginscreen> {
                                     recognizer: TapGestureRecognizer()
                                       ..onTap = () {
                                         _launchUrl(
-                                            'https://policies.google.com/terms');
+                                            'https://peersglobal.com/terms-conditions/');
                                       },
                                   ),
                                   const TextSpan(text: ' and '),
@@ -283,7 +299,7 @@ class _LoginscreenState extends State<Loginscreen> {
                                     recognizer: TapGestureRecognizer()
                                       ..onTap = () {
                                         _launchUrl(
-                                            'https://policies.google.com/privacy');
+                                            'https://peersglobal.com/code-of-conduct/');
                                       },
                                   ),
                                 ],
@@ -293,19 +309,30 @@ class _LoginscreenState extends State<Loginscreen> {
                         ],
                       ),
                       SizedBox(height: screenHeight * 0.01),
+
+                      // Login Button
                       SizedBox(
-                        width: double.infinity, //  Full width
-                        height:screenHeight*0.062,
+                        width: double.infinity, // Full width
+                        height: screenHeight * 0.062,
                         child: ElevatedButton(
-                          onPressed: _loginUser,
+                          onPressed: _isLoading ? null : _loginUser,
                           style: ElevatedButton.styleFrom(
                             backgroundColor: const Color(0xFF2E356A),
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(10),
                             ),
-                            padding: const EdgeInsets.symmetric(vertical: 16), // height control
+                            padding: const EdgeInsets.symmetric(vertical: 16),
                           ),
-                          child: Text(
+                          child: _isLoading
+                              ? SizedBox(
+                            width: 24,
+                            height: 24,
+                            child: CircularProgressIndicator(
+                              color: Colors.white,
+                              strokeWidth: 2,
+                            ),
+                          )
+                              : Text(
                             'Login',
                             style: TextStyle(
                               color: Colors.white,
@@ -316,7 +343,7 @@ class _LoginscreenState extends State<Loginscreen> {
                       ),
                       SizedBox(height: screenHeight * 0.06),
 
-                      /// Register link
+                      // Register link
                       Row(
                         mainAxisAlignment: MainAxisAlignment.end,
                         children: [

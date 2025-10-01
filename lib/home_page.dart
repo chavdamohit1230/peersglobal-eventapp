@@ -145,7 +145,7 @@ class _HomePageState extends State<HomePage> {
                     mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                     children: [
                       buildAction("Event Profile", Icons.work_outline, () => context.push('/eventprofile')),
-                      buildAction("Speakers", Icons.account_circle_outlined,()=> context.push('/speaker')),
+                      buildAction("Speakers",  Icons.account_circle_outlined,()=> context.push('/speaker')),
                       buildAction("Floor Plan", Icons.grid_on, () => context.push('/floorplan')),
                     ],
                   ),
