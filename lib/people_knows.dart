@@ -20,11 +20,11 @@ class _PeopleKnowsState extends State<PeopleKnows> {
     return s[0].toUpperCase() + s.substring(1);
   }
 
-
   @override
   void initState() {
     super.initState();
     fetchUsers();
+    listenToRequests(); // ✅ real-time listener
   }
 
   Future<void> fetchUsers() async {
@@ -44,7 +44,7 @@ class _PeopleKnowsState extends State<PeopleKnows> {
           id: doc.id,
           username: data['name'] ?? '',
           Designnation: data['designation'] ?? '',
-          ImageUrl: data['profileImage'] ?? "https://via.placeholder.com/150",
+          ImageUrl: data['photoUrl'] ?? "https://via.placeholder.com/150",
           email: data['email'] ?? '',
           mobile: data['mobile'] ?? '',
           organization: data['organization'] ?? 'N/A',
@@ -61,33 +61,30 @@ class _PeopleKnowsState extends State<PeopleKnows> {
         users = fetchedUsers;
         isLoading = false;
       });
-
-      await fetchSentRequests();
     } catch (e) {
       print("Error fetching users: $e");
       setState(() => isLoading = false);
     }
   }
 
-  Future<void> fetchSentRequests() async {
-    try {
-      final snapshot = await FirebaseFirestore.instance
-          .collection("requests")
-          .where("from", isEqualTo: widget.currentUserId)
-          .get();
-
-      for (var doc in snapshot.docs) {
-        String toUserId = doc['to'];
-        String status = doc['status'] ?? "pending";
-        requestStatus[toUserId] = status;
-      }
-
+  /// ✅ Real-time listener
+  void listenToRequests() {
+    FirebaseFirestore.instance
+        .collection("requests")
+        .where("from", isEqualTo: widget.currentUserId)
+        .snapshots()
+        .listen((snapshot) {
       setState(() {
+        requestStatus.clear();
+        for (var doc in snapshot.docs) {
+          String toUserId = doc['to'];
+          String status = doc['status'] ?? "pending";
+          requestStatus[toUserId] = status;
+        }
+        // ✅ approved users ko list se turant hata do
         users.removeWhere((u) => requestStatus[u.id] == "approved");
       });
-    } catch (e) {
-      print("Error fetching sent requests: $e");
-    }
+    });
   }
 
   Future<void> toggleRequest(String targetUserId) async {
@@ -144,7 +141,7 @@ class _PeopleKnowsState extends State<PeopleKnows> {
           final user = users[index];
           final status = requestStatus[user.id ?? ""] ?? "none";
 
-          // ✅ Agar approved hai to skip
+          // ✅ Agar approved hai to skip (already remove ho raha hai listener me)
           if (status == "approved") return const SizedBox();
 
           String buttonText;
@@ -176,7 +173,7 @@ class _PeopleKnowsState extends State<PeopleKnows> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  capitalize(user.organization), // Company name
+                  capitalize(user.organization),
                   style: const TextStyle(
                     fontSize: 14,
                     color: Colors.black87,
@@ -185,7 +182,7 @@ class _PeopleKnowsState extends State<PeopleKnows> {
                 ),
                 const SizedBox(height: 2),
                 Text(
-                  capitalize(user.Designnation), // Designation
+                  capitalize(user.Designnation),
                   style: const TextStyle(
                     fontSize: 12,
                     color: Colors.black54,
@@ -194,7 +191,6 @@ class _PeopleKnowsState extends State<PeopleKnows> {
                 ),
               ],
             ),
-
             trailing: ElevatedButton(
               onPressed: () => toggleRequest(user.id!),
               style: ElevatedButton.styleFrom(
@@ -205,7 +201,8 @@ class _PeopleKnowsState extends State<PeopleKnows> {
               ),
               child: Text(
                 buttonText,
-                style: const TextStyle(color: Colors.white, fontSize: 14),
+                style:
+                const TextStyle(color: Colors.white, fontSize: 14),
               ),
             ),
             onTap: () {
@@ -226,6 +223,7 @@ class _PeopleKnowsState extends State<PeopleKnows> {
     );
   }
 }
+
 
 class UserDetailView extends StatefulWidget {
   final Mynetwork user;
@@ -339,11 +337,11 @@ class _UserDetailViewState extends State<UserDetailView> {
                 children: [
                   _buildInfoRow(Icons.person, "Name", widget.user.username),
                   const Divider(),
-                  _buildInfoRow(
-                      Icons.work_outline, "Designation", widget.user.Designnation),
+                  _buildInfoRow(Icons.work_outline, "Designation",
+                      widget.user.Designnation),
                   const Divider(),
-                  _buildInfoRow(Icons.phone, "Mobile",
-                      widget.user.mobile ?? "N/A"),
+                  _buildInfoRow(
+                      Icons.phone, "Mobile", widget.user.mobile ?? "N/A"),
                   const Divider(),
                   _buildInfoRow(Icons.email_outlined, "Email",
                       widget.user.email ?? "N/A"),
@@ -357,7 +355,8 @@ class _UserDetailViewState extends State<UserDetailView> {
                   _buildInfoRow(Icons.business_sharp, "Industry",
                       widget.user.industry ?? "N/A"),
                   const Divider(),
-                  _buildInfoRow(Icons.map, "Country", widget.user.contry ?? "N/A"),
+                  _buildInfoRow(
+                      Icons.map, "Country", widget.user.contry ?? "N/A"),
                   const Divider(),
                   _buildInfoRow(Icons.location_city_sharp, "City",
                       widget.user.city ?? "N/A"),
@@ -398,8 +397,8 @@ class _UserDetailViewState extends State<UserDetailView> {
         SizedBox(
           width: 120,
           child: Text("$title:",
-              style: const TextStyle(
-                  fontWeight: FontWeight.bold, fontSize: 15)),
+              style:
+              const TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
         ),
         Expanded(
             child: Text(value,

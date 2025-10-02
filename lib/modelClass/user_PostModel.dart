@@ -79,7 +79,7 @@ class UserPostModel {
     return UserPostModel(
       id: doc.id,
       username: data['userName']?.toString() ?? "Unknown",
-      profileImageUrl: data['profileImageUrl']?.toString() ?? "",
+      profileImageUrl: data['photoUrl']?.toString() ?? "",
       caption: data['content']?.toString() ?? "",
       imageUrls: images,
       videos: videos,

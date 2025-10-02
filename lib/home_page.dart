@@ -70,6 +70,7 @@ class _HomePageState extends State<HomePage> {
         mobile: widget.user!.mobile ?? "",
         organization:widget.user!.organization,
         designation: widget.user!.designation ?? "",
+        photoUrl: widget.user!.photoUrl ?? "",
       );
       isLoading = false;
     } else {
@@ -202,10 +203,15 @@ class _HomePageState extends State<HomePage> {
                         child: Column(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            const CircleAvatar(
+                             CircleAvatar(
                               radius: 35,
-                              backgroundImage: AssetImage('assets/peersgloblelogo.png'),
+                              backgroundImage: (user != null && user!.photoUrl != null && user!.photoUrl!.isNotEmpty)
+                                  ? NetworkImage(user!.photoUrl!)
+                                  : (widget.user != null && widget.user!.photoUrl != null && widget.user!.photoUrl!.isNotEmpty)
+                                  ? NetworkImage(widget.user!.photoUrl!)
+                                  : const AssetImage('assets/peersgloblelogo.png') as ImageProvider,
                             ),
+
                             const SizedBox(height: 10),
                             Text(
                               user != null ? user!.name : widget.user?.name ?? '',

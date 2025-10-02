@@ -59,7 +59,6 @@ class _UserprofileScreenState extends State<UserprofileScreen>
     }
   }
 
-
   @override
   void dispose() {
     _tabController.dispose();
@@ -85,9 +84,9 @@ class _UserprofileScreenState extends State<UserprofileScreen>
         role: widget.user!.role,
         city: widget.user!.city,
         designation: widget.user!.designation ?? "",
-        organization: widget.user!.organization?? "",
-        aboutme: widget.user!.aboutme?? "",
-        photoUrl: widget.user!.photoUrl?? "",
+        organization: widget.user!.organization ?? "",
+        aboutme: widget.user!.aboutme ?? "",
+        photoUrl: widget.user!.photoUrl ?? "",
       );
       return Scaffold(
         appBar: _buildAppBar(),
@@ -152,9 +151,10 @@ class _UserprofileScreenState extends State<UserprofileScreen>
                       radius: 41,
                       backgroundImage: (user.photoUrl?.isNotEmpty ?? false)
                           ? NetworkImage(user.photoUrl!)
-                          : const AssetImage("assets/images/default_avatar.png"),
+                          : const AssetImage(
+                          "assets/images/default_avatar.png")
+                      as ImageProvider,
                     ),
-
                     const SizedBox(width: 16),
                     Expanded(
                       child: Column(
@@ -192,7 +192,6 @@ class _UserprofileScreenState extends State<UserprofileScreen>
                   ],
                 ),
               ),
-
               TabBar(
                 controller: _tabController,
                 indicatorColor: const Color(0xFF535D97),
@@ -242,11 +241,11 @@ class _UserprofileScreenState extends State<UserprofileScreen>
             title: "Email",
             value: user.email ?? "Not Provided",
           ),
-            _simpleInfoRow(
-              icon: Icons.business,
-              title: "Organization",
-              value: user.organization ?? "Not Provided",
-            ),
+          _simpleInfoRow(
+            icon: Icons.business,
+            title: "Organization",
+            value: user.organization ?? "Not Provided",
+          ),
           _simpleInfoRow(
             icon: Icons.badge,
             title: "Designation",
@@ -305,7 +304,7 @@ class _UserprofileScreenState extends State<UserprofileScreen>
     );
   }
 
-
+  // -------------------- POSTS & COMMENTS --------------------
   Widget _buildPostsTab(AuthUserModel user) {
     return Column(
       children: [
@@ -326,8 +325,6 @@ class _UserprofileScreenState extends State<UserprofileScreen>
                     ),
                     builder: (context) =>
                         CreatePostModal(userId: user.id, userName: user.name),
-                    elevation: 5,
-                    backgroundColor: Colors.white,
                   );
                 },
                 style: ElevatedButton.styleFrom(
@@ -363,7 +360,6 @@ class _UserprofileScreenState extends State<UserprofileScreen>
                 return const Center(child: CircularProgressIndicator());
               }
               final posts = snapshot.data!.docs;
-
               posts.sort((a, b) {
                 final t1 =
                     (a['timestamp'] as Timestamp?)?.toDate() ?? DateTime(1970);
@@ -371,11 +367,7 @@ class _UserprofileScreenState extends State<UserprofileScreen>
                     (b['timestamp'] as Timestamp?)?.toDate() ?? DateTime(1970);
                 return t2.compareTo(t1);
               });
-
-              if (posts.isEmpty) {
-                return const Center(child: Text("No posts yet"));
-              }
-
+              if (posts.isEmpty) return const Center(child: Text("No posts yet"));
               return ListView.builder(
                 itemCount: posts.length,
                 itemBuilder: (context, index) {
@@ -386,12 +378,10 @@ class _UserprofileScreenState extends State<UserprofileScreen>
                   final content = post["content"] ?? "";
                   final postId = post.id;
                   final timestamp = (post["timestamp"] as Timestamp?)?.toDate();
-
                   return Card(
                     margin: const EdgeInsets.all(12),
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(16),
-                    ),
+                        borderRadius: BorderRadius.circular(16)),
                     elevation: 4,
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -409,10 +399,11 @@ class _UserprofileScreenState extends State<UserprofileScreen>
                                           fontWeight: FontWeight.bold)),
                                   if (timestamp != null)
                                     Text(
-                                        DateFormat('dd MMM yyyy, hh:mm a')
-                                            .format(timestamp),
-                                        style: const TextStyle(
-                                            fontSize: 12, color: Colors.grey)),
+                                      DateFormat('dd MMM yyyy, hh:mm a')
+                                          .format(timestamp),
+                                      style: const TextStyle(
+                                          fontSize: 12, color: Colors.grey),
+                                    ),
                                 ],
                               ),
                               if (post["userId"] == user.id)
@@ -518,38 +509,9 @@ class _UserprofileScreenState extends State<UserprofileScreen>
       builder: (context) => CommentSection(postId: postId),
     );
   }
-
-  Widget _infoRow({
-    required IconData icon,
-    required String title,
-    required String value,
-    required double screenHeight,
-    required double screenWidth,
-  }) {
-    return Column(
-      children: [
-        Padding(
-          padding: EdgeInsets.symmetric(
-              horizontal: screenWidth * 0.035, vertical: screenHeight * 0.015),
-          child: Row(
-            children: [
-              Icon(icon),
-              SizedBox(width: screenWidth * 0.031),
-              Text(title,
-                  style: const TextStyle(fontSize: 18, color: Colors.grey)),
-            ],
-          ),
-        ),
-        Padding(
-          padding: EdgeInsets.only(left: screenWidth * 0.1),
-          child: Text(value, style: const TextStyle(fontSize: 16)),
-        ),
-      ],
-    );
-  }
 }
 
-// --------------------- VIDEO PLAYER WIDGET ---------------------
+// ---------------- VIDEO PLAYER ----------------
 class VideoPostWidget extends StatefulWidget {
   final String videoUrl;
   const VideoPostWidget({super.key, required this.videoUrl});
@@ -610,6 +572,7 @@ class _VideoPostWidgetState extends State<VideoPostWidget> {
   }
 }
 
+// ---------------- COMMENT SECTION ----------------
 class CommentSection extends StatefulWidget {
   final String postId;
   const CommentSection({super.key, required this.postId});
@@ -628,7 +591,10 @@ class _CommentSectionState extends State<CommentSection> {
         .doc(widget.postId)
         .update({
       "comments": FieldValue.arrayUnion([
-        {"text": _controller.text.trim(), "timestamp": DateTime.now().toIso8601String()}
+        {
+          "text": _controller.text.trim(),
+          "timestamp": DateTime.now().toIso8601String()
+        }
       ])
     });
     _controller.clear();
@@ -677,8 +643,10 @@ class _CommentSectionState extends State<CommentSection> {
                 Expanded(
                   child: TextField(
                     controller: _controller,
-                    decoration:
-                    const InputDecoration(hintText: "Add a comment"),
+                    decoration: const InputDecoration(
+                      hintText: "Write a comment...",
+                      contentPadding: EdgeInsets.symmetric(horizontal: 12),
+                    ),
                   ),
                 ),
                 IconButton(
@@ -686,7 +654,7 @@ class _CommentSectionState extends State<CommentSection> {
                   onPressed: _addComment,
                 ),
               ],
-            )
+            ),
           ],
         ),
       ),
@@ -694,7 +662,7 @@ class _CommentSectionState extends State<CommentSection> {
   }
 }
 
-// --------------------- CREATE POST MODAL ---------------------
+// ---------------- CREATE POST MODAL ----------------
 class CreatePostModal extends StatefulWidget {
   final String userId;
   final String userName;
@@ -705,68 +673,53 @@ class CreatePostModal extends StatefulWidget {
 }
 
 class _CreatePostModalState extends State<CreatePostModal> {
-  final ImagePicker _picker = ImagePicker();
-  List<XFile> _selectedImages = [];
-  XFile? _selectedVideo;
   final TextEditingController _contentController = TextEditingController();
-  bool _isUploading = false;
+  List<File> _images = [];
+  List<File> _videos = [];
 
   Future<void> _pickImages() async {
-    final List<XFile>? images = await _picker.pickMultiImage();
-    if (images != null) {
-      setState(() => _selectedImages.addAll(images));
-    }
-  }
-
-  Future<void> _pickVideo() async {
-    final XFile? video = await _picker.pickVideo(source: ImageSource.gallery);
-    if (video != null) {
-      setState(() => _selectedVideo = video);
-    }
-  }
-
-  Future<void> _uploadPost() async {
-    if (_selectedImages.isEmpty && _selectedVideo == null && _contentController.text.trim().isEmpty) return;
-
-    setState(() => _isUploading = true);
-
-    try {
-      List<String> imageUrls = [];
-      List<String> videoUrls = [];
-
-      for (var img in _selectedImages) {
-        final ref = FirebaseStorage.instance
-            .ref()
-            .child("postDataImage/${DateTime.now().millisecondsSinceEpoch}_${img.name}");
-        await ref.putFile(File(img.path));
-        imageUrls.add(await ref.getDownloadURL());
-      }
-
-      if (_selectedVideo != null) {
-        final ref = FirebaseStorage.instance
-            .ref()
-            .child("postDataImage/${DateTime.now().millisecondsSinceEpoch}_${_selectedVideo!.name}");
-        await ref.putFile(File(_selectedVideo!.path));
-        videoUrls.add(await ref.getDownloadURL());
-      }
-
-      await FirebaseFirestore.instance.collection("userposts").add({
-        "userId": widget.userId,
-        "userName": widget.userName,
-        "content": _contentController.text.trim(),
-        "images": imageUrls,
-        "videos": videoUrls,
-        "likes": [],
-        "comments": [],
-        "timestamp": DateTime.now(),
+    final picked = await ImagePicker().pickMultiImage();
+    if (picked != null) {
+      setState(() {
+        _images.addAll(picked.map((e) => File(e.path)));
       });
-
-      Navigator.pop(context);
-    } catch (e) {
-      print("Upload error: $e");
-    } finally {
-      setState(() => _isUploading = false);
     }
+  }
+
+  Future<void> _pickVideos() async {
+    final picked = await ImagePicker().pickVideo(source: ImageSource.gallery);
+    if (picked != null) {
+      setState(() {
+        _videos.add(File(picked.path));
+      });
+    }
+  }
+
+  Future<String> _uploadFile(File file, String folder) async {
+    final ref = FirebaseStorage.instance
+        .ref()
+        .child("$folder/${DateTime.now().millisecondsSinceEpoch}");
+    await ref.putFile(file);
+    return await ref.getDownloadURL();
+  }
+
+  void _createPost() async {
+    List<String> imageUrls = [];
+    List<String> videoUrls = [];
+    for (var img in _images) imageUrls.add(await _uploadFile(img, "post_images"));
+    for (var vid in _videos) videoUrls.add(await _uploadFile(vid, "post_videos"));
+
+    await FirebaseFirestore.instance.collection("userposts").add({
+      "userId": widget.userId,
+      "userName": widget.userName,
+      "content": _contentController.text.trim(),
+      "images": imageUrls,
+      "videos": videoUrls,
+      "likes": [],
+      "comments": [],
+      "timestamp": DateTime.now(),
+    });
+    Navigator.pop(context);
   }
 
   @override
@@ -775,53 +728,36 @@ class _CreatePostModalState extends State<CreatePostModal> {
       padding: MediaQuery.of(context).viewInsets,
       child: SizedBox(
         height: MediaQuery.of(context).size.height * 0.7,
-        child: Column(
-          children: [
-            const Padding(
-              padding: EdgeInsets.all(12.0),
-              child: Text("Create Post",
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-            ),
-            TextField(
-              controller: _contentController,
-              decoration: const InputDecoration(
-                  hintText: "Write something...", contentPadding: EdgeInsets.all(12)),
-            ),
-            Wrap(
-              children: _selectedImages
-                  .map((img) => Padding(
-                padding: const EdgeInsets.all(8.0),
-                child: Image.file(File(img.path),
-                    width: 80, height: 80, fit: BoxFit.cover),
-              ))
-                  .toList(),
-            ),
-            if (_selectedVideo != null)
-              Padding(
-                padding: const EdgeInsets.all(8.0),
-                child: Text("Video selected: ${_selectedVideo!.name}"),
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            children: [
+              TextField(
+                controller: _contentController,
+                maxLines: 3,
+                decoration: const InputDecoration(hintText: "What's on your mind?"),
               ),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: [
-                ElevatedButton.icon(
+              const SizedBox(height: 12),
+              Row(
+                children: [
+                  ElevatedButton(
                     onPressed: _pickImages,
-                    icon: const Icon(Icons.image),
-                    label: const Text("Add Images")),
-                ElevatedButton.icon(
-                    onPressed: _pickVideo,
-                    icon: const Icon(Icons.videocam),
-                    label: const Text("Add Video")),
-              ],
-            ),
-            const SizedBox(height: 12),
-            _isUploading
-                ? const CircularProgressIndicator()
-                : ElevatedButton(
-              onPressed: _uploadPost,
-              child: const Text("Post"),
-            ),
-          ],
+                    child: const Text("Add Images"),
+                  ),
+                  const SizedBox(width: 12),
+                  ElevatedButton(
+                    onPressed: _pickVideos,
+                    child: const Text("Add Video"),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 12),
+              ElevatedButton(
+                onPressed: _createPost,
+                child: const Text("Post"),
+              ),
+            ],
+          ),
         ),
       ),
     );

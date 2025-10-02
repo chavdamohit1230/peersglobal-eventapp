@@ -59,7 +59,8 @@ class UserRegister {
         "hearAboutUs": {"stringValue": hearAboutUs ?? ""},
         "otherInfo": {"stringValue": otherInfo ?? ""},
         "role": {"stringValue": role ?? ""},
-        "photoUrl": {"stringValue": photoUrl ?? ""}, // <-- Add this line
+        "photoUrl": {"stringValue": photoUrl ?? ""
+        },
       }
     };
   }
