@@ -237,11 +237,6 @@ class _UserprofileScreenState extends State<UserprofileScreen>
             value: user.name.isNotEmpty ? user.name : "Not Provided",
           ),
           _simpleInfoRow(
-            icon: Icons.email,
-            title: "Email",
-            value: user.email ?? "Not Provided",
-          ),
-          _simpleInfoRow(
             icon: Icons.business,
             title: "Organization",
             value: user.organization ?? "Not Provided",
@@ -252,9 +247,19 @@ class _UserprofileScreenState extends State<UserprofileScreen>
             value: user.designation ?? "Not Provided",
           ),
           _simpleInfoRow(
+            icon: Icons.email,
+            title: "Email",
+            value: user.email ?? "Not Provided",
+          ),
+          _simpleInfoRow(
             icon: Icons.call,
             title: "Mobile",
             value: user.mobile,
+          ),
+          _simpleInfoRow(
+            icon: Icons.location_city,
+            title: "Country",
+            value: user.city ?? "Not Provided",
           ),
           _simpleInfoRow(
             icon: Icons.location_city,
