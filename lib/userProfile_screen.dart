@@ -256,11 +256,7 @@ class _UserprofileScreenState extends State<UserprofileScreen>
             title: "Mobile",
             value: user.mobile,
           ),
-          _simpleInfoRow(
-            icon: Icons.location_city,
-            title: "Country",
-            value: user.city ?? "Not Provided",
-          ),
+        
           _simpleInfoRow(
             icon: Icons.location_city,
             title: "City",

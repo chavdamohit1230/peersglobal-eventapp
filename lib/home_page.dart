@@ -263,7 +263,10 @@ class _HomePageState extends State<HomePage> {
                       ListTile(
                         leading: const Icon(Icons.people_alt_outlined, size: 28),
                         title: const Text('Meeting', style: TextStyle(fontSize: 18)),
-                        onTap: () => Navigator.pop(context),
+                        onTap: () {
+                          String currentUserId = widget.userId ?? user?.id ?? "";
+                          context.push('/meeting', extra: {'currentUserId': currentUserId});
+                        },
                       ),
                       ListTile(
                         leading: const Icon(Icons.people_outline, size: 28),

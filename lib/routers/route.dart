@@ -5,6 +5,7 @@ import 'package:peersglobleeventapp/eventprofile.dart';
 import 'package:peersglobleeventapp/home_page.dart';
 import 'package:peersglobleeventapp/invitaion.dart';
 import 'package:peersglobleeventapp/loginscreen.dart';
+import 'package:peersglobleeventapp/meeting.dart';
 import 'package:peersglobleeventapp/people_knows.dart';
 import 'package:peersglobleeventapp/qr_scanResult.dart';
 import 'package:peersglobleeventapp/registration_screen.dart';
@@ -100,7 +101,18 @@ class AppRouter {
           builder: (context, state) => Sponsor(),),
 
         GoRoute(path: '/speaker',
-          builder: (context, state) => Speaker(),)
+          builder: (context, state) => Speaker(),),
+
+        GoRoute(
+          path: '/meeting',
+          builder: (context, state) {
+            final extras = state.extra as Map<String, dynamic>?;
+            final currentUserId = extras?['currentUserId'] ?? "";
+
+            return Meeting(currentUserId: currentUserId);
+          },
+        ),
+
       ],
     );
   }
