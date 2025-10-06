@@ -13,52 +13,77 @@ class Meeting extends StatefulWidget {
 class _MeetingState extends State<Meeting> {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
-  // 🔹 Fetch approved connections
-  Stream<List<Map<String, dynamic>>> getConnectionsStream() async* {
-    await for (var requestSnap in _firestore
-        .collection("requests")
-        .where("status", isEqualTo: "approved")
-        .snapshots()) {
-      List<Map<String, dynamic>> connections = [];
-      for (var doc in requestSnap.docs) {
-        final data = doc.data();
-        String friendId = "";
-        if (data["from"] == widget.currentUserId) {
-          friendId = data["to"];
-        } else if (data["to"] == widget.currentUserId) {
-          friendId = data["from"];
-        } else {
-          continue;
-        }
-
-        final userDoc =
-        await _firestore.collection("userregister").doc(friendId).get();
-        if (!userDoc.exists) continue;
-
-        final userData = userDoc.data()!;
-        connections.add({
-          "id": friendId,
-          "name": userData["name"] ?? "",
-          "designation": userData["designation"] ?? "",
-          "photoUrl": userData["photoUrl"] ?? "",
-        });
-      }
-      yield connections;
+  // 🔹 Helper: Extract last part of Firestore path (userId)
+  String extractUserId(String fullPath) {
+    // Example: projects/event-9da2e/databases/(default)/documents/userregister/geBbj2WsyyOCDzAwQUSH
+    if (fullPath.contains("/")) {
+      return fullPath.split("/").last;
     }
+    return fullPath;
   }
 
-  // 🔹 Fetch meetings for current user
-  Stream<List<Map<String, dynamic>>> getMeetingsStream() async* {
-    await for (var snap in _firestore.collection("meetings").snapshots()) {
-      List<Map<String, dynamic>> meetings = [];
-      for (var doc in snap.docs) {
+  // 🔹 Fetch approved connections (both from/to)
+  Stream<List<Map<String, dynamic>>> getConnectionsStream() {
+    return _firestore
+        .collection("requests")
+        .where("status", isEqualTo: "approved")
+        .snapshots()
+        .asyncMap((snapshot) async {
+      List<Map<String, dynamic>> connections = [];
+
+      for (var doc in snapshot.docs) {
         final data = doc.data();
-        if (data["hostId"] == widget.currentUserId ||
-            data["participantId"] == widget.currentUserId) {
+
+        final fromId = extractUserId(data["from"]);
+        final toId = extractUserId(data["to"]);
+
+        // Check if current user is part of this request
+        if (fromId == widget.currentUserId || toId == widget.currentUserId) {
+          final friendId =
+          fromId == widget.currentUserId ? toId : fromId;
+
+          final userDoc =
+          await _firestore.collection("userregister").doc(friendId).get();
+          if (!userDoc.exists) continue;
+
+          final userData = userDoc.data()!;
+          connections.add({
+            "id": friendId,
+            "name": userData["name"] ?? "",
+            "designation": userData["designation"] ?? "",
+            "photoUrl": userData["photoUrl"] ?? "",
+          });
+        }
+      }
+
+      return connections;
+    });
+  }
+
+  // 🔹 Fetch meetings for current user (with user names)
+  Stream<List<Map<String, dynamic>>> getMeetingsStream() {
+    return _firestore.collection("meetings").snapshots().asyncMap((snapshot) async {
+      List<Map<String, dynamic>> meetings = [];
+
+      for (var doc in snapshot.docs) {
+        final data = doc.data();
+
+        final hostId = extractUserId(data["hostId"]);
+        final participantId = extractUserId(data["participantId"]);
+
+        if (hostId == widget.currentUserId || participantId == widget.currentUserId) {
+          // Fetch both user names
+          final hostDoc =
+          await _firestore.collection("userregister").doc(hostId).get();
+          final participantDoc =
+          await _firestore.collection("userregister").doc(participantId).get();
+
           meetings.add({
             "id": doc.id,
-            "hostId": data["hostId"],
-            "participantId": data["participantId"],
+            "hostId": hostId,
+            "hostName": hostDoc.data()?["name"] ?? "Unknown",
+            "participantId": participantId,
+            "participantName": participantDoc.data()?["name"] ?? "Unknown",
             "status": data["status"] ?? "pending",
             "date": data["date"] ?? "",
             "time": data["time"] ?? "",
@@ -67,8 +92,9 @@ class _MeetingState extends State<Meeting> {
           });
         }
       }
-      yield meetings;
-    }
+
+      return meetings;
+    });
   }
 
   // 🔹 Open schedule dialog
@@ -158,7 +184,7 @@ class _MeetingState extends State<Meeting> {
                     const SnackBar(content: Text("Request Sent ✅")));
               }
             }
-                : null, // disabled if date/time null
+                : null,
             child: const Text("Send Request"),
           )
         ],
@@ -179,15 +205,19 @@ class _MeetingState extends State<Meeting> {
       appBar: AppBar(title: const Text("Meetings")),
       body: Column(
         children: [
-          // Connections List
+          // 🔹 Connections List
           Expanded(
             flex: 2,
             child: StreamBuilder<List<Map<String, dynamic>>>(
               stream: getConnectionsStream(),
               builder: (context, snapshot) {
-                if (!snapshot.hasData || snapshot.data!.isEmpty) {
+                if (!snapshot.hasData) {
+                  return const Center(child: CircularProgressIndicator());
+                }
+                if (snapshot.data!.isEmpty) {
                   return const Center(child: Text("❌ No Connections Found"));
                 }
+
                 final connections = snapshot.data!;
                 return ListView.builder(
                   itemCount: connections.length,
@@ -223,16 +253,22 @@ class _MeetingState extends State<Meeting> {
               },
             ),
           ),
+
           const Divider(),
-          // Meetings List
+
+          // 🔹 Meetings List
           Expanded(
             flex: 2,
             child: StreamBuilder<List<Map<String, dynamic>>>(
               stream: getMeetingsStream(),
               builder: (context, snapshot) {
-                if (!snapshot.hasData || snapshot.data!.isEmpty) {
+                if (!snapshot.hasData) {
+                  return const Center(child: CircularProgressIndicator());
+                }
+                if (snapshot.data!.isEmpty) {
                   return const Center(child: Text("No Meetings Scheduled"));
                 }
+
                 final meetings = snapshot.data!;
                 return ListView.builder(
                   itemCount: meetings.length,
@@ -240,12 +276,14 @@ class _MeetingState extends State<Meeting> {
                     final meet = meetings[index];
                     bool isHost =
                     meet["hostId"] == widget.currentUserId ? true : false;
+                    final otherPerson =
+                    isHost ? meet["participantName"] : meet["hostName"];
+
                     return Card(
                       margin: const EdgeInsets.symmetric(
                           horizontal: 10, vertical: 5),
                       child: ListTile(
-                        title: Text(
-                            "With: ${isHost ? meet["participantId"] : meet["hostId"]}"),
+                        title: Text("With: $otherPerson"),
                         subtitle: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
