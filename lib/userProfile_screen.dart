@@ -8,7 +8,49 @@ import 'package:intl/intl.dart';
 import 'package:video_player/video_player.dart';
 import 'package:peersglobleeventapp/modelClass/model/auth_User_model.dart';
 import 'package:peersglobleeventapp/modelClass/model/userregister_model.dart';
+import 'package:url_launcher/url_launcher_string.dart';
 
+// Helper function to capitalize the first letter of each word
+String capitalizeWords(String text) {
+  if (text.isEmpty) {
+    return '';
+  }
+  return text.split(' ').map((word) {
+    if (word.isEmpty) return '';
+    return word[0].toUpperCase() + word.substring(1).toLowerCase();
+  }).join(' ');
+}
+
+// Model class for network connections
+class Mynetwork {
+  final String id;
+  final String username;
+  final String Designation;
+  final String mobile;
+  final String email;
+  final String companywebsite;
+  final String businessLocation;
+  final String industry;
+  final String contry;
+  final String city;
+  final String photoUrl;
+
+  Mynetwork({
+    required this.id,
+    required this.username,
+    required this.Designation,
+    required this.mobile,
+    required this.email,
+    required this.companywebsite,
+    required this.businessLocation,
+    required this.industry,
+    required this.contry,
+    required this.city,
+    required this.photoUrl,
+  });
+}
+
+// -------------------- UserprofileScreen --------------------
 class UserprofileScreen extends StatefulWidget {
   final String? userId;
   final UserRegister? user;
@@ -23,6 +65,7 @@ class _UserprofileScreenState extends State<UserprofileScreen>
   late TabController _tabController;
   Future<AuthUserModel?>? _userFuture;
   late String docId;
+  late AuthUserModel _currentUser;
 
   @override
   void initState() {
@@ -34,11 +77,24 @@ class _UserprofileScreenState extends State<UserprofileScreen>
       tabLength = 3;
     }
     _tabController = TabController(length: tabLength, vsync: this);
+
     if (widget.user == null && widget.userId != null) {
       docId = widget.userId!.split("/").last;
       _userFuture = fetchUser(docId);
     } else {
       docId = widget.userId ?? "";
+      _currentUser = AuthUserModel(
+        id: docId,
+        name: widget.user?.name ?? "",
+        mobile: widget.user?.mobile ?? "",
+        email: widget.user?.email,
+        role: widget.user?.role,
+        city: widget.user?.city,
+        designation: widget.user?.designation ?? "",
+        organization: widget.user?.organization ?? "",
+        aboutme: widget.user?.aboutme ?? "",
+        photoUrl: widget.user?.photoUrl ?? "",
+      );
     }
   }
 
@@ -49,7 +105,8 @@ class _UserprofileScreenState extends State<UserprofileScreen>
           .doc(userId)
           .get();
       if (doc.exists) {
-        return AuthUserModel.fromFirestore(doc);
+        _currentUser = AuthUserModel.fromFirestore(doc);
+        return _currentUser;
       } else {
         return null;
       }
@@ -76,21 +133,9 @@ class _UserprofileScreenState extends State<UserprofileScreen>
     double screenWidth = MediaQuery.of(context).size.width;
 
     if (widget.user != null) {
-      final localUser = AuthUserModel(
-        id: widget.userId ?? "",
-        name: widget.user!.name ?? "",
-        mobile: widget.user!.mobile ?? "",
-        email: widget.user!.email,
-        role: widget.user!.role,
-        city: widget.user!.city,
-        designation: widget.user!.designation ?? "",
-        organization: widget.user!.organization ?? "",
-        aboutme: widget.user!.aboutme ?? "",
-        photoUrl: widget.user!.photoUrl ?? "",
-      );
       return Scaffold(
         appBar: _buildAppBar(),
-        body: _buildProfileUI(localUser, screenHeight, screenWidth),
+        body: _buildProfileUI(_currentUser, screenHeight, screenWidth),
       );
     }
 
@@ -105,7 +150,8 @@ class _UserprofileScreenState extends State<UserprofileScreen>
           if (!snapshot.hasData || snapshot.data == null) {
             return const Center(child: Text("User not found"));
           }
-          return _buildProfileUI(snapshot.data!, screenHeight, screenWidth);
+          _currentUser = snapshot.data!;
+          return _buildProfileUI(_currentUser, screenHeight, screenWidth);
         },
       ),
     );
@@ -126,10 +172,33 @@ class _UserprofileScreenState extends State<UserprofileScreen>
       ),
       actions: [
         IconButton(
-          onPressed: () {},
+          onPressed: () {
+            _showEditProfileModal(context, _currentUser);
+          },
           icon: const Icon(Icons.edit),
         ),
       ],
+    );
+  }
+
+  void _showEditProfileModal(BuildContext context, AuthUserModel user) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(25.0)),
+      ),
+      builder: (BuildContext context) {
+        return _EditProfileModal(
+          user: user,
+          onProfileUpdated: () {
+            setState(() {
+              // Refresh the screen after updating
+              _userFuture = fetchUser(docId);
+            });
+          },
+        );
+      },
     );
   }
 
@@ -215,7 +284,7 @@ class _UserprofileScreenState extends State<UserprofileScreen>
               children: [
                 _buildProfileDetails(user, screenHeight, screenWidth),
                 if (isExhibitorOrSponsor(user.role)) _buildPostsTab(user),
-                const Center(child: Text("Connections")),
+                _buildConnectionsTab(user),
               ],
             ),
           ),
@@ -256,7 +325,7 @@ class _UserprofileScreenState extends State<UserprofileScreen>
             title: "Mobile",
             value: user.mobile,
           ),
-        
+
           _simpleInfoRow(
             icon: Icons.location_city,
             title: "City",
@@ -305,7 +374,6 @@ class _UserprofileScreenState extends State<UserprofileScreen>
     );
   }
 
-  // -------------------- POSTS & COMMENTS --------------------
   Widget _buildPostsTab(AuthUserModel user) {
     return Column(
       children: [
@@ -508,6 +576,386 @@ class _UserprofileScreenState extends State<UserprofileScreen>
       context: context,
       isScrollControlled: true,
       builder: (context) => CommentSection(postId: postId),
+    );
+  }
+
+  // -------------------- Connections Tab Method --------------------
+  Widget _buildConnectionsTab(AuthUserModel user) {
+    final cleanedCurrentUserId = docId;
+
+    return StreamBuilder<List<QueryDocumentSnapshot>>(
+      stream: _connectionsStream(cleanedCurrentUserId),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Center(child: CircularProgressIndicator());
+        }
+
+        if (!snapshot.hasData || snapshot.data!.isEmpty) {
+          return const Center(child: Text("No connections yet"));
+        }
+
+        final docs = snapshot.data!;
+        final connectedUserIds = docs.map((doc) {
+          String fromId = _getIdFromPath(doc['from']);
+          String toId = _getIdFromPath(doc['to']);
+          return fromId == cleanedCurrentUserId ? toId : fromId;
+        }).toSet().toList();
+
+        return FutureBuilder<List<Mynetwork>>(
+          future: _fetchUsersDetails(connectedUserIds),
+          builder: (context, usersSnapshot) {
+            if (usersSnapshot.connectionState == ConnectionState.waiting) {
+              return const Center(child: CircularProgressIndicator());
+            }
+
+            if (!usersSnapshot.hasData || usersSnapshot.data!.isEmpty) {
+              return const Center(child: Text("No connections yet"));
+            }
+
+            final users = usersSnapshot.data!;
+            return ListView.builder(
+              itemCount: users.length,
+              itemBuilder: (context, index) {
+                final connectedUser = users[index];
+                return Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  child: Card(
+                    elevation: 2,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: ListTile(
+                      contentPadding: const EdgeInsets.all(12),
+                      leading: CircleAvatar(
+                        radius: 30,
+                        backgroundImage:
+                        (connectedUser.photoUrl.isNotEmpty)
+                            ? NetworkImage(connectedUser.photoUrl)
+                            : const AssetImage("assets/images/default_avatar.png")
+                        as ImageProvider,
+                      ),
+                      title: Text(
+                        capitalizeWords(connectedUser.username),
+                        style: const TextStyle(fontWeight: FontWeight.bold),
+                      ),
+                      subtitle: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(connectedUser.Designation),
+                          Text(connectedUser.companywebsite),
+                        ],
+                      ),
+                      onTap: () {
+                        context.push('/user_profile/${connectedUser.id}');
+                      },
+                    ),
+                  ),
+                );
+              },
+            );
+          },
+        );
+      },
+    );
+  }
+
+  String _getIdFromPath(String path) {
+    if (path.contains('/documents/')) {
+      return path.split('/').last;
+    }
+    return path;
+  }
+
+  Stream<List<QueryDocumentSnapshot>> _connectionsStream(String cleanedUserId) {
+    final requestsStream =
+    FirebaseFirestore.instance.collection('requests').snapshots();
+
+    return requestsStream.map((snapshot) {
+      return snapshot.docs.where((doc) {
+        final fromId = _getIdFromPath(doc['from']);
+        final toId = _getIdFromPath(doc['to']);
+        return doc['status'] == 'approved' &&
+            (fromId == cleanedUserId || toId == cleanedUserId);
+      }).toList();
+    });
+  }
+
+  Future<List<Mynetwork>> _fetchUsersDetails(List<String> userIds) async {
+    if (userIds.isEmpty) {
+      return [];
+    }
+
+    final userDocs = await FirebaseFirestore.instance
+        .collection('userregister')
+        .where(FieldPath.documentId, whereIn: userIds)
+        .get();
+
+    return userDocs.docs.map((doc) {
+      final data = doc.data();
+      return Mynetwork(
+        id: doc.id,
+        username: (data['name'] as String?) ?? "N/A",
+        Designation: (data['designation'] as String?) ?? "N/A",
+        mobile: (data['mobile'] as String?) ?? "N/A",
+        email: (data['email'] as String?) ?? "N/A",
+        companywebsite: (data['companywebsite'] as String?) ?? "N/A",
+        businessLocation: (data['businessLocation'] as String?) ?? "N/A",
+        industry: (data['industry'] as String?) ?? "N/A",
+        contry: (data['country'] as String?) ?? "N/A",
+        city: (data['city'] as String?) ?? "N/A",
+        photoUrl: (data['photoUrl'] as String?) ?? "https://via.placeholder.com/150",
+      );
+    }).toList();
+  }
+}
+
+// -------------------- New Modal for Editing Profile --------------------
+class _EditProfileModal extends StatefulWidget {
+  final AuthUserModel user;
+  final VoidCallback onProfileUpdated;
+
+  const _EditProfileModal({
+    super.key,
+    required this.user,
+    required this.onProfileUpdated,
+  });
+
+  @override
+  State<_EditProfileModal> createState() => _EditProfileModalState();
+}
+
+class _EditProfileModalState extends State<_EditProfileModal> {
+  final _formKey = GlobalKey<FormState>();
+  late TextEditingController _nameController;
+  late TextEditingController _designationController;
+  late TextEditingController _organizationController;
+  late TextEditingController _aboutmeController;
+  File? _pickedImage;
+  bool _isSaving = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _nameController = TextEditingController(text: widget.user.name);
+    _designationController =
+        TextEditingController(text: widget.user.designation);
+    _organizationController =
+        TextEditingController(text: widget.user.organization);
+    _aboutmeController = TextEditingController(text: widget.user.aboutme);
+  }
+
+  @override
+  void dispose() {
+    _nameController.dispose();
+    _designationController.dispose();
+    _organizationController.dispose();
+    _aboutmeController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _pickImage() async {
+    final pickedImage =
+    await ImagePicker().pickImage(source: ImageSource.gallery);
+    if (pickedImage != null) {
+      setState(() {
+        _pickedImage = File(pickedImage.path);
+      });
+    }
+  }
+
+  Future<String?> _uploadImage() async {
+    if (_pickedImage == null) {
+      return widget.user.photoUrl;
+    }
+
+    try {
+      final ref = FirebaseStorage.instance
+          .ref()
+          .child('user_images')
+          .child('${widget.user.id}.jpg');
+      await ref.putFile(_pickedImage!);
+      final url = await ref.getDownloadURL();
+      return url;
+    } catch (e) {
+      print("Error uploading image: $e");
+      return null;
+    }
+  }
+
+  Future<void> _saveProfile() async {
+    if (!_formKey.currentState!.validate()) {
+      return;
+    }
+
+    setState(() {
+      _isSaving = true;
+    });
+
+    try {
+      final newPhotoUrl = await _uploadImage();
+
+      if (newPhotoUrl == null && _pickedImage != null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("Image upload failed. Please try again.")),
+        );
+        return;
+      }
+
+      await FirebaseFirestore.instance
+          .collection('userregister')
+          .doc(widget.user.id)
+          .update({
+        'name': _nameController.text.trim(),
+        'designation': _designationController.text.trim(),
+        'organization': _organizationController.text.trim(),
+        'aboutme': _aboutmeController.text.trim(),
+        if (newPhotoUrl != null) 'photoUrl': newPhotoUrl,
+      });
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Profile updated successfully!")),
+      );
+      widget.onProfileUpdated();
+      if (mounted) {
+        Navigator.of(context).pop();
+      }
+    } catch (e) {
+      print("Error saving profile: $e");
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+            content: Text("Failed to update profile. Please try again.")),
+      );
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isSaving = false;
+        });
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: MediaQuery.of(context).viewInsets,
+      child: Container(
+        padding: const EdgeInsets.all(16.0),
+        child: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Text(
+                "Edit Profile",
+                style: Theme.of(context).textTheme.headlineSmall,
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 20),
+              Center(
+                child: Stack(
+                  children: [
+                    CircleAvatar(
+                      radius: 60,
+                      backgroundImage: _pickedImage != null
+                          ? FileImage(_pickedImage!)
+                          : (widget.user.photoUrl?.isNotEmpty ?? false)
+                          ? NetworkImage(widget.user.photoUrl!)
+                          : const AssetImage(
+                          "assets/images/default_avatar.png")
+                      as ImageProvider,
+                    ),
+                    Positioned(
+                      bottom: 0,
+                      right: 0,
+                      child: IconButton(
+                        icon: const Icon(Icons.camera_alt,
+                            color: Colors.blue, size: 30),
+                        onPressed: _pickImage,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 20),
+              Form(
+                key: _formKey,
+                child: Column(
+                  children: [
+                    _buildTextField(
+                      controller: _nameController,
+                      label: "Name",
+                      icon: Icons.person,
+                    ),
+                    _buildTextField(
+                      controller: _designationController,
+                      label: "Designation",
+                      icon: Icons.badge,
+                    ),
+                    _buildTextField(
+                      controller: _organizationController,
+                      label: "Organization",
+                      icon: Icons.business,
+                    ),
+                    _buildTextField(
+                      controller: _aboutmeController,
+                      label: "About Me",
+                      icon: Icons.info_outline,
+                      maxLines: 4,
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 30),
+              _isSaving
+                  ? const Center(child: CircularProgressIndicator())
+                  : ElevatedButton.icon(
+                onPressed: _saveProfile,
+                icon: const Icon(Icons.save),
+                label: const Text("Save Profile"),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.blue,
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(
+                      horizontal: 40, vertical: 15),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(30),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildTextField({
+    required TextEditingController controller,
+    required String label,
+    required IconData icon,
+    int? maxLines = 1,
+  }) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8.0),
+      child: TextFormField(
+        controller: controller,
+        maxLines: maxLines,
+        decoration: InputDecoration(
+          labelText: label,
+          prefixIcon: Icon(icon),
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(10),
+          ),
+          filled: true,
+          fillColor: Colors.white,
+        ),
+        validator: (value) {
+          if (value == null || value.isEmpty) {
+            return '$label cannot be empty';
+          }
+          return null;
+        },
+      ),
     );
   }
 }

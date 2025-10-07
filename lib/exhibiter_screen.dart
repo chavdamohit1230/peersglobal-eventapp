@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:url_launcher/url_launcher.dart';
-import 'modelClass/exhibiter_model.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:url_launcher/url_launcher_string.dart';
+import 'package:shimmer/shimmer.dart';
+
+import 'modelClass/exhibiter_model.dart';
 
 class ExhibiterScreen extends StatefulWidget {
   const ExhibiterScreen({super.key});
@@ -68,6 +71,17 @@ class _ExhibiterScreenState extends State<ExhibiterScreen> {
     }
   }
 
+  Color _getBannerColor(int index) {
+    List<Color> colors = [
+      const Color(0xFF6B7A8F),
+      const Color(0xFFC0A183),
+      const Color(0xFF5F9E9D),
+      const Color(0xFFA15A6B),
+      const Color(0xFF8B6B8A),
+    ];
+    return colors[index % colors.length];
+  }
+
   @override
   Widget build(BuildContext context) {
     List<Exhibiter> filteredList = exhibitorList.where((exhibitor) {
@@ -84,22 +98,26 @@ class _ExhibiterScreenState extends State<ExhibiterScreen> {
           });
           return false;
         } else {
-          Navigator.of(context).pushReplacementNamed('/homepage');
+          Navigator.of(context).pop();
           return false;
         }
       },
       child: Scaffold(
-        backgroundColor: const Color(0xFFF5F5F5),
+        backgroundColor: const Color(0xFFF5F7F9),
         appBar: AppBar(
           title: Text(
-            selectedExhibitor == null ? "Exhibitors" : "Exhibitor Details",
-            style: const TextStyle(fontSize: 20, color: Colors.black),
+            selectedExhibitor == null ? "Exhibitors" : selectedExhibitor!.name,
+            style: Theme.of(context)
+                .textTheme
+                .titleLarge!
+                .copyWith(fontWeight: FontWeight.bold, color: Colors.black87),
           ),
+          centerTitle: true,
           backgroundColor: Colors.white,
-          elevation: 0,
+          elevation: 0.5,
           leading: selectedExhibitor != null
               ? IconButton(
-            icon: const Icon(Icons.arrow_back, color: Colors.black),
+            icon: const Icon(Icons.arrow_back, color: Colors.black54),
             onPressed: () {
               setState(() {
                 selectedExhibitor = null;
@@ -108,228 +126,373 @@ class _ExhibiterScreenState extends State<ExhibiterScreen> {
           )
               : null,
         ),
-        body: loading
-            ? const Center(child: CircularProgressIndicator())
+        body: selectedExhibitor != null
+            ? _buildExhibitorDetailsPage(context)
             : Column(
           children: [
-            if (selectedExhibitor == null)
-              Padding(
-                padding: const EdgeInsets.all(12),
-                child: TextField(
-                  onChanged: (value) {
-                    setState(() {
-                      searchQuery = value;
-                    });
-                  },
-                  decoration: InputDecoration(
-                    hintText: 'Search exhibitors...',
-                    prefixIcon:
-                    const Icon(Icons.search, color: Colors.grey),
-                    suffixIcon: searchQuery.isNotEmpty
-                        ? IconButton(
-                      icon: const Icon(Icons.clear),
-                      onPressed: () {
-                        setState(() {
-                          searchQuery = '';
-                        });
-                      },
-                    )
-                        : null,
-                    filled: true,
-                    fillColor: Colors.white,
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      borderSide: BorderSide.none,
-                    ),
-                    contentPadding: const EdgeInsets.symmetric(
-                        vertical: 0, horizontal: 16),
+            Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: TextField(
+                onChanged: (value) {
+                  setState(() {
+                    searchQuery = value;
+                  });
+                },
+                decoration: InputDecoration(
+                  hintText: 'Search exhibitors...',
+                  hintStyle: const TextStyle(color: Colors.black45),
+                  prefixIcon:
+                  const Icon(Icons.search, color: Colors.black45),
+                  filled: true,
+                  fillColor: Colors.white,
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide.none,
                   ),
                 ),
               ),
-            if (selectedExhibitor != null)
-              Expanded(
-                child: SingleChildScrollView(
-                  child: Container(
-                    margin: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(20),
-                      boxShadow: const [
-                        BoxShadow(
-                            color: Colors.black12,
-                            blurRadius: 10,
-                            offset: Offset(0, 6))
-                      ],
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        // Horizontal banner image
-                        ClipRRect(
-                          borderRadius: const BorderRadius.vertical(
-                              top: Radius.circular(20)),
-                          child: Image.network(
-                            selectedExhibitor!.Imageurl,
-                            height: 200,
-                            width: double.infinity,
-                            fit: BoxFit.cover,
-                          ),
-                        ),
-                        Padding(
-                          padding: const EdgeInsets.all(16.0),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Center(
-                                child: Column(
-                                  children: [
-                                    Text(
-                                      selectedExhibitor!.name,
-                                      style: const TextStyle(
-                                          fontSize: 26,
-                                          fontWeight: FontWeight.bold),
-                                    ),
-                                    const SizedBox(height: 6),
-                                    if (selectedExhibitor!.organization !=
-                                        null)
-                                      Text(
-                                        selectedExhibitor!.organization!,
-                                        style: const TextStyle(
-                                            fontSize: 16,
-                                            color: Colors.grey),
-                                      ),
-                                  ],
-                                ),
-                              ),
-                              const SizedBox(height: 20),
-                              _infoRow(
-                                  icon: Icons.email,
-                                  label: "Email",
-                                  value: selectedExhibitor!.email),
-                              const Divider(),
-                              _infoRow(
-                                  icon: Icons.business,
-                                  label: "Company",
-                                  value: selectedExhibitor!.organization),
-                              const Divider(),
-                              _infoRow(
-                                  icon: Icons.language,
-                                  label: "Website",
-                                  value: selectedExhibitor!.website,
-                                  isLink: true),
-                              const Divider(),
-                              _infoRow(
-                                  icon: Icons.location_on,
-                                  label: "Location",
-                                  value: selectedExhibitor!.location),
-                              const Divider(),
-                              _infoRow(
-                                  icon: Icons.flag,
-                                  label: "Country",
-                                  value: selectedExhibitor!.country),
-                              const Divider(),
-                              if (selectedExhibitor!.about != null) ...[
-                                const SizedBox(height: 16),
-                                const Text(
-                                  "About",
-                                  style: TextStyle(
-                                      fontSize: 18,
-                                      fontWeight: FontWeight.bold),
-                                ),
-                                const SizedBox(height: 6),
-                                Text(
-                                  selectedExhibitor!.about!,
-                                  style:
-                                  const TextStyle(fontSize: 16),
-                                ),
-                                const Divider(),
-                              ],
-                              const SizedBox(height: 16),
-                              const Text(
-                                "Social Media Links",
-                                style: TextStyle(
-                                    fontSize: 18,
-                                    fontWeight: FontWeight.bold),
-                              ),
-                              const SizedBox(height: 8),
-                              Row(
-                                children: [
-                                  for (var link
-                                  in selectedExhibitor!.socialLinks)
-                                    IconButton(
-                                      icon: _getSocialIcon(link),
-                                      color: Colors.blue,
-                                      onPressed: () =>
-                                          _launchWebsite(link),
-                                    ),
-                                  if (selectedExhibitor!.socialLinks.isEmpty)
-                                    const Text("Coming Soon..."),
-                                ],
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              )
-            else
-              Expanded(
-                child: GridView.builder(
-                  padding: const EdgeInsets.all(12),
-                  itemCount: filteredList.length,
-                  gridDelegate:
-                  const SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: 2,
-                    crossAxisSpacing: 16,
-                    mainAxisSpacing: 16,
-                    childAspectRatio: 0.78,
-                  ),
-                  itemBuilder: (context, index) {
-                    final exhibitor = filteredList[index];
-                    return GestureDetector(
-                      onTap: () {
-                        setState(() {
-                          selectedExhibitor = exhibitor;
-                        });
-                      },
-                      child: Card(
-                        shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(20)),
-                        elevation: 6,
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            CircleAvatar(
-                              radius: 45,
-                              backgroundImage:
-                              NetworkImage(exhibitor.Imageurl),
-                            ),
-                            const SizedBox(height: 12),
-                            Text(
-                              exhibitor.name,
-                              textAlign: TextAlign.center,
-                              style: const TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 16),
-                            ),
-                            const SizedBox(height: 4),
-                            Text(
-                              exhibitor.organization ?? "",
-                              textAlign: TextAlign.center,
-                              style: const TextStyle(
-                                  color: Colors.grey, fontSize: 14),
-                            ),
-                          ],
-                        ),
-                      ),
-                    );
-                  },
-                ),
+            ),
+            Expanded(
+              child: loading
+                  ? _buildShimmerLoading()
+                  : ListView.builder(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                itemCount: filteredList.length,
+                itemBuilder: (context, index) {
+                  final exhibitor = filteredList[index];
+                  return _exhibitorCardDesign(
+                      context, exhibitor, index);
+                },
               ),
+            ),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildShimmerLoading() {
+    return Shimmer.fromColors(
+      baseColor: Colors.grey[300]!,
+      highlightColor: Colors.grey[100]!,
+      child: ListView.builder(
+        itemCount: 5,
+        padding: const EdgeInsets.symmetric(horizontal: 16),
+        itemBuilder: (context, index) {
+          return _shimmerCardSkeleton(index);
+        },
+      ),
+    );
+  }
+
+  Widget _shimmerCardSkeleton(int index) {
+    return Card(
+      color: Colors.white,
+      margin: const EdgeInsets.only(bottom: 16),
+      elevation: 6,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(20),
+        child: Container(
+          color: Colors.white,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Container(
+                height: 100,
+                decoration: BoxDecoration(
+                  color: _getBannerColor(index).withOpacity(0.5),
+                  borderRadius:
+                  const BorderRadius.vertical(top: Radius.circular(20)),
+                ),
+              ),
+              Transform.translate(
+                offset: const Offset(20, -30),
+                child: Container(
+                  width: 60,
+                  height: 60,
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(12),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.2),
+                        blurRadius: 4,
+                        offset: const Offset(0,2),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Container(
+                      height: 18,
+                      width: 150,
+                      color: Colors.white,
+                    ),
+                    const SizedBox(height: 8),
+                    Container(
+                      height: 14,
+                      width: 200,
+                      color: Colors.white,
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _exhibitorCardDesign(
+      BuildContext context, Exhibiter exhibitor, int index) {
+    return GestureDetector(
+      onTap: () {
+        setState(() {
+          selectedExhibitor = exhibitor;
+        });
+      },
+      child: Card(
+        margin: const EdgeInsets.only(bottom: 16),
+        elevation: 2,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(20),
+        ),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(20),
+          child: Container(
+            color: Colors.white,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Container(
+                  height: 100,
+                  decoration: BoxDecoration(
+                    color: _getBannerColor(index),
+                    borderRadius:
+                    const BorderRadius.vertical(top: Radius.circular(20)),
+                  ),
+                ),
+                Transform.translate(
+                  offset: const Offset(20, -30),
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(12),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.2),
+                          blurRadius: 8,
+                          offset: const Offset(0, 4),
+                        ),
+                      ],
+                    ),
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(10),
+                      child: Image.network(
+                        exhibitor.Imageurl,
+                        width: 60,
+                        height: 60,
+                        fit: BoxFit.cover,
+                        errorBuilder: (context, error, stackTrace) =>
+                            Container(
+                              width: 60,
+                              height: 60,
+                              color: Colors.grey[200],
+                              child: const Icon(Icons.business,
+                                  color: Colors.grey, size: 30),
+                            ),
+                      ),
+                    ),
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        exhibitor.name,
+                        style: Theme.of(context)
+                            .textTheme
+                            .headlineSmall!
+                            .copyWith(
+                          fontWeight: FontWeight.bold,
+                          color: Colors.black87,
+                        ),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      if (exhibitor.organization != null &&
+                          exhibitor.organization!.isNotEmpty) ...[
+                        const SizedBox(height: 4),
+                        Text(
+                          exhibitor.organization!,
+                          style: Theme.of(context).textTheme.bodyLarge!.copyWith(
+                            color: Colors.black54,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ],
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildExhibitorDetailsPage(BuildContext context) {
+    return SingleChildScrollView(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Container(
+            padding: const EdgeInsets.all(24),
+            decoration: const BoxDecoration(
+              color: Color(0xFF2C3E50), // Replaced Appcolor.backgroundDark
+              borderRadius: BorderRadius.only(
+                bottomLeft: Radius.circular(30),
+                bottomRight: Radius.circular(30),
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black,
+                  blurRadius: 10,
+                  offset: Offset(0, 5),
+                ),
+              ],
+            ),
+            child: Column(
+              children: [
+                CircleAvatar(
+                  radius: 60,
+                  backgroundColor: Colors.white,
+                  child: CircleAvatar(
+                    radius: 56,
+                    backgroundImage: NetworkImage(selectedExhibitor!.Imageurl),
+                    onBackgroundImageError: (exception, stackTrace) =>
+                    const Icon(Icons.person, size: 56, color: Colors.grey),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  selectedExhibitor!.name,
+                  style: Theme.of(context).textTheme.headlineSmall!.copyWith(
+                      fontWeight: FontWeight.bold, color: Colors.white),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  selectedExhibitor!.organization ?? '',
+                  style: Theme.of(context).textTheme.titleMedium!.copyWith(
+                      color: Colors.white.withOpacity(0.8)),
+                  textAlign: TextAlign.center,
+                ),
+              ],
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.all(24.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _buildSection(
+                  context,
+                  title: "About Us",
+                  content: Text(
+                    selectedExhibitor!.about ?? "No information provided.",
+                    style: Theme.of(context).textTheme.bodyLarge,
+                  ),
+                ),
+                _buildSection(
+                  context,
+                  title: "Contact Information",
+                  content: Column(
+                    children: [
+                      _infoRow(
+                          icon: Icons.email,
+                          label: "Email",
+                          value: selectedExhibitor!.email,
+                          isLink: true),
+                      _infoRow(
+                          icon: Icons.language,
+                          label: "Website",
+                          value: selectedExhibitor!.website,
+                          isLink: true),
+                      _infoRow(
+                          icon: Icons.location_on,
+                          label: "Location",
+                          value: selectedExhibitor!.location),
+                      _infoRow(
+                          icon: Icons.flag,
+                          label: "Country",
+                          value: selectedExhibitor!.country),
+                    ],
+                  ),
+                ),
+                if (selectedExhibitor!.socialLinks.isNotEmpty)
+                  _buildSection(
+                    context,
+                    title: "Connect",
+                    content: Row(
+                      children: [
+                        for (var link in selectedExhibitor!.socialLinks)
+                          _socialIcon(link),
+                      ],
+                    ),
+                  ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSection(BuildContext context,
+      {required String title, required Widget content}) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 24.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            title,
+            style: Theme.of(context).textTheme.titleLarge!.copyWith(
+              fontWeight: FontWeight.bold,
+              color: Colors.black87,
+            ),
+          ),
+          const SizedBox(height: 12),
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(16),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black12,
+                  blurRadius: 8,
+                  offset: const Offset(0, 4),
+                )
+              ],
+            ),
+            child: content,
+          ),
+        ],
       ),
     );
   }
@@ -341,28 +504,44 @@ class _ExhibiterScreenState extends State<ExhibiterScreen> {
         bool isLink = false}) {
     if (value == null || value.isEmpty) return const SizedBox.shrink();
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 6),
+      padding: const EdgeInsets.symmetric(vertical: 8),
       child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(icon, color: Colors.blue),
-          const SizedBox(width: 10),
-          Text("$label: ",
-              style: const TextStyle(fontWeight: FontWeight.bold)),
-          isLink
-              ? InkWell(
-            onTap: () => _launchWebsite(value),
-            child: Text(
-              value,
-              style: const TextStyle(
-                  color: Colors.blue,
-                  decoration: TextDecoration.underline),
-            ),
-          )
-              : Expanded(
-            child: Text(
-              value,
-              style: const TextStyle(),
-              overflow: TextOverflow.ellipsis,
+          Icon(icon, color: Colors.blue[700], size: 20),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  label,
+                  style: Theme.of(context).textTheme.bodySmall!.copyWith(
+                    fontWeight: FontWeight.w600,
+                    color: Colors.black54,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                isLink
+                    ? InkWell(
+                  onTap: () => _launchWebsite(value),
+                  child: Text(
+                    value,
+                    style: const TextStyle(
+                        color: Colors.blue,
+                        decoration: TextDecoration.underline),
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                )
+                    : Text(
+                  value,
+                  style: Theme.of(context).textTheme.bodyMedium!.copyWith(
+                    color: Colors.black87,
+                  ),
+                  overflow: TextOverflow.ellipsis,
+                  maxLines: 2,
+                ),
+              ],
             ),
           ),
         ],
@@ -370,12 +549,27 @@ class _ExhibiterScreenState extends State<ExhibiterScreen> {
     );
   }
 
-  Icon _getSocialIcon(String url) {
-    if (url.contains("facebook")) return const Icon(FontAwesomeIcons.facebook);
-    if (url.contains("twitter")) return const Icon(FontAwesomeIcons.twitter);
-    if (url.contains("linkedin")) return const Icon(FontAwesomeIcons.linkedin);
-    if (url.contains("instagram")) return const Icon(FontAwesomeIcons.instagram);
-    return const Icon(Icons.link);
+  Widget _socialIcon(String url) {
+    IconData icon;
+    if (url.contains("facebook")) {
+      icon = FontAwesomeIcons.facebook;
+    } else if (url.contains("twitter")) {
+      icon = FontAwesomeIcons.twitter;
+    } else if (url.contains("linkedin")) {
+      icon = FontAwesomeIcons.linkedin;
+    } else if (url.contains("instagram")) {
+      icon = FontAwesomeIcons.instagram;
+    } else {
+      icon = Icons.link;
+    }
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 8.0),
+      child: IconButton(
+        icon: Icon(icon, color: Colors.blue[700]),
+        iconSize: 30,
+        onPressed: () => _launchWebsite(url),
+      ),
+    );
   }
 }
- 
