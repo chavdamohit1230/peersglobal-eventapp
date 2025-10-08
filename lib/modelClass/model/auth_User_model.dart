@@ -42,7 +42,7 @@ class AuthUserModel {
       city: data['city']??'',
       email:data['email']?? '',
       photoUrl:data['photoUrl']?? '',
-      organization: data['orgenigation']?? '',
+      organization: data['organization']?? '',
       aboutme:data['aboutme']?? '',
 
     );

@@ -35,6 +35,8 @@ class Mynetwork {
   final String contry;
   final String city;
   final String photoUrl;
+  final String? organization;
+
 
   Mynetwork({
     required this.id,
@@ -48,6 +50,8 @@ class Mynetwork {
     required this.contry,
     required this.city,
     required this.photoUrl,
+    this.organization
+
   });
 }
 

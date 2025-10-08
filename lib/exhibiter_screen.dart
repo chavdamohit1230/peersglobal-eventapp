@@ -41,7 +41,7 @@ class _ExhibiterScreenState extends State<ExhibiterScreen> {
         }
         return Exhibiter(
           name: data['name'] ?? '',
-          Imageurl: data['profileImage'] ?? '',
+          Imageurl: data['photoUrl'] ?? '',
           email: data['email'] ?? '',
           organization: data['organization'] ?? '',
           website: data['companywebsite'] ?? '',
