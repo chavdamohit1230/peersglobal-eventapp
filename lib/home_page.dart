@@ -23,9 +23,10 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage> {
   int selectedIndex = 0;
   bool isBottomSheetOpen = false;
-
   AuthUserModel? user;
   bool isLoading = true;
+  final TextEditingController _searchController = TextEditingController();
+  String _searchQuery = '';
 
   double safeFontSize(double size, double min, double max) {
     return size.clamp(min, max);
@@ -68,7 +69,7 @@ class _HomePageState extends State<HomePage> {
         role: widget.user!.role ?? "",
         name: widget.user!.name ?? "",
         mobile: widget.user!.mobile ?? "",
-        organization:widget.user!.organization,
+        organization: widget.user!.organization,
         designation: widget.user!.designation ?? "",
         photoUrl: widget.user!.photoUrl ?? "",
       );
@@ -76,10 +77,21 @@ class _HomePageState extends State<HomePage> {
     } else {
       fetchUserData();
     }
+
+    _searchController.addListener(() {
+      setState(() {
+        _searchQuery = _searchController.text;
+      });
+    });
+  }
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
   }
 
   void onTabTapped(int index) {
-
     if (index == 2) {
       return;
     }
@@ -146,7 +158,7 @@ class _HomePageState extends State<HomePage> {
                     mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                     children: [
                       buildAction("Event Profile", Icons.work_outline, () => context.push('/eventprofile')),
-                      buildAction("Speakers",  Icons.account_circle_outlined,()=> context.push('/speaker')),
+                      buildAction("Speakers", Icons.account_circle_outlined, () => context.push('/speaker')),
                       buildAction("Floor Plan", Icons.grid_on, () => context.push('/floorplan')),
                     ],
                   ),
@@ -154,7 +166,7 @@ class _HomePageState extends State<HomePage> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                     children: [
-                      buildAction("Sponsors\n& Partners", Icons.handshake_outlined,()=> context.push('/sponsor')),
+                      buildAction("Sponsors\n& Partners", Icons.handshake_outlined, () => context.push('/sponsor')),
                       buildAction("Selfie Plan", Icons.photo_camera_front_outlined, () {}),
                       buildAction("Agenda", Icons.event_note_outlined, () => context.push('/eventagenda')),
                     ],
@@ -203,7 +215,7 @@ class _HomePageState extends State<HomePage> {
                         child: Column(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                             CircleAvatar(
+                            CircleAvatar(
                               radius: 35,
                               backgroundImage: (user != null && user!.photoUrl != null && user!.photoUrl!.isNotEmpty)
                                   ? NetworkImage(user!.photoUrl!)
@@ -211,7 +223,6 @@ class _HomePageState extends State<HomePage> {
                                   ? NetworkImage(widget.user!.photoUrl!)
                                   : const AssetImage('assets/peersgloblelogo.png') as ImageProvider,
                             ),
-
                             const SizedBox(height: 10),
                             Text(
                               user != null ? user!.name : widget.user?.name ?? '',
@@ -341,6 +352,7 @@ class _HomePageState extends State<HomePage> {
                           SizedBox(width: screenWidth * 0.02),
                           Expanded(
                             child: TextField(
+                              controller: _searchController,
                               decoration: const InputDecoration(hintText: "Search here", border: InputBorder.none, isDense: true),
                               style: TextStyle(fontSize: screenHeight * 0.016),
                             ),
@@ -350,9 +362,7 @@ class _HomePageState extends State<HomePage> {
                     ),
                   ),
                   SizedBox(width: screenWidth * 0.02),
-                  Icon(Icons.groups_outlined, color: Colors.black87, size: screenHeight * 0.03),
-                  SizedBox(width: screenWidth * 0.02),
-                  Icon(Icons.notifications_none_rounded, color: Colors.black87, size: screenHeight * 0.028),
+                  Icon(Icons.notifications, color: Colors.black87, size: screenHeight * 0.03),
                 ],
               ),
             ),
@@ -375,24 +385,28 @@ class _HomePageState extends State<HomePage> {
                     return const Center(child: Text("No posts available"));
                   }
 
-                  final posts = snapshot.data!.docs
-                      .map((doc) => UserPostModel.fromFirestore(doc))
-                      .toList();
+                  final filteredPosts = snapshot.data!.docs.where((doc) {
+                    final post = UserPostModel.fromFirestore(doc);
+                    return post.username!.toLowerCase().contains(_searchQuery.toLowerCase());
+                  }).toList();
+
+                  if (filteredPosts.isEmpty) {
+                    return const Center(child: Text("No posts found for this search"));
+                  }
 
                   return ListView.builder(
                     shrinkWrap: true,
                     physics: const NeverScrollableScrollPhysics(),
-                    itemCount: posts.length,
+                    itemCount: filteredPosts.length,
                     itemBuilder: (context, index) {
-                      final doc = snapshot.data!.docs[index];
+                      final doc = filteredPosts[index];
                       final post = UserPostModel.fromFirestore(doc);
-
-                      return Userpostcard( post: post,
+                      return Userpostcard(
+                        post: post,
                         currentUserId: widget.userId ?? user?.id ?? "",
                       );
                     },
                   );
-
                 },
               ),
             ),

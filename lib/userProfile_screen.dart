@@ -9,6 +9,7 @@ import 'package:video_player/video_player.dart';
 import 'package:peersglobleeventapp/modelClass/model/auth_User_model.dart';
 import 'package:peersglobleeventapp/modelClass/model/userregister_model.dart';
 import 'package:url_launcher/url_launcher_string.dart';
+import 'package:peersglobleeventapp/color/colorfile.dart';
 
 // Helper function to capitalize the first letter of each word
 String capitalizeWords(String text) {
@@ -620,7 +621,7 @@ class _UserprofileScreenState extends State<UserprofileScreen>
                 return Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                   child: Card(
-                    elevation: 2,
+                    color: Appcolor.white,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12),
                     ),
@@ -642,11 +643,20 @@ class _UserprofileScreenState extends State<UserprofileScreen>
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(connectedUser.Designation),
-                          Text(connectedUser.companywebsite),
+                          Text('Company: ${connectedUser.companywebsite}',
+                              style: TextStyle(fontSize: 12, color: Colors.grey[700])),
+                          Text('Location: ${connectedUser.businessLocation}',
+                              style: TextStyle(fontSize: 12, color: Colors.grey[700])),
+                          Text('Industry: ${connectedUser.industry}',
+                              style: TextStyle(fontSize: 12, color: Colors.grey[700])),
                         ],
                       ),
                       onTap: () {
-                        context.push('/user_profile/${connectedUser.id}');
+                        Navigator.of(context).push(
+                          MaterialPageRoute(
+                            builder: (context) => MynetworkDetailView(user: connectedUser),
+                          ),
+                        );
                       },
                     ),
                   ),
@@ -1207,6 +1217,220 @@ class _CreatePostModalState extends State<CreatePostModal> {
               ),
             ],
           ),
+        ),
+      ),
+    );
+  }
+}
+
+class MynetworkDetailView extends StatelessWidget {
+  final Mynetwork user;
+
+  const MynetworkDetailView({super.key, required this.user});
+
+  Widget _buildInfoRow(IconData icon, String title, String value, {VoidCallback? onTap}) {
+    return InkWell(
+      onTap: onTap,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            Icon(icon, color: Colors.blueGrey, size: 22),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: const TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w500,
+                        color: Colors.grey),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    value,
+                    style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.black87),
+                  ),
+                ],
+              ),
+            ),
+            if (onTap != null)
+              const Icon(Icons.arrow_forward_ios, size: 16, color: Colors.grey),
+          ],
+        ),
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: const Color(0xFFF0F4FD),
+      appBar: AppBar(
+        title: const Text("User Details", style: TextStyle(color: Colors.black87)),
+        backgroundColor: Colors.white,
+        elevation: 1,
+        iconTheme: const IconThemeData(color: Colors.black87),
+      ),
+      body: SingleChildScrollView(
+        child: Column(
+          children: [
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.symmetric(vertical: 40, horizontal: 16),
+              decoration: const BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [Color(0xFFDCEAF4), Color(0xFFFFFFFF)],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+                borderRadius: BorderRadius.vertical(bottom: Radius.circular(30)),
+              ),
+              child: Column(
+                children: [
+                  CircleAvatar(
+                    radius: 60,
+                    backgroundColor: Colors.white,
+                    backgroundImage: (user.photoUrl.isNotEmpty)
+                        ? NetworkImage(user.photoUrl)
+                        : const AssetImage("assets/images/default_avatar.png")
+                    as ImageProvider,
+                  ),
+                  const SizedBox(height: 16),
+                  Text(
+                    capitalizeWords(user.username),
+                    style: const TextStyle(
+                      fontSize: 24,
+                      fontWeight: FontWeight.bold,
+                      color: Color(0xFF2E3A59),
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    user.Designation,
+                    style: const TextStyle(
+                      fontSize: 16,
+                      color: Color(0xFF7B8BB2),
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 20),
+            Card(
+              color:Appcolor.white,
+              elevation: 2,
+              margin: const EdgeInsets.symmetric(horizontal: 16),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Padding(
+                    padding: EdgeInsets.fromLTRB(16, 16, 16, 8),
+                    child: Text(
+                      "Contact Information",
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        color: Color(0xFF535D97),
+                      ),
+                    ),
+                  ),
+                  _buildInfoRow(
+                    Icons.email,
+                    "Email",
+                    user.email,
+                    onTap: () async {
+                      if (await canLaunchUrlString("mailto:${user.email}")) {
+                        await launchUrlString("mailto:${user.email}");
+                      }
+                    },
+                  ),
+                  const Divider(indent: 16, endIndent: 16),
+                  _buildInfoRow(
+                    Icons.call,
+                    "Mobile",
+                    user.mobile,
+                    onTap: () async {
+                      if (await canLaunchUrlString("tel:${user.mobile}")) {
+                        await launchUrlString("tel:${user.mobile}");
+                      }
+                    },
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 20),
+            Card(
+              color:Appcolor.white,
+              elevation: 2,
+              margin: const EdgeInsets.symmetric(horizontal: 16),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Padding(
+                    padding: EdgeInsets.fromLTRB(16, 16, 16, 8),
+                    child: Text(
+                      "Business Details",
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        color: Color(0xFF535D97),
+                      ),
+                    ),
+                  ),
+                  _buildInfoRow(
+                    Icons.business,
+                    "Company Website",
+                    user.companywebsite,
+                    onTap: () async {
+                      String url = user.companywebsite.startsWith('http') ? user.companywebsite : 'https://${user.companywebsite}';
+                      if (await canLaunchUrlString(url)) {
+                        await launchUrlString(url);
+                      }
+                    },
+                  ),
+                  const Divider(indent: 16, endIndent: 16),
+                  _buildInfoRow(
+                    Icons.location_on,
+                    "Business Location",
+                    user.businessLocation,
+                  ),
+                  const Divider(indent: 16, endIndent: 16),
+                  _buildInfoRow(
+                    Icons.category,
+                    "Industry",
+                    user.industry,
+                  ),
+                  const Divider(indent: 16, endIndent: 16),
+                  _buildInfoRow(
+                    Icons.flag,
+                    "Country",
+                    user.contry,
+                  ),
+                  const Divider(indent: 16, endIndent: 16),
+                  _buildInfoRow(
+                    Icons.location_city,
+                    "City",
+                    user.city,
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 30),
+          ],
         ),
       ),
     );
