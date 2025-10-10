@@ -131,6 +131,8 @@ flutter:
     - assets/loading.json
     - assets/Otpverification.json
     - assets/lottieanimation/hello.json
+    - assets/lottieanimation/locationanimation.json
+
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images
 

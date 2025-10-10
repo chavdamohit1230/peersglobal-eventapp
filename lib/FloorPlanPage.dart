@@ -1,5 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:lottie/lottie.dart';
+import 'package:peersglobleeventapp/color/colorfile.dart';
+
+
 
 class FloorPlanPage extends StatefulWidget {
   const FloorPlanPage({super.key});
@@ -12,14 +16,14 @@ class _FloorPlanPageState extends State<FloorPlanPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF3F8FE),
+      backgroundColor:Appcolor.backgroundLight,
       appBar: AppBar(
         title: const Text(
           "Floor Plans",
           style: TextStyle(
               color: Colors.black87, fontWeight: FontWeight.w600, fontSize: 20),
         ),
-        backgroundColor: Colors.white,
+        backgroundColor:Appcolor.backgroundDark,
         elevation: 1,
         iconTheme: const IconThemeData(color: Colors.black87),
       ),
@@ -34,14 +38,30 @@ class _FloorPlanPageState extends State<FloorPlanPage> {
           }
 
           if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
-            return const Center(
-              child: Text(
-                "No floor plans available",
-                style: TextStyle(fontSize: 16, color: Colors.black54),
+            return Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  SizedBox(
+                    child: Lottie.asset(
+                      'assets/lottieanimation/locationanimation.json',
+                      height: 280,
+                      width: 280,
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+                  const Text(
+                    'No Floor Plan Awailable',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.black54,
+                    ),
+                  ),
+                ],
               ),
             );
           }
-
           final floorPlans = snapshot.data!.docs;
 
           return ListView.builder(

@@ -4,6 +4,7 @@ import 'package:video_player/video_player.dart';
 import 'package:carousel_slider/carousel_slider.dart' as custom_carousel;
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:peersglobleeventapp/modelClass/user_PostModel.dart';
+import 'package:shimmer/shimmer.dart';
 
 class Userpostcard extends StatefulWidget {
   final UserPostModel post;
@@ -194,70 +195,66 @@ class _UserpostcardState extends State<Userpostcard> {
     final sw = MediaQuery.of(context).size.width;
     final sh = MediaQuery.of(context).size.height;
 
-    return Padding(
-      padding: EdgeInsets.only(bottom: sh * 0.01),
-      child: Container(
-        color: const Color(0xFFF0F4FD),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Header
-            Padding(
-              padding: EdgeInsets.symmetric(horizontal: sw * 0.04),
-              child: ListTile(
-                contentPadding: EdgeInsets.zero,
-                leading: CircleAvatar(
-                  radius: sw * 0.06,
-                  backgroundImage: (widget.post.profileImageUrl.startsWith('http')
-                      ? NetworkImage(widget.post.profileImageUrl)
-                      : FileImage(File(widget.post.profileImageUrl)))
-                  as ImageProvider<Object>,
-                ),
-                title: Text(
-                  widget.post.username,
-                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: sw * 0.045),
-                ),
-                subtitle: Text(
-                  _getTimeAgo(widget.post.timestamp),
-                  style: TextStyle(color: Colors.grey[600], fontSize: sw * 0.034),
-                ),
-                trailing: const Icon(Icons.more_horiz),
-              ),
-            ),
+    return StreamBuilder<DocumentSnapshot>(
+      stream: FirebaseFirestore.instance
+          .collection("userposts")
+          .doc(widget.post.id)
+          .snapshots(),
+      builder: (context, snapshot) {
+        String username = widget.post.username;
+        String profileImageUrl = widget.post.profileImageUrl;
+        List<dynamic> likes = [];
+        List<dynamic> comments = [];
 
-            // Caption
-            if (widget.post.caption.isNotEmpty)
-              Padding(
-                padding: EdgeInsets.symmetric(horizontal: sw * 0.04, vertical: sh * 0.006),
-                child: Text(
-                  widget.post.caption,
-                  style: TextStyle(fontSize: sw * 0.04, color: Colors.black),
+        if (snapshot.hasData && snapshot.data!.exists) {
+          final data = snapshot.data!.data() as Map<String, dynamic>? ?? {};
+          username = data['username'] ?? widget.post.username;
+          profileImageUrl = data['userPhotoUrl'] ?? widget.post.profileImageUrl;
+          likes = (data['likes'] ?? []) as List<dynamic>;
+          comments = (data['comments'] ?? []) as List<dynamic>;
+        }
+
+        final isLiked = likes.contains(widget.currentUserId);
+
+        return Padding(
+          padding: EdgeInsets.only(bottom: sh * 0.01),
+          child: Container(
+            color: const Color(0xFFF0F4FD),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Header
+                Padding(
+                  padding: EdgeInsets.symmetric(horizontal: sw * 0.04),
+                  child: ListTile(
+                    contentPadding: EdgeInsets.zero,
+                    leading: CircleAvatar(
+                      radius: sw * 0.06,
+                      backgroundImage: (profileImageUrl.startsWith('http')
+                          ? NetworkImage(profileImageUrl)
+                          : FileImage(File(profileImageUrl)))
+                      as ImageProvider<Object>,
+                    ),
+                    title: Text(
+                      username,
+                      style: TextStyle(fontWeight: FontWeight.bold, fontSize: sw * 0.045),
+                    ),
+                    subtitle: Text(
+                      _getTimeAgo(widget.post.timestamp),
+                      style: TextStyle(color: Colors.grey[600], fontSize: sw * 0.034),
+                    ),
+                    trailing: const Icon(Icons.more_horiz),
+                  ),
                 ),
-              ),
 
-            // Media (images or videos)
-            if (widget.post.imageUrls.isNotEmpty)
-              _buildLinkedInImageGrid(widget.post.imageUrls, sw, sh)
-            else if (widget.post.videos.isNotEmpty)
-              _buildVideoPlayer(sh),
+                // Media (images or videos)
+                if (widget.post.imageUrls.isNotEmpty)
+                  _buildLinkedInImageGrid(widget.post.imageUrls, sw, sh)
+                else if (widget.post.videos.isNotEmpty)
+                  _buildVideoPlayer(sh),
 
-            // Like & Comment Section
-            StreamBuilder<DocumentSnapshot>(
-              stream: FirebaseFirestore.instance
-                  .collection("userposts")
-                  .doc(widget.post.id)
-                  .snapshots(),
-              builder: (context, snapshot) {
-                List<dynamic> likes = [];
-                List<dynamic> comments = [];
-                if (snapshot.hasData && snapshot.data!.exists) {
-                  final data = snapshot.data!.data() as Map<String, dynamic>? ?? {};
-                  likes = (data['likes'] ?? []) as List<dynamic>;
-                  comments = (data['comments'] ?? []) as List<dynamic>;
-                }
-                final isLiked = likes.contains(widget.currentUserId);
-
-                return Padding(
+                // Like & Comment Section
+                Padding(
                   padding: EdgeInsets.only(top: sh * 0.006),
                   child: Row(
                     children: [
@@ -288,12 +285,22 @@ class _UserpostcardState extends State<Userpostcard> {
                       ),
                     ],
                   ),
-                );
-              },
+                ),
+
+                // Caption (moved here)
+                if (widget.post.caption.isNotEmpty)
+                  Padding(
+                    padding: EdgeInsets.symmetric(horizontal: sw * 0.04, vertical: sh * 0.006),
+                    child: Text(
+                      widget.post.caption,
+                      style: TextStyle(fontSize: sw * 0.04, color: Colors.black),
+                    ),
+                  ),
+              ],
             ),
-          ],
-        ),
-      ),
+          ),
+        );
+      },
     );
   }
 
@@ -338,7 +345,7 @@ class _UserpostcardState extends State<Userpostcard> {
           width: double.infinity,
           height: height,
           color: Colors.grey.shade200,
-          child: _imageWidget(url, BoxFit.cover), // <-- CHANGED
+          child: _imageWidget(url, BoxFit.cover),
         ),
       );
     }
@@ -386,11 +393,20 @@ class _UserpostcardState extends State<Userpostcard> {
         fit: fit,
         width: double.infinity,
         height: double.infinity,
-        loadingBuilder: (context, child, progress) =>
-        progress == null ? child : const Center(child: CircularProgressIndicator()),
+        loadingBuilder: (context, child, progress) {
+          if (progress == null) return child;
+          return Shimmer.fromColors(
+            baseColor: Colors.grey[300]!,
+            highlightColor: Colors.grey[100]!,
+            child: Container(
+              color: Colors.white,
+            ),
+          );
+        },
         errorBuilder: (context, _, __) => const Center(child: Icon(Icons.broken_image, size: 40)),
       );
     } else {
+      // Local files don't need a loading indicator since they load instantly
       return Image.file(
         File(url),
         fit: fit,
