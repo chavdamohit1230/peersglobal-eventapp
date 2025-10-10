@@ -37,7 +37,6 @@ class Mynetwork {
   final String photoUrl;
   final String? organization;
 
-
   Mynetwork({
     required this.id,
     required this.username,
@@ -51,7 +50,6 @@ class Mynetwork {
     required this.city,
     required this.photoUrl,
     this.organization
-
   });
 }
 
@@ -129,7 +127,7 @@ class _UserprofileScreenState extends State<UserprofileScreen>
 
   bool isExhibitorOrSponsor(String? role) {
     final r = role?.toLowerCase() ?? "";
-    return r == "exhibitor" || r == "sponsor";
+    return r == "exhibitor" || r == "sponsor" || r == "organizer";
   }
 
   @override
@@ -398,7 +396,8 @@ class _UserprofileScreenState extends State<UserprofileScreen>
                       borderRadius: BorderRadius.all(Radius.circular(16)),
                     ),
                     builder: (context) =>
-                        CreatePostModal(userId: user.id, userName: user.name),
+                    // Pass photoUrl to CreatePostModal
+                    CreatePostModal(userId: user.id, userName: user.name, userPhotoUrl: user.photoUrl),
                   );
                 },
                 style: ElevatedButton.styleFrom(
@@ -452,6 +451,8 @@ class _UserprofileScreenState extends State<UserprofileScreen>
                   final content = post["content"] ?? "";
                   final postId = post.id;
                   final timestamp = (post["timestamp"] as Timestamp?)?.toDate();
+                  // Get photoUrl from post data
+                  final postUserPhotoUrl = post["userPhotoUrl"] ?? "";
                   return Card(
                     margin: const EdgeInsets.all(12),
                     shape: RoundedRectangleBorder(
@@ -465,20 +466,30 @@ class _UserprofileScreenState extends State<UserprofileScreen>
                           child: Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
-                              Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(post["userName"] ?? "",
-                                      style: const TextStyle(
-                                          fontWeight: FontWeight.bold)),
-                                  if (timestamp != null)
-                                    Text(
-                                      DateFormat('dd MMM yyyy, hh:mm a')
-                                          .format(timestamp),
-                                      style: const TextStyle(
-                                          fontSize: 12, color: Colors.grey),
-                                    ),
-                                ],
+                              CircleAvatar(
+                                radius: 20,
+                                backgroundImage: (postUserPhotoUrl.isNotEmpty)
+                                    ? NetworkImage(postUserPhotoUrl)
+                                    : const AssetImage("assets/images/default_avatar.png")
+                                as ImageProvider,
+                              ),
+                              const SizedBox(width: 8),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(post["userName"] ?? "",
+                                        style: const TextStyle(
+                                            fontWeight: FontWeight.bold)),
+                                    if (timestamp != null)
+                                      Text(
+                                        DateFormat('dd MMM yyyy, hh:mm a')
+                                            .format(timestamp),
+                                        style: const TextStyle(
+                                            fontSize: 12, color: Colors.grey),
+                                      ),
+                                  ],
+                                ),
                               ),
                               if (post["userId"] == user.id)
                                 IconButton(
@@ -1129,7 +1140,14 @@ class _CommentSectionState extends State<CommentSection> {
 class CreatePostModal extends StatefulWidget {
   final String userId;
   final String userName;
-  const CreatePostModal({super.key, required this.userId, required this.userName});
+  // Added new field for user's photoUrl
+  final String? userPhotoUrl;
+  const CreatePostModal({
+    super.key,
+    required this.userId,
+    required this.userName,
+    this.userPhotoUrl
+  });
 
   @override
   State<CreatePostModal> createState() => _CreatePostModalState();
@@ -1139,6 +1157,7 @@ class _CreatePostModalState extends State<CreatePostModal> {
   final TextEditingController _contentController = TextEditingController();
   List<File> _images = [];
   List<File> _videos = [];
+  bool _isUploading = false;
 
   Future<void> _pickImages() async {
     final picked = await ImagePicker().pickMultiImage();
@@ -1158,31 +1177,71 @@ class _CreatePostModalState extends State<CreatePostModal> {
     }
   }
 
+  void _removeImage(int index) {
+    setState(() {
+      _images.removeAt(index);
+    });
+  }
+
   Future<String> _uploadFile(File file, String folder) async {
     final ref = FirebaseStorage.instance
         .ref()
-        .child("$folder/${DateTime.now().millisecondsSinceEpoch}");
+        .child("postDataImage/${DateTime.now().millisecondsSinceEpoch}");
     await ref.putFile(file);
     return await ref.getDownloadURL();
   }
 
   void _createPost() async {
-    List<String> imageUrls = [];
-    List<String> videoUrls = [];
-    for (var img in _images) imageUrls.add(await _uploadFile(img, "post_images"));
-    for (var vid in _videos) videoUrls.add(await _uploadFile(vid, "post_videos"));
+    if (_contentController.text.trim().isEmpty && _images.isEmpty && _videos.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Please add some content to your post.")),
+      );
+      return;
+    }
 
-    await FirebaseFirestore.instance.collection("userposts").add({
-      "userId": widget.userId,
-      "userName": widget.userName,
-      "content": _contentController.text.trim(),
-      "images": imageUrls,
-      "videos": videoUrls,
-      "likes": [],
-      "comments": [],
-      "timestamp": DateTime.now(),
+    setState(() {
+      _isUploading = true;
     });
-    Navigator.pop(context);
+
+    try {
+      List<String> imageUrls = [];
+      for (var img in _images) {
+        imageUrls.add(await _uploadFile(img, "post_images"));
+      }
+
+      List<String> videoUrls = [];
+      for (var vid in _videos) {
+        videoUrls.add(await _uploadFile(vid, "post_videos"));
+      }
+
+      await FirebaseFirestore.instance.collection("userposts").add({
+        "userId": widget.userId,
+        "userName": widget.userName,
+        // Save the user's photo URL here
+        "userPhotoUrl": widget.userPhotoUrl,
+        "content": _contentController.text.trim(),
+        "images": imageUrls,
+        "videos": videoUrls,
+        "likes": [],
+        "comments": [],
+        "timestamp": DateTime.now(),
+      });
+
+      if (mounted) {
+        Navigator.pop(context);
+      }
+    } catch (e) {
+      print("Error creating post: $e");
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Failed to create post. Please try again.")),
+      );
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isUploading = false;
+        });
+      }
+    }
   }
 
   @override
@@ -1202,20 +1261,64 @@ class _CreatePostModalState extends State<CreatePostModal> {
               ),
               const SizedBox(height: 12),
               Row(
+                mainAxisAlignment: MainAxisAlignment.spaceAround,
                 children: [
-                  ElevatedButton(
+                  ElevatedButton.icon(
                     onPressed: _pickImages,
-                    child: const Text("Add Images"),
+                    icon: const Icon(Icons.photo_library),
+                    label: const Text("Images"),
                   ),
-                  const SizedBox(width: 12),
-                  ElevatedButton(
+                  ElevatedButton.icon(
                     onPressed: _pickVideos,
-                    child: const Text("Add Video"),
+                    icon: const Icon(Icons.videocam),
+                    label: const Text("Video"),
                   ),
                 ],
               ),
               const SizedBox(height: 12),
-              ElevatedButton(
+              if (_images.isNotEmpty)
+                Expanded(
+                  child: GridView.builder(
+                    gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                      crossAxisCount: 3,
+                      crossAxisSpacing: 8,
+                      mainAxisSpacing: 8,
+                    ),
+                    itemCount: _images.length,
+                    itemBuilder: (context, index) {
+                      return Stack(
+                        children: [
+                          Positioned.fill(
+                            child: Image.file(
+                              _images[index],
+                              fit: BoxFit.cover,
+                            ),
+                          ),
+                          Positioned(
+                            right: 0,
+                            child: GestureDetector(
+                              onTap: () => _removeImage(index),
+                              child: const CircleAvatar(
+                                radius: 12,
+                                backgroundColor: Colors.black54,
+                                child: Icon(Icons.close, size: 16, color: Colors.white),
+                              ),
+                            ),
+                          ),
+                        ],
+                      );
+                    },
+                  ),
+                ),
+              if (_videos.isNotEmpty)
+                const Padding(
+                  padding: EdgeInsets.symmetric(vertical: 8.0),
+                  child: Text("Video selected (will be uploaded)", style: TextStyle(fontStyle: FontStyle.italic)),
+                ),
+              const SizedBox(height: 12),
+              _isUploading
+                  ? const CircularProgressIndicator()
+                  : ElevatedButton(
                 onPressed: _createPost,
                 child: const Text("Post"),
               ),

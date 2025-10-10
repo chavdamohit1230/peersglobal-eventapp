@@ -18,7 +18,6 @@ class Loginscreen extends StatefulWidget {
 }
 
 class _LoginscreenState extends State<Loginscreen> {
-  final TextEditingController _usernameController = TextEditingController();
   final TextEditingController _mobileController = TextEditingController();
   final TextEditingController _countryCodeController =
   TextEditingController(text: '+91');
@@ -53,11 +52,10 @@ class _LoginscreenState extends State<Loginscreen> {
         // 🔹 Fetch users from Firestore
         List<AuthUserModel> users = await _repo.fetchUsers();
 
-        final username = _usernameController.text.trim().toLowerCase();
         final mobile = _mobileController.text.trim();
 
         final matchUser = users.firstWhere(
-              (u) => u.name.toLowerCase() == username && u.mobile.trim() == mobile,
+              (u) => u.mobile.trim() == mobile,
           orElse: () => AuthUserModel(id: '', name: '', mobile: ''),
         );
 
@@ -109,7 +107,7 @@ class _LoginscreenState extends State<Loginscreen> {
           // ❌ Invalid user
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
-              content: Text("Invalid username or mobile number!"),
+              content: Text("Mobile number not found!"),
               backgroundColor: Colors.red,
             ),
           );
@@ -202,35 +200,20 @@ class _LoginscreenState extends State<Loginscreen> {
                   key: _formKey,
                   child: Column(
                     children: [
-                      // Username field
-                      SizedBox(
-                        height: 55,
-                        child: TextFormField(
-                          controller: _usernameController,
-                          decoration: _inputDecoration('Username', Icons.person),
-                          validator: (value) {
-                            if (value == null || value.isEmpty) {
-                              return 'Please enter username';
-                            }
-                            return null;
-                          },
-                        ),
-                      ),
-                      SizedBox(height: screenHeight * 0.020),
-
                       // Country code + Mobile number
                       Row(
                         children: [
-                          SizedBox(
-                            width: screenWidth * 0.22,
-                            height: 55,
-                            child: AutocompleteTextbox(
-                              options: countrycode,
-                              controller: _countryCodeController,
-                              validator: (value) =>
-                              value == null || value.isEmpty
-                                  ? 'Please select code'
-                                  : null,
+                          IntrinsicWidth(
+                            child: SizedBox(
+                              height: 55,
+                              child: AutocompleteTextbox(
+                                options: countrycode,
+                                controller: _countryCodeController,
+                                validator: (value) =>
+                                value == null || value.isEmpty
+                                    ? 'Please select code'
+                                    : null,
+                              ),
                             ),
                           ),
                           const SizedBox(width: 8),
@@ -324,7 +307,7 @@ class _LoginscreenState extends State<Loginscreen> {
                             padding: const EdgeInsets.symmetric(vertical: 16),
                           ),
                           child: _isLoading
-                              ? SizedBox(
+                              ? const SizedBox(
                             width: 24,
                             height: 24,
                             child: CircularProgressIndicator(

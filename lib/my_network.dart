@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:lottie/lottie.dart';
 import 'package:url_launcher/url_launcher_string.dart';
 import 'package:peersglobleeventapp/color/colorfile.dart';
 
@@ -74,13 +75,53 @@ class _MyNetworkState extends State<MyNetwork> {
       body: StreamBuilder<List<QueryDocumentSnapshot>>(
         stream: _connectionsStream(_cleanedCurrentUserId),
         builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator());
+          if (!snapshot.hasData || snapshot.data!.isEmpty) {
+            final screenHeight = MediaQuery.of(context).size.height;
+            final screenWidth = MediaQuery.of(context).size.width;
+
+            // Fixed but adaptive box size (uniform look)
+            final boxHeight = screenHeight * 0.38; // thoda bada box
+            final boxWidth = screenWidth * 0.8;    // wider box
+            final fontSize = (screenWidth * 0.048).clamp(14, 18);
+
+            return Center(
+              child: Opacity(
+                opacity: 0.7,
+                child: SingleChildScrollView( // ✅ Prevent overflow
+                  child: SizedBox(
+                    height: boxHeight,
+                    width: boxWidth,
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min, // ✅ Prevent layout stretching
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        // 🔥 Bigger Lottie animation (90% of box)
+                        Flexible(
+                          child: Lottie.asset(
+                            'assets/lottieanimation/hello.json',
+                            width: boxWidth,
+                            height: boxHeight * 0.9,
+                            fit: BoxFit.contain,
+                          ),
+                        ),
+                        SizedBox(height: 16),
+                        Text(
+                          "Please Make Connection",
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            fontSize: fontSize.toDouble(),
+                            fontWeight: FontWeight.bold,
+                            color: Colors.black54,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            );
           }
 
-          if (!snapshot.hasData || snapshot.data!.isEmpty) {
-            return const Center(child: Text("No connections yet"));
-          }
 
           final docs = snapshot.data!;
           final connectedUserIds = docs.map((doc) {
