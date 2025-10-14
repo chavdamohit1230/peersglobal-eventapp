@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:peersglobleeventapp/color/colorfile.dart';
 import 'package:peersglobleeventapp/modelClass/mynetwork_model.dart';
 
 class PeopleKnows extends StatefulWidget {
@@ -131,7 +132,7 @@ class _PeopleKnowsState extends State<PeopleKnows> {
         title: const Text("People You May Know"),
         backgroundColor: const Color(0xFFF0F4FD),
       ),
-      backgroundColor: Colors.white,
+      backgroundColor:Appcolor.backgroundLight,
       body: isLoading
           ? const Center(child: CircularProgressIndicator())
           : ListView.separated(

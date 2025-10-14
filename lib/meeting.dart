@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:intl/intl.dart';
+import 'package:lottie/lottie.dart';
 import 'package:url_launcher/url_launcher_string.dart';
 import 'package:shimmer/shimmer.dart';
+import 'package:peersglobleeventapp/color/colorfile.dart';
 
 // Helper function to capitalize the first letter of each word
 String capitalizeWords(String text) {
@@ -13,7 +15,6 @@ String capitalizeWords(String text) {
   }).join(' ');
 }
 
-// -------------------- Meeting Screen --------------------
 class Meeting extends StatefulWidget {
   final String currentUserId;
   const Meeting({super.key, required this.currentUserId});
@@ -199,9 +200,10 @@ class _MeetingState extends State<Meeting> with SingleTickerProviderStateMixin {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor:Appcolor.backgroundLight,
       appBar: AppBar(
         title: const Text("Meetings"),
-        backgroundColor: const Color(0xFFF0F4FD),
+        backgroundColor:Appcolor.backgroundLight,
         bottom: TabBar(
           controller: _tabController,
           labelColor: Colors.black,
@@ -231,9 +233,29 @@ class _MeetingState extends State<Meeting> with SingleTickerProviderStateMixin {
           return _buildConnectionsShimmer();
         }
         if (!snapshot.hasData || snapshot.data!.isEmpty) {
-          return const Center(child: Text("❌ No Connections Found"));
+          return Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Lottie.asset(
+                  'assets/lottieanimation/mentalTherapy.json',
+                  width: 200,
+                  height: 200,
+                  fit: BoxFit.cover,
+                ),
+                const SizedBox(height: 20),
+                const Text(
+                  "No Connections Found",
+                  style: TextStyle(
+                    fontSize: 16,
+                    color: Colors.grey,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ],
+            ),
+          );
         }
-
         final connections = snapshot.data!;
         return GridView.builder(
           padding: const EdgeInsets.all(16.0),
@@ -260,9 +282,33 @@ class _MeetingState extends State<Meeting> with SingleTickerProviderStateMixin {
         if (snapshot.connectionState == ConnectionState.waiting) {
           return _buildMeetingsShimmer();
         }
+
         if (!snapshot.hasData || snapshot.data!.isEmpty) {
-          return const Center(child: Text("No Meetings Scheduled"));
+          return Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Lottie.asset(
+                  'assets/lottieanimation/editedsuccess.json', // Path to your animation file
+                  width: 200,
+                  height: 200,
+                  fit: BoxFit.cover,
+                ),
+                const SizedBox(height: 20),
+                const Text(
+                  "No Meetings Scheduled",
+                  style: TextStyle(
+                    fontSize: 16,
+                    color: Colors.grey,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ],
+            ),
+          );
         }
+
+// ... the rest of your code ...
 
         final meetings = snapshot.data!;
         return ListView.builder(

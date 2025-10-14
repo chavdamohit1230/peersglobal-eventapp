@@ -8,6 +8,7 @@ import 'package:peersglobleeventapp/loginscreen.dart';
 import 'package:peersglobleeventapp/meeting.dart';
 import 'package:peersglobleeventapp/people_knows.dart';
 import 'package:peersglobleeventapp/qr_scanResult.dart';
+import 'package:peersglobleeventapp/recentnotification.dart';
 import 'package:peersglobleeventapp/registration_screen.dart';
 import 'package:peersglobleeventapp/speaker.dart';
 import 'package:peersglobleeventapp/splashscreen.dart';
@@ -102,6 +103,10 @@ class AppRouter {
 
         GoRoute(path: '/speaker',
           builder: (context, state) => Speaker(),),
+
+        GoRoute(path: '/recentnotification',
+          builder: (context, state) =>Recentnotification()),
+
 
         GoRoute(
           path: '/meeting',

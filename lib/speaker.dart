@@ -24,82 +24,81 @@ class _SpeakerState extends State<Speaker> {
   // Build Social Icon
   Widget buildSocialIcon(String url, IconData icon, Color color) {
     if (url.isEmpty) return const SizedBox();
-    return InkWell(
-      onTap: () => launchLink(url),
-      borderRadius: BorderRadius.circular(8),
-      child: Container(
-        margin: const EdgeInsets.only(right: 12),
-        padding: const EdgeInsets.all(8),
-        decoration: BoxDecoration(
-          color: Colors.grey.shade100,
-          borderRadius: BorderRadius.circular(10),
-        ),
-        child: FaIcon(icon, color: color, size: 18),
-      ),
+    return IconButton(
+      icon: FaIcon(icon, color: color, size: 20),
+      onPressed: () => launchLink(url),
+      splashRadius: 24,
+      tooltip: url,
     );
   }
 
-  // Speaker Card
-  Widget buildSpeakerCard(DocumentSnapshot doc, BoxConstraints constraints) {
+  // Speaker Card with Gradient
+  Widget buildSpeakerCard(DocumentSnapshot doc) {
     var data = doc.data() as Map<String, dynamic>;
     List<String> links = List<String>.from(data["socialLinks"] ?? []);
     String? bio = data["bio"];
 
-    bool isWide = constraints.maxWidth > 700; // Tablet/Web responsive
-
-    return Card(
+    return Container(
       margin: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      elevation: 4,
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: isWide
-            ? Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Speaker Image (rectangular for pro look)
-            ClipRRect(
-              borderRadius: BorderRadius.circular(12),
-              child: Image.network(
-                data["imageUrl"] ?? "",
-                width: 120,
-                height: 120,
-                fit: BoxFit.cover,
-                errorBuilder: (_, __, ___) => Container(
-                  width: 120,
-                  height: 120,
-                  color: Colors.grey.shade300,
-                  child: const Icon(Icons.person,
-                      size: 60, color: Colors.grey),
-                ),
-              ),
-            ),
-            const SizedBox(width: 20),
-            // Info
-            Expanded(child: buildSpeakerInfo(data, bio, links)),
+      decoration: BoxDecoration(
+        // === GRADIENT CHANGE ===
+        // Re-adding the gradient for a professional look
+        gradient: LinearGradient(
+          colors: [
+            Colors.white,
+            Appcolor.backgroundLight,
           ],
-        )
-            : Column(
-          crossAxisAlignment: CrossAxisAlignment.center,
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: Colors.grey.shade200),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.grey.shade100,
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(24),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start, // Vertically center content
           children: [
-            ClipRRect(
-              borderRadius: BorderRadius.circular(12),
-              child: Image.network(
-                data["imageUrl"] ?? "",
-                width: 120,
-                height: 120,
-                fit: BoxFit.cover,
-                errorBuilder: (_, __, ___) => Container(
+            // Speaker Image (Left Side)
+            Container(
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(12),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.1),
+                    blurRadius: 8,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
+              ),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(12),
+                child: SizedBox(
                   width: 120,
                   height: 120,
-                  color: Colors.grey.shade300,
-                  child: const Icon(Icons.person,
-                      size: 60, color: Colors.grey),
+                  child: Image.network(
+                    data["imageUrl"] ?? "",
+                    fit: BoxFit.contain,
+                    errorBuilder: (_, __, ___) => Container(
+                      color: Colors.grey.shade300,
+                      child: const Icon(Icons.person, size: 60, color: Colors.white),
+                    ),
+                  ),
                 ),
               ),
             ),
-            const SizedBox(height: 16),
-            buildSpeakerInfo(data, bio, links),
+            const SizedBox(width: 24),
+            // Speaker Details (Right Side)
+            Expanded(
+              child: buildSpeakerInfo(data, bio, links),
+            ),
           ],
         ),
       ),
@@ -114,59 +113,65 @@ class _SpeakerState extends State<Speaker> {
         Text(
           data["name"] ?? "",
           style: const TextStyle(
-              fontSize: 20, fontWeight: FontWeight.bold, color: Colors.black87),
+            fontSize: 24,
+            fontWeight: FontWeight.bold,
+            color: Colors.black,
+            letterSpacing: -0.5,
+          ),
         ),
         const SizedBox(height: 4),
         Text(
           data["occupation"] ?? "",
           style: TextStyle(
-              fontSize: 16,
-              fontStyle: FontStyle.italic,
-              color: Colors.grey.shade700),
+            fontSize: 16,
+            fontWeight: FontWeight.w500,
+            color: Colors.grey.shade700,
+          ),
         ),
-        const SizedBox(height: 6),
+        const SizedBox(height: 2),
+        Text(
+          data["organization"] ?? "",
+          style: TextStyle(
+            fontSize: 16,
+            color: Colors.grey.shade800,
+          ),
+        ),
+        const SizedBox(height: 8),
+        Text(
+          "${data["city"] ?? ""}, ${data["country"] ?? ""}",
+          style: TextStyle(
+            fontSize: 14,
+            color: Colors.grey.shade600,
+          ),
+        ),
+        const SizedBox(height: 16),
         Row(
           children: [
+            Icon(Icons.email_outlined, size: 18, color: Colors.grey.shade600),
+            const SizedBox(width: 8),
             Expanded(
               child: Text(
-                data["organization"] ?? "",
+                data["email"] ?? "",
                 style: TextStyle(fontSize: 14, color: Colors.grey.shade800),
               ),
             ),
           ],
         ),
-        const SizedBox(height: 4),
-        Text(
-          "${data["city"] ?? ""}, ${data["country"] ?? ""}",
-          style: TextStyle(fontSize: 13, color: Colors.grey.shade600),
-        ),
-        const SizedBox(height: 10),
-        Row(
-          children: [
-            const Icon(Icons.email, size: 16, color: Colors.black54),
-            const SizedBox(width: 6),
-            Expanded(
-                child: Text(data["email"] ?? "",
-                    style: TextStyle(fontSize: 14, color: Colors.grey.shade800))),
-          ],
-        ),
-        const SizedBox(height: 10),
         if (bio != null && bio.isNotEmpty) ...[
+          const SizedBox(height: 16),
           ExpandableBio(bio: bio),
-          const SizedBox(height: 10),
         ],
+        const SizedBox(height: 16),
         Row(
           children: [
             if (links.isNotEmpty)
-              buildSocialIcon(links[0], FontAwesomeIcons.facebook, Colors.blue),
+              buildSocialIcon(links[0], FontAwesomeIcons.facebook, Colors.blue.shade700),
             if (links.length > 1)
-              buildSocialIcon(
-                  links[1], FontAwesomeIcons.linkedin, Colors.blueAccent),
+              buildSocialIcon(links[1], FontAwesomeIcons.linkedin, Colors.blue.shade800),
             if (links.length > 2)
-              buildSocialIcon(links[2], FontAwesomeIcons.twitter, Colors.blue),
+              buildSocialIcon(links[2], FontAwesomeIcons.twitter, Colors.blue.shade400),
             if (links.length > 3)
-              buildSocialIcon(
-                  links[3], FontAwesomeIcons.instagram, Colors.purple),
+              buildSocialIcon(links[3], FontAwesomeIcons.instagram, Colors.purple.shade700),
           ],
         )
       ],
@@ -181,27 +186,27 @@ class _SpeakerState extends State<Speaker> {
         title: const Text("Speakers"),
         backgroundColor: Appcolor.backgroundDark,
       ),
-      body: LayoutBuilder(
-        builder: (context, constraints) {
-          return StreamBuilder<QuerySnapshot>(
-            stream: FirebaseFirestore.instance
-                .collection("speakers")
-                .orderBy("createdAt", descending: true)
-                .snapshots(),
-            builder: (context, snapshot) {
-              if (!snapshot.hasData) {
-                return const Center(child: CircularProgressIndicator());
-              }
-              final docs = snapshot.data!.docs;
-              if (docs.isEmpty) {
-                return const Center(child: Text("No speakers found"));
-              }
-              return ListView.builder(
-                itemCount: docs.length,
-                itemBuilder: (context, index) {
-                  return buildSpeakerCard(docs[index], constraints);
-                },
-              );
+      body: StreamBuilder<QuerySnapshot>(
+        stream: FirebaseFirestore.instance
+            .collection("speakers")
+            .orderBy("createdAt", descending: true)
+            .snapshots(),
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Center(child: CircularProgressIndicator());
+          }
+          if (snapshot.hasError) {
+            return Center(child: Text("Error: ${snapshot.error}"));
+          }
+          if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+            return const Center(child: Text("No speakers found."));
+          }
+
+          final docs = snapshot.data!.docs;
+          return ListView.builder(
+            itemCount: docs.length,
+            itemBuilder: (context, index) {
+              return buildSpeakerCard(docs[index]);
             },
           );
         },
@@ -231,17 +236,22 @@ class _ExpandableBioState extends State<ExpandableBio> {
           widget.bio,
           maxLines: expanded ? null : 3,
           overflow: expanded ? TextOverflow.visible : TextOverflow.ellipsis,
-          style: const TextStyle(fontSize: 14, color: Colors.black87),
+          style: const TextStyle(
+            fontSize: 14,
+            color: Colors.black87,
+            height: 1.5,
+          ),
         ),
-        const SizedBox(height: 4),
+        const SizedBox(height: 8),
         GestureDetector(
           onTap: () => setState(() => expanded = !expanded),
           child: Text(
             expanded ? "Show less" : "Read more",
             style: TextStyle(
-                fontSize: 13,
-                color: Appcolor.backgroundDark,
-                fontWeight: FontWeight.w500),
+              fontSize: 14,
+              color: Appcolor.backgroundDark,
+              fontWeight: FontWeight.w600,
+            ),
           ),
         )
       ],

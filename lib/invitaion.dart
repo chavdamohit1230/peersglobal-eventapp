@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:lottie/lottie.dart';
+import 'package:peersglobleeventapp/color/colorfile.dart';
 
 class Invitaion extends StatefulWidget {
   final String currentUserId;
@@ -15,8 +17,9 @@ class _InvitaionState extends State<Invitaion> {
     print("📌 CurrentUserId => ${widget.currentUserId}");
 
     return Scaffold(
-      appBar: AppBar(title: const Text("Invitations")),
-      backgroundColor: Colors.white,
+      appBar: AppBar(title: const Text("Invitations"),
+      backgroundColor:Appcolor.backgroundLight,),
+      backgroundColor:Appcolor.backgroundLight,
       body: StreamBuilder<QuerySnapshot>(
         stream: FirebaseFirestore.instance
             .collection("requests")
@@ -35,9 +38,25 @@ class _InvitaionState extends State<Invitaion> {
           print("📌 Total Requests Found => ${snapshot.data?.docs.length}");
 
           if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
-            return const Center(child: Text("No pending requests"));
+            return Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Lottie.asset(
+                    'assets/lottieanimation/invitaion.json', // Check this path
+                    width: 200,
+                    height: 200,
+                    fit: BoxFit.cover,
+                  ),
+                  const SizedBox(height: 20),
+                  const Text(
+                    "No Invitaion Found.",
+                    style: TextStyle(fontSize: 16, color: Colors.grey),
+                  ),
+                ],
+              ),
+            );
           }
-
           final requests = snapshot.data!.docs;
 
           return ListView.builder(

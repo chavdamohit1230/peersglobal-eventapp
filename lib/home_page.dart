@@ -238,7 +238,7 @@ class _HomePageState extends State<HomePage> {
                             Text(
                               user != null ? (user!.designation ?? '') : (widget.user?.designation ?? ''),
                               maxLines: 2,
-                              overflow: TextOverflow.ellipsis,
+                              overflow: TextOverflow.ellipsis, // Corrected here
                               textAlign: TextAlign.center,
                               style: TextStyle(
                                 color: Colors.grey,
@@ -248,7 +248,7 @@ class _HomePageState extends State<HomePage> {
                             Text(
                               "Attendee : Business Information",
                               maxLines: 2,
-                              overflow: TextOverflow.ellipsis,
+                              overflow: TextOverflow.ellipsis, // Corrected here
                               textAlign: TextAlign.center,
                               style: TextStyle(
                                 color: Colors.grey,
@@ -363,7 +363,56 @@ class _HomePageState extends State<HomePage> {
                     ),
                   ),
                   SizedBox(width: screenWidth * 0.02),
-                  Icon(Icons.notifications, color: Colors.black87, size: screenHeight * 0.03),
+                  // ----- START: Notification Icon with Dynamic Badge -----
+                  StreamBuilder<QuerySnapshot>(
+                    stream: FirebaseFirestore.instance.collection('notifications').where('isRead', isEqualTo: false).snapshots(),
+                    builder: (context, snapshot) {
+                      int notificationCount = 0;
+                      if (snapshot.hasData) {
+                        notificationCount = snapshot.data!.docs.length;
+                      }
+
+                      return Stack(
+                        children: [
+                          IconButton(
+                            icon: Icon(
+                              Icons.notifications,
+                              color: Colors.black87,
+                              size: screenHeight * 0.03,
+                            ),
+                            onPressed: () {
+                              context.push('/recentnotification');
+                            },
+                          ),
+                          if (notificationCount > 0)
+                            Positioned(
+                              right: 0,
+                              top: 5,
+                              child: Container(
+                                padding: const EdgeInsets.all(3),
+                                decoration: BoxDecoration(
+                                  color: Colors.red,
+                                  borderRadius: BorderRadius.circular(10),
+                                ),
+                                constraints: const BoxConstraints(
+                                  minWidth: 16,
+                                  minHeight: 16,
+                                ),
+                                child: Text(
+                                  '$notificationCount',
+                                  style: const TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 10,
+                                  ),
+                                  textAlign: TextAlign.center,
+                                ),
+                              ),
+                            ),
+                        ],
+                      );
+                    },
+                  ),
+                  // ----- END: Notification Icon with Dynamic Badge -----
                 ],
               ),
             ),
