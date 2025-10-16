@@ -38,82 +38,90 @@ class _SpeakerState extends State<Speaker> {
     List<String> links = List<String>.from(data["socialLinks"] ?? []);
     String? bio = data["bio"];
 
-    return Container(
-      margin: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
-      decoration: BoxDecoration(
-        // === GRADIENT CHANGE ===
-        // Re-adding the gradient for a professional look
-        gradient: LinearGradient(
-          colors: [
-            Colors.white,
-            Appcolor.backgroundLight,
-          ],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.grey.shade200),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.grey.shade100,
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(24),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start, // Vertically center content
-          children: [
-            // Speaker Image (Left Side)
-            Container(
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(12),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.1),
-                    blurRadius: 8,
-                    offset: const Offset(0, 2),
-                  ),
-                ],
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final screenWidth = constraints.maxWidth;
+        final bool isSmallScreen = screenWidth < 500;
+
+        final double imageSize = isSmallScreen ? 100 : 120;
+        final double horizontalPadding = isSmallScreen ? 16 : 24;
+        final double nameFontSize = isSmallScreen ? 20 : 24;
+
+        return Container(
+          margin: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: [
+                Colors.white,
+                Appcolor.backgroundLight,
+              ],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: Colors.grey.shade200),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.grey.shade100,
+                blurRadius: 10,
+                offset: const Offset(0, 4),
               ),
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(12),
-                child: SizedBox(
-                  width: 120,
-                  height: 120,
-                  child: Image.network(
-                    data["imageUrl"] ?? "",
-                    fit: BoxFit.contain,
-                    errorBuilder: (_, __, ___) => Container(
-                      color: Colors.grey.shade300,
-                      child: const Icon(Icons.person, size: 60, color: Colors.white),
+            ],
+          ),
+          child: Padding(
+            padding: EdgeInsets.all(horizontalPadding),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Speaker Image (Left Side)
+                Container(
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(12),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.1),
+                        blurRadius: 8,
+                        offset: const Offset(0, 2),
+                      ),
+                    ],
+                  ),
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(12),
+                    child: SizedBox(
+                      width: imageSize,
+                      height: imageSize,
+                      child: Image.network(
+                        data["imageUrl"] ?? "",
+                        fit: BoxFit.cover,
+                        errorBuilder: (_, __, ___) => Container(
+                          color: Colors.grey.shade300,
+                          child: const Icon(Icons.person, size: 60, color: Colors.white),
+                        ),
+                      ),
                     ),
                   ),
                 ),
-              ),
+                SizedBox(width: isSmallScreen ? 16 : 24),
+                Expanded(
+                  child: buildSpeakerInfo(data, bio, links, nameFontSize),
+                ),
+              ],
             ),
-            const SizedBox(width: 24),
-            // Speaker Details (Right Side)
-            Expanded(
-              child: buildSpeakerInfo(data, bio, links),
-            ),
-          ],
-        ),
-      ),
+          ),
+        );
+      },
     );
   }
 
   Widget buildSpeakerInfo(
-      Map<String, dynamic> data, String? bio, List<String> links) {
+      Map<String, dynamic> data, String? bio, List<String> links, double nameFontSize) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
           data["name"] ?? "",
-          style: const TextStyle(
-            fontSize: 24,
+          style: TextStyle(
+            fontSize: nameFontSize,
             fontWeight: FontWeight.bold,
             color: Colors.black,
             letterSpacing: -0.5,
@@ -162,17 +170,21 @@ class _SpeakerState extends State<Speaker> {
           ExpandableBio(bio: bio),
         ],
         const SizedBox(height: 16),
-        Row(
-          children: [
-            if (links.isNotEmpty)
-              buildSocialIcon(links[0], FontAwesomeIcons.facebook, Colors.blue.shade700),
-            if (links.length > 1)
-              buildSocialIcon(links[1], FontAwesomeIcons.linkedin, Colors.blue.shade800),
-            if (links.length > 2)
-              buildSocialIcon(links[2], FontAwesomeIcons.twitter, Colors.blue.shade400),
-            if (links.length > 3)
-              buildSocialIcon(links[3], FontAwesomeIcons.instagram, Colors.purple.shade700),
-          ],
+        // FIX: Wrap the Row in a SingleChildScrollView to prevent overflow
+        SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          child: Row(
+            children: [
+              if (links.isNotEmpty)
+                buildSocialIcon(links[0], FontAwesomeIcons.facebook, Colors.blue.shade700),
+              if (links.length > 1)
+                buildSocialIcon(links[1], FontAwesomeIcons.linkedin, Colors.blue.shade800),
+              if (links.length > 2)
+                buildSocialIcon(links[2], FontAwesomeIcons.twitter, Colors.blue.shade400),
+              if (links.length > 3)
+                buildSocialIcon(links[3], FontAwesomeIcons.instagram, Colors.purple.shade700),
+            ],
+          ),
         )
       ],
     );

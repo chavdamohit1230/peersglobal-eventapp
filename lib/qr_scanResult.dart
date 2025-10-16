@@ -9,13 +9,6 @@ class QrScanresult extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text('Scan Result')),
-      body: Center(
-        child: Text(
-          'Scanned QR Code:\n$qrCode',
-          textAlign: TextAlign.center,
-          style: const TextStyle(fontSize: 24),
-        ),
-      ),
     );
   }
 }

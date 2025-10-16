@@ -13,21 +13,29 @@ class Sponsor extends StatefulWidget {
 
 class _SponsorState extends State<Sponsor> {
   Future<void> _launchUrl(String url) async {
-    final Uri uri = Uri.parse(url.startsWith("http") ? url : "https://$url");
-    if (await canLaunchUrl(uri)) {
-      await launchUrl(uri, mode: LaunchMode.externalApplication);
+    final Uri uri = Uri.parse(url);
+    try {
+      if (!await launchUrl(uri, mode: LaunchMode.externalApplication)) {
+        throw 'Could not launch $uri';
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Could not open the link.')),
+      );
     }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor:Appcolor.backgroundLight,
+      backgroundColor: Appcolor.backgroundLight,
       appBar: AppBar(
-        title: const Text("Our Sponsors",
-            style: TextStyle(fontWeight: FontWeight.bold)),
+        title: const Text(
+          "Our Sponsors",
+          style: TextStyle(fontWeight: FontWeight.bold),
+        ),
         centerTitle: true,
-        backgroundColor:Appcolor.backgroundDark,
+        backgroundColor: Appcolor.backgroundDark,
         foregroundColor: Colors.white,
         elevation: 4,
         shadowColor: Colors.blueAccent,
@@ -53,7 +61,8 @@ class _SponsorState extends State<Sponsor> {
             itemBuilder: (context, index) {
               var data = sponsors[index].data() as Map<String, dynamic>;
 
-              return GestureDetector(
+              return SponsorListCard(
+                data: data,
                 onTap: () {
                   Navigator.push(
                     context,
@@ -62,65 +71,90 @@ class _SponsorState extends State<Sponsor> {
                     ),
                   );
                 },
-                child: Container(
-                  margin: const EdgeInsets.only(bottom: 20),
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(20),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black12,
-                        blurRadius: 8,
-                        offset: const Offset(0, 4),
-                      ),
-                    ],
-                    color: Colors.white,
-                  ),
-                  child: Column(
-                    children: [
-                      ClipRRect(
-                        borderRadius: const BorderRadius.vertical(
-                          top: Radius.circular(20),
-                        ),
-                        child: Image.network(
-                          data["photoUrl"] ?? "",
-                          height: 180,
-                          width: double.infinity,
-                          fit: BoxFit.cover,
-                        ),
-                      ),
-                      Padding(
-                        padding: const EdgeInsets.all(16),
-                        child: Column(
-                          children: [
-                            Text(
-                              data["name"] ?? "",
-                              style: const TextStyle(
-                                fontSize: 20,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.black87,
-                              ),
-                              textAlign: TextAlign.center,
-                            ),
-                            const SizedBox(height: 6),
-                            Text(
-                              data["brandName"] ?? "",
-                              style: const TextStyle(
-                                fontSize: 16,
-                                color: Colors.blue,
-                                fontWeight: FontWeight.w600,
-                              ),
-                              textAlign: TextAlign.center,
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
               );
             },
           );
         },
+      ),
+    );
+  }
+}
+
+class SponsorListCard extends StatelessWidget {
+  final Map<String, dynamic> data;
+  final VoidCallback onTap;
+
+  const SponsorListCard({
+    super.key,
+    required this.data,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      elevation: 6,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      margin: const EdgeInsets.only(bottom: 20),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(16),
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              ClipRRect(
+                borderRadius: BorderRadius.circular(12),
+                child: Container(
+                  width: 80,
+                  height: 80,
+                  color: Colors.grey.shade200,
+                  child: Image.network(
+                    data["photoUrl"] ?? "",
+                    fit: BoxFit.contain,
+                    errorBuilder: (context, error, stackTrace) =>
+                    const Icon(Icons.business_center, size: 50, color: Colors.grey),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      data["brandName"] ?? "N/A",
+                      style: const TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.black87,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      data["name"] ?? "N/A",
+                      style: TextStyle(
+                        fontSize: 16,
+                        color: Colors.grey.shade700,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      data["sponsorType"] ?? "N/A",
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: Colors.blue.shade700,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const Icon(Icons.arrow_forward_ios, color: Colors.grey, size: 16),
+            ],
+          ),
+        ),
       ),
     );
   }
@@ -131,24 +165,44 @@ class SponsorDetailScreen extends StatelessWidget {
   const SponsorDetailScreen({super.key, required this.data});
 
   Future<void> _launchUrl(String url) async {
-    final Uri uri = Uri.parse(url.startsWith("http") ? url : "https://$url");
-    if (await canLaunchUrl(uri)) {
-      await launchUrl(uri, mode: LaunchMode.externalApplication);
+    final Uri uri = Uri.parse(url);
+    try {
+      if (!await launchUrl(uri, mode: LaunchMode.externalApplication)) {
+        throw 'Could not launch $uri';
+      }
+    } catch (e) {
+      // You can show a SnackBar or an alert dialog here to inform the user
+      print('An error occurred while launching the URL: $e');
     }
   }
 
   Widget _infoRow(IconData icon, String title, String? value) {
-    if (value == null || value.isEmpty) return const SizedBox();
+    if (value == null || value.isEmpty) return const SizedBox.shrink();
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 6),
+      padding: const EdgeInsets.symmetric(vertical: 8),
       child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(icon, color: Colors.blue, size: 20),
-          const SizedBox(width: 10),
+          Icon(icon, color: Colors.blue, size: 24),
+          const SizedBox(width: 16),
           Expanded(
-            child: Text(
-              "$title: $value",
-              style: const TextStyle(fontSize: 15, color: Colors.black87),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: const TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.grey,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  value,
+                  style: const TextStyle(fontSize: 16, color: Colors.black87),
+                ),
+              ],
             ),
           ),
         ],
@@ -158,23 +212,22 @@ class SponsorDetailScreen extends StatelessWidget {
 
   Widget _socialIcon(IconData icon, String? url, Color color) {
     bool hasLink = url != null && url.isNotEmpty;
-    return InkWell(
-      onTap: hasLink ? () => _launchUrl(url!) : null,
-      child: CircleAvatar(
-        radius: 24,
-        backgroundColor: hasLink ? color : Colors.grey.shade400,
-        child: Icon(icon, color: Colors.white, size: 20),
-      ),
+    return IconButton(
+      icon: FaIcon(icon, color: hasLink ? color : Colors.grey.shade400, size: 28),
+      onPressed: hasLink ? () => _launchUrl(url!) : null,
+      tooltip: url,
     );
   }
 
   @override
   Widget build(BuildContext context) {
+    final Map<String, dynamic> socialLinks = data["socialLinks"] ?? {};
+
     return Scaffold(
-      backgroundColor:Appcolor.backgroundLight,
+      backgroundColor: Appcolor.backgroundLight,
       appBar: AppBar(
-        title: Text(data["name"] ?? "Sponsor"),
-        backgroundColor:Appcolor.backgroundDark,
+        title: Text(data["brandName"] ?? "Sponsor"),
+        backgroundColor: Appcolor.backgroundDark,
         foregroundColor: Colors.white,
       ),
       body: SingleChildScrollView(
@@ -182,26 +235,75 @@ class SponsorDetailScreen extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Image
-            ClipRRect(
-              borderRadius: BorderRadius.circular(15),
-              child: Image.network(
-                data["photoUrl"] ?? "",
-                height: 220,
-                width: double.infinity,
-                fit: BoxFit.cover,
+            Center(
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(20),
+                child: Container(
+                  width: 200,
+                  height: 200,
+                  color: Colors.white,
+                  child: Image.network(
+                    data["photoUrl"] ?? "",
+                    fit: BoxFit.contain,
+                    errorBuilder: (context, error, stackTrace) => Center(
+                      child: Icon(
+                        Icons.business_center,
+                        color: Colors.grey.shade600,
+                        size: 100,
+                      ),
+                    ),
+                  ),
+                ),
               ),
             ),
             const SizedBox(height: 20),
+            Center(
+              child: Text(
+                data["brandName"] ?? "N/A",
+                style: const TextStyle(
+                  fontSize: 28,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.black87,
+                ),
+                textAlign: TextAlign.center,
+              ),
+            ),
+            Center(
+              child: Text(
+                data["name"] ?? "N/A",
+                style: TextStyle(
+                  fontSize: 18,
+                  color: Colors.grey.shade700,
+                ),
+                textAlign: TextAlign.center,
+              ),
+            ),
+            const SizedBox(height: 30),
 
-            // Info Rows
-            _infoRow(Icons.business, "Organization", data["organization"]),
-            _infoRow(Icons.work, "Designation", data["designation"]),
-            _infoRow(Icons.email, "Email", data["email"]),
-            _infoRow(Icons.location_on, "Location", data["businessLocation"]),
-            _infoRow(Icons.star, "Sponsor Type", data["sponsorType"]),
-            _infoRow(Icons.info, "Other Info", data["otherInfo"]),
-
+            // Sponsor Details Section
+            const Text(
+              "Sponsor Details",
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.black87),
+            ),
+            const SizedBox(height: 10),
+            Card(
+              elevation: 4,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              child: Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _infoRow(Icons.business, "Organization", data["organization"]),
+                    _infoRow(Icons.work, "Designation", data["designation"]),
+                    _infoRow(Icons.email, "Email", data["email"]),
+                    _infoRow(Icons.location_on, "Location", data["businessLocation"]),
+                    _infoRow(Icons.star, "Sponsor Type", data["sponsorType"]),
+                    _infoRow(Icons.info, "Other Info", data["otherInfo"]),
+                  ],
+                ),
+              ),
+            ),
             const SizedBox(height: 20),
 
             if (data["companywebsite"] != null &&
@@ -214,29 +316,33 @@ class SponsorDetailScreen extends StatelessWidget {
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12),
                   ),
-                  minimumSize: const Size(double.infinity, 48),
+                  minimumSize: const Size(double.infinity, 50),
                 ),
                 icon: const Icon(Icons.language),
-                label: const Text("Visit Website"),
+                label: const Text("Visit Website", style: TextStyle(fontSize: 16)),
               ),
 
             const SizedBox(height: 30),
 
-            // Social Icons Row
+            // Use a Divider as a separator
+            const Divider(height: 1, thickness: 1, color: Colors.grey),
+
+            const SizedBox(height: 30),
+
+            // Social Media Section
             const Text(
-              "Follow us on",
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              "Follow Us on Social Media",
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.black87),
             ),
             const SizedBox(height: 15),
-            Wrap(
-              spacing: 20,
-              runSpacing: 10,
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceAround,
               children: [
-                _socialIcon(FontAwesomeIcons.facebookF, data["facebook"], Colors.blue),
-                _socialIcon(FontAwesomeIcons.instagram, data["instagram"], Colors.pink),
-                _socialIcon(FontAwesomeIcons.linkedinIn, data["linkedin"], Colors.blueAccent),
-                _socialIcon(FontAwesomeIcons.twitter, data["twitter"], Colors.lightBlue),
-                _socialIcon(FontAwesomeIcons.youtube, data["youtube"], Colors.red),
+                _socialIcon(FontAwesomeIcons.facebookF, socialLinks["facebook"], Colors.blue.shade700),
+                _socialIcon(FontAwesomeIcons.instagram, socialLinks["instagram"], Colors.pink),
+                _socialIcon(FontAwesomeIcons.linkedinIn, socialLinks["linkedin"], Colors.blue.shade800),
+                _socialIcon(FontAwesomeIcons.twitter, socialLinks["twitter"], Colors.lightBlue.shade500),
+                _socialIcon(FontAwesomeIcons.youtube, socialLinks["youtube"], Colors.red.shade700),
               ],
             )
           ],

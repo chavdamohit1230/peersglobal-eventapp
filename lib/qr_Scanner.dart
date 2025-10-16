@@ -23,34 +23,7 @@ class _QrScannerState extends State<QrScanner> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text('QR Scanner')),
-      body: MobileScanner(
-        controller: _controller,
-        onDetect: (capture) {
-          if (isScanned) return;
 
-          final barcode = capture.barcodes.first;
-          final String? code = barcode.rawValue;
-
-          if (code != null) {
-            setState(() {
-              isScanned = true;
-            });
-
-            if (mounted) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text('Scanned: $code')),
-              );
-            }
-
-            Future.delayed(const Duration(seconds: 1), () async {
-              await _controller.stop();
-              if (mounted) {
-                context.push('/result/$code');
-              }
-            });
-          }
-        },
-      ),
     );
   }
 }
