@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:peersglobleeventapp/color/colorfile.dart';
+import 'package:peersglobleeventapp/color/colorfile.dart';
 
 class Sponsor extends StatefulWidget {
   const Sponsor({super.key});
@@ -32,12 +33,10 @@ class _SponsorState extends State<Sponsor> {
       appBar: AppBar(
         title: const Text(
           "Our Sponsors",
-          style: TextStyle(fontWeight: FontWeight.bold),
+          style: TextStyle(fontWeight: FontWeight.bold,color:Colors.black),
         ),
         centerTitle: true,
         backgroundColor: Appcolor.backgroundDark,
-        foregroundColor: Colors.white,
-        elevation: 4,
         shadowColor: Colors.blueAccent,
       ),
       body: StreamBuilder<QuerySnapshot>(
@@ -93,7 +92,7 @@ class SponsorListCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Card(
-      elevation: 6,
+      elevation: 3,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       margin: const EdgeInsets.only(bottom: 20),
       child: InkWell(

@@ -1257,22 +1257,81 @@ class _CreatePostModalState extends State<CreatePostModal> {
               TextField(
                 controller: _contentController,
                 maxLines: 3,
-                decoration: const InputDecoration(hintText: "What's on your mind?"),
-              ),
+                decoration: InputDecoration(
+                  hintText: "What's on your mind?",
+                  hintStyle: const TextStyle(color: Colors.grey),
+                  contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                  filled: true,
+                  fillColor: Colors.grey[100], // 🔹 Light background
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12), // 🔹 Rounded corners
+                    borderSide: const BorderSide(color: Colors.grey), // 🔹 Border color
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: const BorderSide(color: Colors.grey),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: const BorderSide(color: Colors.blue, width: 2), // 🔹 Highlight on focus
+                  ),
+                ),
+              )
+              ,
               const SizedBox(height: 12),
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceAround,
                 children: [
                   ElevatedButton.icon(
                     onPressed: _pickImages,
-                    icon: const Icon(Icons.photo_library),
-                    label: const Text("Images"),
+                    icon: const Icon(
+                      Icons.photo_library,
+                      color: Colors.white,
+                      size: 22,
+                    ),
+                    label: const Text(
+                      "Images",
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.blueAccent,
+                      elevation: 3,
+                      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                    ),
                   ),
+
                   ElevatedButton.icon(
                     onPressed: _pickVideos,
-                    icon: const Icon(Icons.videocam),
-                    label: const Text("Video"),
+                    icon: const Icon(
+                      Icons.videocam,
+                      color: Colors.white,
+                      size: 22,
+                    ),
+                    label: const Text(
+                      "Video",
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.blueAccent,
+                      elevation: 3,
+                      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                    ),
                   ),
+
                 ],
               ),
               const SizedBox(height: 12),
@@ -1318,10 +1377,26 @@ class _CreatePostModalState extends State<CreatePostModal> {
               const SizedBox(height: 12),
               _isUploading
                   ? const CircularProgressIndicator()
-                  : ElevatedButton(
+                  :ElevatedButton(
                 onPressed: _createPost,
-                child: const Text("Post"),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.green,
+                  elevation: 3,
+                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                ),
+                child: const Text(
+                  "Post",
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
               ),
+
             ],
           ),
         ),

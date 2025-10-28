@@ -3,8 +3,48 @@ import 'package:flutter/material.dart';
 import 'package:video_player/video_player.dart';
 import 'package:carousel_slider/carousel_slider.dart' as custom_carousel;
 import 'package:cloud_firestore/cloud_firestore.dart';
+// Note: Assuming UserPostModel supports the new comment structure or is adapted elsewhere.
 import 'package:peersglobleeventapp/modelClass/user_PostModel.dart';
 import 'package:shimmer/shimmer.dart';
+
+// --- Comment Model (Internal to the Widget for clarity) ---
+class Comment {
+  final String userId;
+  final String username;
+  final String userPhotoUrl;
+  final String text;
+  final Timestamp timestamp;
+
+  Comment({
+    required this.userId,
+    required this.username,
+    required this.userPhotoUrl,
+    required this.text,
+    required this.timestamp,
+  });
+
+  factory Comment.fromMap(Map<String, dynamic> data) {
+    return Comment(
+      userId: data['userId'] ?? '',
+      username: data['username'] ?? 'Unknown User',
+      userPhotoUrl: data['userPhotoUrl'] ?? '',
+      text: data['text'] ?? '',
+      timestamp: data['timestamp'] ?? Timestamp.now(),
+    );
+  }
+
+  Map<String, dynamic> toMap() {
+    return {
+      'userId': userId,
+      'username': username,
+      'userPhotoUrl': userPhotoUrl,
+      'text': text,
+      'timestamp': timestamp,
+    };
+  }
+}
+// -----------------------------------------------------------
+
 
 class Userpostcard extends StatefulWidget {
   final UserPostModel post;
@@ -26,6 +66,38 @@ class _UserpostcardState extends State<Userpostcard> {
   final Map<String, double> _imageAspectRatios = {};
   final Set<String> _loadingAspectRatio = {};
 
+  // Caching current user details to use when posting a new comment
+  String _currentUsername = 'You';
+  String _currentUserPhotoUrl = '';
+
+  // 🔄 HELPER FUNCTION: Fetch user details from 'userregister'
+  Future<Map<String, dynamic>> _fetchCommentUserDetails(String fullUserIdPath) async {
+    String userIdToFetch = fullUserIdPath;
+
+    // Path से असली यूजर ID निकालें
+    if (userIdToFetch.contains('userregister/')) {
+      userIdToFetch = userIdToFetch.split('userregister/').last;
+    } else if (userIdToFetch.contains('/users/')) {
+      userIdToFetch = userIdToFetch.split('/users/').last;
+    }
+
+    // 'userregister' कलेक्शन से फेच करें
+    final userDoc = await FirebaseFirestore.instance.collection('userregister').doc(userIdToFetch).get();
+    final userData = userDoc.data();
+
+    if (userData != null) {
+      return {
+        'username': userData['name'] ?? 'Unknown User',
+        'userPhotoUrl': userData['photoUrl'] ?? '',
+      };
+    }
+    return {
+      'username': 'Unknown User',
+      'userPhotoUrl': '',
+    };
+  }
+
+
   @override
   void initState() {
     super.initState();
@@ -35,6 +107,176 @@ class _UserpostcardState extends State<Userpostcard> {
     for (final url in widget.post.imageUrls) {
       _fetchImageAspectRatio(url);
     }
+    _fetchCurrentUserDetails();
+  }
+
+  void _fetchCurrentUserDetails() async {
+    String userIdToFetch = widget.currentUserId;
+
+    // ➡️ वर्तमान यूजर ID को साफ करना
+    if (userIdToFetch.contains('userregister/')) {
+      userIdToFetch = userIdToFetch.split('userregister/').last;
+    } else if (userIdToFetch.contains('/users/')) {
+      userIdToFetch = userIdToFetch.split('/users/').last;
+    }
+
+    // ➡️ वर्तमान यूजर की डिटेल्स को 'userregister' से फेच करना
+    final userDoc = await FirebaseFirestore.instance.collection('userregister').doc(userIdToFetch).get();
+    final userData = userDoc.data();
+
+    if (userData != null && mounted) {
+      setState(() {
+        // Firestore फ़ील्ड 'name' और 'photoUrl' का उपयोग करें
+        _currentUsername = userData['name'] ?? 'You';
+        _currentUserPhotoUrl = userData['photoUrl'] ?? '';
+      });
+      print('Current User Username Fetched: $_currentUsername');
+    } else {
+      print('Error: Could not find current user document for ID: $userIdToFetch in "userregister" collection.');
+    }
+  }
+
+  // --- UPDATED: Edit Comment Functionality (Fixes Pop-up Closing) ---
+  void _editComment(Comment comment) {
+    TextEditingController editController = TextEditingController(text: comment.text);
+
+    showDialog(
+      context: context,
+      builder: (context) {
+        // लोडिंग स्टेट को लोकल रूप से हैंडल करने के लिए StatefulBuilder का उपयोग करें
+        return StatefulBuilder(
+          builder: (context, setLocalState) {
+            bool isLoading = false;
+
+            return AlertDialog(
+              title: const Text("Edit Comment"),
+              content: TextField(
+                controller: editController,
+                decoration: const InputDecoration(hintText: "Enter your updated comment"),
+                autofocus: true,
+                enabled: !isLoading, // लोडिंग के दौरान डिसेबल
+              ),
+              actions: [
+                TextButton(
+                  onPressed: isLoading ? null : () => Navigator.pop(context), // लोडिंग के दौरान डिसेबल
+                  child: const Text("Cancel"),
+                ),
+                TextButton(
+                  onPressed: isLoading ? null : () async {
+                    final updatedText = editController.text.trim();
+                    if (updatedText.isNotEmpty) {
+
+                      // 🟢 Step 1: लोडिंग शुरू करें
+                      setLocalState(() {
+                        isLoading = true;
+                      });
+
+                      final postRef = FirebaseFirestore.instance.collection("userposts").doc(widget.post.id);
+                      bool updateSuccess = false;
+
+                      try {
+                        await FirebaseFirestore.instance.runTransaction((transaction) async {
+                          final postSnapshot = await transaction.get(postRef);
+                          if (!postSnapshot.exists) return;
+
+                          List comments = postSnapshot.data()?['comments'] ?? [];
+
+                          final index = comments.indexWhere((map) =>
+                          map['userId'] == comment.userId &&
+                              map['timestamp'] == comment.timestamp
+                          );
+
+                          if (index != -1) {
+                            comments[index]['text'] = updatedText;
+                            transaction.update(postRef, {'comments': comments});
+                            updateSuccess = true;
+                          }
+                        });
+                      } catch (e) {
+                        print("Error updating comment: $e");
+                        // यदि कोई एरर हो तो भी लोडिंग खत्म करें
+                        setLocalState(() => isLoading = false);
+                        return;
+                      }
+
+                      // 🟢 Step 2: ट्रांजेक्शन सफल होने पर पॉप-अप बंद करें
+                      // pop-up को बंद करने से पहले stream को अपडेट होने का मौका न दें
+                      if (updateSuccess) {
+                        if(mounted) Navigator.pop(context);
+                      } else {
+                        // यदि अपडेट सफल न हो, तो भी लोडिंग खत्म करें
+                        setLocalState(() => isLoading = false);
+                      }
+                    }
+                  },
+                  child: isLoading
+                      ? const SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(strokeWidth: 2)
+                  )
+                      : const Text("Update"), // 'Update' या लोडिंग इंडिकेटर दिखाएं
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+  }
+
+  // --- Delete Comment Functionality ---
+  void _deleteComment(Comment comment) async {
+    // यह comment object को array से हटाता है
+    final Map<String, dynamic> commentToDelete = {
+      'userId': comment.userId,
+      'username': comment.username,
+      'userPhotoUrl': comment.userPhotoUrl,
+      'text': comment.text,
+      'timestamp': comment.timestamp,
+    };
+
+    await FirebaseFirestore.instance
+        .collection("userposts")
+        .doc(widget.post.id)
+        .update({
+      'comments': FieldValue.arrayRemove([commentToDelete])
+    });
+  }
+
+  // --- Comment Menu Widget ---
+  Widget _buildCommentMenu(Comment comment) {
+    // केवल वही यूजर एडिट/डिलीट कर सकता है जिसने कमेंट पोस्ट किया है।
+    final bool canModify = comment.userId.contains(widget.currentUserId);
+
+    if (!canModify) {
+      return const SizedBox.shrink();
+    }
+
+    return PopupMenuButton<String>(
+      onSelected: (String result) {
+        switch (result) {
+          case 'edit':
+            _editComment(comment);
+            break;
+          case 'delete':
+            _deleteComment(comment);
+            break;
+        }
+      },
+      itemBuilder: (BuildContext context) => <PopupMenuEntry<String>>[
+        const PopupMenuItem<String>(
+          value: 'edit',
+          child: Text('Edit'),
+        ),
+        const PopupMenuItem<String>(
+          value: 'delete',
+          child: Text('Delete'),
+        ),
+      ],
+      icon: const Icon(Icons.more_vert, size: 18, color: Colors.grey),
+      splashRadius: 18,
+    );
   }
 
   void _initVideo(String url) {
@@ -42,6 +284,7 @@ class _UserpostcardState extends State<Userpostcard> {
         ? VideoPlayerController.networkUrl(Uri.parse(url))
         : VideoPlayerController.file(File(url));
     _videoController!.initialize().then((_) => setState(() {}));
+    _videoController!.setLooping(true); // Added for a better video experience
   }
 
   @override
@@ -60,58 +303,216 @@ class _UserpostcardState extends State<Userpostcard> {
     return "${date.day}/${date.month}/${date.year}";
   }
 
-  void _showCommentsDialog(List<dynamic> comments) {
+  // --- UPDATED: Show comments as a Bottom Modal Sheet ---
+  void _showCommentsBottomSheet(List<dynamic> commentMaps) {
     TextEditingController commentController = TextEditingController();
-    showDialog(
+
+    showModalBottomSheet(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text("Comments"),
-        content: SizedBox(
-          width: double.maxFinite,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Flexible(
-                child: ListView.builder(
-                  shrinkWrap: true,
-                  itemCount: comments.length,
-                  itemBuilder: (context, index) {
-                    return ListTile(
-                      title: Text(comments[index].toString()),
-                    );
-                  },
+      isScrollControlled: true,
+      useSafeArea: true,
+      builder: (context) {
+        return StreamBuilder<DocumentSnapshot>(
+          stream: FirebaseFirestore.instance.collection("userposts").doc(widget.post.id).snapshots(),
+          builder: (context, snapshot) {
+
+            List<dynamic> latestCommentMaps = [];
+            if (snapshot.hasData && snapshot.data!.exists) {
+              latestCommentMaps = (snapshot.data!.data() as Map<String, dynamic>?)?['comments'] ?? [];
+            }
+
+            final List<Comment> comments = latestCommentMaps
+                .map((map) => Comment.fromMap(map as Map<String, dynamic>))
+                .toList()
+              ..sort((a, b) => a.timestamp.compareTo(b.timestamp));
+
+            return Padding(
+              padding: EdgeInsets.only(
+                bottom: MediaQuery.of(context).viewInsets.bottom,
+              ),
+              child: SizedBox(
+                height: MediaQuery.of(context).size.height * 0.8, // Take 80% of the screen height
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    // Title and Close Button
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          const Text(
+                            "Comments",
+                            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                          ),
+                          IconButton(
+                            icon: const Icon(Icons.close),
+                            onPressed: () => Navigator.pop(context),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const Divider(height: 1),
+
+                    // Comments List
+                    Expanded(
+                      child: ListView.builder(
+                        itemCount: comments.length,
+                        itemBuilder: (context, index) {
+                          final comment = comments[index];
+
+                          return FutureBuilder<Map<String, dynamic>>(
+                            // हर कमेंट के लिए Firestore से डिटेल्स फेच करना
+                            future: _fetchCommentUserDetails(comment.userId),
+                            builder: (context, userSnapshot) {
+
+                              String displayUsername = comment.username;
+                              String displayPhotoUrl = comment.userPhotoUrl;
+
+                              if (userSnapshot.connectionState == ConnectionState.done && userSnapshot.hasData) {
+                                // अगर सफलतापूर्वक फेच हो गया और कमेंट में 'You' या खाली नाम है, तो फेच किए गए डेटा का उपयोग करें
+                                if (comment.username == 'You' || comment.username.isEmpty) {
+                                  displayUsername = userSnapshot.data!['username'] ?? 'Unknown User';
+                                }
+                                if (comment.userPhotoUrl.isEmpty) {
+                                  displayPhotoUrl = userSnapshot.data!['userPhotoUrl'] ?? '';
+                                }
+                              } else if (userSnapshot.connectionState == ConnectionState.waiting) {
+                                // लोडिंग की स्थिति में Shimmer दिखाएं
+                                return Shimmer.fromColors(
+                                  baseColor: Colors.grey[300]!,
+                                  highlightColor: Colors.grey[100]!,
+                                  child: Padding(
+                                    padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+                                    child: Row(children: [
+                                      const CircleAvatar(radius: 18),
+                                      const SizedBox(width: 8),
+                                      Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                                        Container(width: 100, height: 10, color: Colors.white),
+                                        const SizedBox(height: 4),
+                                        Container(width: 200, height: 10, color: Colors.white),
+                                      ])
+                                    ]),
+                                  ),
+                                );
+                              }
+
+                              // *** USERNAME AND IMAGE DISPLAY ***
+                              return Padding(
+                                padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+                                child: Row(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    CircleAvatar(
+                                      radius: 18,
+                                      // backgroundImage null हैंडलिंग के साथ सेट करना
+                                      backgroundImage: displayPhotoUrl.isNotEmpty
+                                          ? (displayPhotoUrl.startsWith('http')
+                                          ? NetworkImage(displayPhotoUrl)
+                                          : FileImage(File(displayPhotoUrl))
+                                      ) as ImageProvider<Object>?
+                                          : null,
+
+                                      // Fallback child: Show person icon if no photoUrl is available
+                                      child: displayPhotoUrl.isEmpty ? const Icon(Icons.person, size: 20) : null,
+                                    ),
+                                    const SizedBox(width: 8),
+                                    Expanded(
+                                      child: Column(
+                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        children: [
+                                          RichText(
+                                            text: TextSpan(
+                                              style: DefaultTextStyle.of(context).style.copyWith(fontSize: 14),
+                                              children: <TextSpan>[
+                                                TextSpan(
+                                                  // 👤 फेच किया गया या स्टोर्ड username का उपयोग
+                                                  text: '${displayUsername} ',
+                                                  style: const TextStyle(fontWeight: FontWeight.bold),
+                                                ),
+                                                TextSpan(
+                                                  text: comment.text,
+                                                ),
+                                              ],
+                                            ),
+                                          ),
+                                          const SizedBox(height: 2),
+                                          Text(
+                                            _getTimeAgo(comment.timestamp.toDate()),
+                                            style: TextStyle(color: Colors.grey[600], fontSize: 12),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+
+                                    // 🟢 Comment Menu (Edit/Delete)
+                                    _buildCommentMenu(comment),
+
+                                  ],
+                                ),
+                              );
+                              // *** END USERNAME AND IMAGE DISPLAY ***
+                            },
+                          );
+                        },
+                      ),
+                    ),
+                    const Divider(height: 1),
+
+                    // Comment Input Field
+                    Padding(
+                      padding: const EdgeInsets.all(8.0),
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: TextField(
+                              controller: commentController,
+                              decoration: const InputDecoration(
+                                hintText: "Add a comment...",
+                                border: OutlineInputBorder(borderRadius: BorderRadius.all(Radius.circular(20))),
+                                contentPadding: EdgeInsets.symmetric(horizontal: 15, vertical: 10),
+                              ),
+                              textCapitalization: TextCapitalization.sentences,
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          IconButton(
+                            icon: const Icon(Icons.send, color: Colors.blue),
+                            onPressed: () async {
+                              final commentText = commentController.text.trim();
+                              if (commentText.isNotEmpty) {
+
+                                // Use the cached user details
+                                final newComment = Comment(
+                                  userId: widget.currentUserId,
+                                  username: _currentUsername,
+                                  userPhotoUrl: _currentUserPhotoUrl,
+                                  text: commentText,
+                                  timestamp: Timestamp.now(),
+                                );
+
+                                await FirebaseFirestore.instance
+                                    .collection("userposts")
+                                    .doc(widget.post.id)
+                                    .update({'comments': FieldValue.arrayUnion([newComment.toMap()])});
+
+                                commentController.clear();
+                              }
+                            },
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
                 ),
               ),
-              const SizedBox(height: 10),
-              TextField(
-                controller: commentController,
-                decoration: const InputDecoration(
-                  hintText: "Add a comment",
-                  border: OutlineInputBorder(),
-                ),
-              ),
-            ],
-          ),
-        ),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(context), child: const Text("Cancel")),
-          ElevatedButton(
-            onPressed: () async {
-              final comment = commentController.text.trim();
-              if (comment.isNotEmpty) {
-                await FirebaseFirestore.instance
-                    .collection("userposts")
-                    .doc(widget.post.id)
-                    .update({'comments': FieldValue.arrayUnion([comment])});
-              }
-              Navigator.pop(context);
-            },
-            child: const Text("Post"),
-          ),
-        ],
-      ),
+            );
+          },
+        );
+      },
     );
   }
+  // --- END UPDATED: Show comments as a Bottom Modal Sheet ---
 
   void _fetchImageAspectRatio(String url) {
     if (_imageAspectRatios.containsKey(url) || _loadingAspectRatio.contains(url)) return;
@@ -137,6 +538,9 @@ class _UserpostcardState extends State<Userpostcard> {
   }
 
   void _openFullScreenGallery(int initialIndex) {
+    // Re-implemented to correctly handle the initial image index for the full-screen view.
+    setState(() => _currentImageIndex = initialIndex);
+
     showDialog(
       context: context,
       builder: (context) => Dialog(
@@ -165,7 +569,9 @@ class _UserpostcardState extends State<Userpostcard> {
                 enableInfiniteScroll: false,
                 viewportFraction: 1.0,
                 height: MediaQuery.of(context).size.height,
-                onPageChanged: (idx, _) => setState(() => _currentImageIndex = idx),
+                onPageChanged: (idx, _) {
+                  setState(() => _currentImageIndex = idx);
+                },
               ),
             ),
             Positioned(
@@ -204,7 +610,7 @@ class _UserpostcardState extends State<Userpostcard> {
         String username = widget.post.username;
         String profileImageUrl = widget.post.profileImageUrl;
         List<dynamic> likes = [];
-        List<dynamic> comments = [];
+        List<dynamic> comments = []; // Now stores a list of maps (the comment structure)
 
         if (snapshot.hasData && snapshot.data!.exists) {
           final data = snapshot.data!.data() as Map<String, dynamic>? ?? {};
@@ -234,6 +640,8 @@ class _UserpostcardState extends State<Userpostcard> {
                           ? NetworkImage(profileImageUrl)
                           : FileImage(File(profileImageUrl)))
                       as ImageProvider<Object>,
+                      onBackgroundImageError: (exception, stackTrace) =>
+                      const Icon(Icons.person),
                     ),
                     title: Text(
                       username,
@@ -281,13 +689,13 @@ class _UserpostcardState extends State<Userpostcard> {
                         icon: Icons.comment_outlined,
                         color: Colors.black,
                         text: "Comment  ${comments.length}",
-                        onTap: () => _showCommentsDialog(comments),
+                        onTap: () => _showCommentsBottomSheet(comments),
                       ),
                     ],
                   ),
                 ),
 
-                // Caption (moved here)
+                // Caption
                 if (widget.post.caption.isNotEmpty)
                   Padding(
                     padding: EdgeInsets.symmetric(horizontal: sw * 0.04, vertical: sh * 0.006),
@@ -336,7 +744,7 @@ class _UserpostcardState extends State<Userpostcard> {
       final aspect = _imageAspectRatios[url];
       final maxH = sh * 0.75;
       final height = (aspect != null ? (sw / aspect) : sh * 0.45)
-          .clamp(100, maxH)
+          .clamp(100.0, maxH) // Use 100.0 for double
           .toDouble();
 
       return GestureDetector(
@@ -429,9 +837,25 @@ class _UserpostcardState extends State<Userpostcard> {
               : _videoController!.play();
         });
       },
-      child: AspectRatio(
-        aspectRatio: _videoController!.value.aspectRatio,
-        child: VideoPlayer(_videoController!),
+      child: Stack(
+        alignment: Alignment.center,
+        children: [
+          AspectRatio(
+            aspectRatio: _videoController!.value.aspectRatio,
+            child: VideoPlayer(_videoController!),
+          ),
+          if (!_videoController!.value.isPlaying)
+            Container(
+              color: Colors.black38,
+              child: const Center(
+                child: Icon(
+                  Icons.play_circle_fill,
+                  color: Colors.white,
+                  size: 80,
+                ),
+              ),
+            ),
+        ],
       ),
     );
   }

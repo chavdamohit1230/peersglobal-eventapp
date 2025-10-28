@@ -60,6 +60,7 @@ dependencies:
   firebase_storage:
   intl:
   timeago:
+  connectivity_plus:
   font_awesome_flutter:
 
 
