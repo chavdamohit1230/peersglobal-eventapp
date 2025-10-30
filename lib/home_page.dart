@@ -262,8 +262,15 @@ class _HomePageState extends State<HomePage> {
                       ListTile(
                         leading: const Icon(Icons.home, size: 28),
                         title: const Text('Home', style: TextStyle(fontSize: 18)),
-                        onTap: () => Navigator.pop(context),
+                        onTap: () {
+                          Navigator.pop(context);
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(builder: (context) =>HomePage()),
+                          );
+                        },
                       ),
+
                       ListTile(
                         leading: const Icon(Icons.person, size: 28),
                         title: const Text('Profile', style: TextStyle(fontSize: 18)),

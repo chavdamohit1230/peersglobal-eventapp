@@ -107,6 +107,8 @@ class AppRouter {
         GoRoute(path: '/recentnotification',
           builder: (context, state) =>Recentnotification()),
 
+        GoRoute(path: '/home_page',
+          builder: (context, state) =>HomePage(),),
 
         GoRoute(
           path: '/meeting',

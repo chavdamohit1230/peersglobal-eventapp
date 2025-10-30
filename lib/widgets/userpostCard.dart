@@ -3,11 +3,9 @@ import 'package:flutter/material.dart';
 import 'package:video_player/video_player.dart';
 import 'package:carousel_slider/carousel_slider.dart' as custom_carousel;
 import 'package:cloud_firestore/cloud_firestore.dart';
-// Note: Assuming UserPostModel supports the new comment structure or is adapted elsewhere.
 import 'package:peersglobleeventapp/modelClass/user_PostModel.dart';
 import 'package:shimmer/shimmer.dart';
 
-// --- Comment Model (Internal to the Widget for clarity) ---
 class Comment {
   final String userId;
   final String username;
@@ -43,7 +41,6 @@ class Comment {
     };
   }
 }
-// -----------------------------------------------------------
 
 
 class Userpostcard extends StatefulWidget {
@@ -66,22 +63,18 @@ class _UserpostcardState extends State<Userpostcard> {
   final Map<String, double> _imageAspectRatios = {};
   final Set<String> _loadingAspectRatio = {};
 
-  // Caching current user details to use when posting a new comment
   String _currentUsername = 'You';
   String _currentUserPhotoUrl = '';
 
-  // 🔄 HELPER FUNCTION: Fetch user details from 'userregister'
   Future<Map<String, dynamic>> _fetchCommentUserDetails(String fullUserIdPath) async {
     String userIdToFetch = fullUserIdPath;
 
-    // Path से असली यूजर ID निकालें
     if (userIdToFetch.contains('userregister/')) {
       userIdToFetch = userIdToFetch.split('userregister/').last;
     } else if (userIdToFetch.contains('/users/')) {
       userIdToFetch = userIdToFetch.split('/users/').last;
     }
 
-    // 'userregister' कलेक्शन से फेच करें
     final userDoc = await FirebaseFirestore.instance.collection('userregister').doc(userIdToFetch).get();
     final userData = userDoc.data();
 
@@ -113,20 +106,17 @@ class _UserpostcardState extends State<Userpostcard> {
   void _fetchCurrentUserDetails() async {
     String userIdToFetch = widget.currentUserId;
 
-    // ➡️ वर्तमान यूजर ID को साफ करना
     if (userIdToFetch.contains('userregister/')) {
       userIdToFetch = userIdToFetch.split('userregister/').last;
     } else if (userIdToFetch.contains('/users/')) {
       userIdToFetch = userIdToFetch.split('/users/').last;
     }
 
-    // ➡️ वर्तमान यूजर की डिटेल्स को 'userregister' से फेच करना
     final userDoc = await FirebaseFirestore.instance.collection('userregister').doc(userIdToFetch).get();
     final userData = userDoc.data();
 
     if (userData != null && mounted) {
       setState(() {
-        // Firestore फ़ील्ड 'name' और 'photoUrl' का उपयोग करें
         _currentUsername = userData['name'] ?? 'You';
         _currentUserPhotoUrl = userData['photoUrl'] ?? '';
       });
@@ -136,14 +126,13 @@ class _UserpostcardState extends State<Userpostcard> {
     }
   }
 
-  // --- UPDATED: Edit Comment Functionality (Fixes Pop-up Closing) ---
   void _editComment(Comment comment) {
     TextEditingController editController = TextEditingController(text: comment.text);
 
     showDialog(
       context: context,
       builder: (context) {
-        // लोडिंग स्टेट को लोकल रूप से हैंडल करने के लिए StatefulBuilder का उपयोग करें
+
         return StatefulBuilder(
           builder: (context, setLocalState) {
             bool isLoading = false;
@@ -154,11 +143,11 @@ class _UserpostcardState extends State<Userpostcard> {
                 controller: editController,
                 decoration: const InputDecoration(hintText: "Enter your updated comment"),
                 autofocus: true,
-                enabled: !isLoading, // लोडिंग के दौरान डिसेबल
+                enabled: !isLoading,
               ),
               actions: [
                 TextButton(
-                  onPressed: isLoading ? null : () => Navigator.pop(context), // लोडिंग के दौरान डिसेबल
+                  onPressed: isLoading ? null : () => Navigator.pop(context),
                   child: const Text("Cancel"),
                 ),
                 TextButton(
@@ -166,7 +155,6 @@ class _UserpostcardState extends State<Userpostcard> {
                     final updatedText = editController.text.trim();
                     if (updatedText.isNotEmpty) {
 
-                      // 🟢 Step 1: लोडिंग शुरू करें
                       setLocalState(() {
                         isLoading = true;
                       });
@@ -194,17 +182,12 @@ class _UserpostcardState extends State<Userpostcard> {
                         });
                       } catch (e) {
                         print("Error updating comment: $e");
-                        // यदि कोई एरर हो तो भी लोडिंग खत्म करें
                         setLocalState(() => isLoading = false);
                         return;
                       }
-
-                      // 🟢 Step 2: ट्रांजेक्शन सफल होने पर पॉप-अप बंद करें
-                      // pop-up को बंद करने से पहले stream को अपडेट होने का मौका न दें
                       if (updateSuccess) {
                         if(mounted) Navigator.pop(context);
                       } else {
-                        // यदि अपडेट सफल न हो, तो भी लोडिंग खत्म करें
                         setLocalState(() => isLoading = false);
                       }
                     }
@@ -215,7 +198,7 @@ class _UserpostcardState extends State<Userpostcard> {
                       height: 20,
                       child: CircularProgressIndicator(strokeWidth: 2)
                   )
-                      : const Text("Update"), // 'Update' या लोडिंग इंडिकेटर दिखाएं
+                      : const Text("Update"),
                 ),
               ],
             );
@@ -225,9 +208,7 @@ class _UserpostcardState extends State<Userpostcard> {
     );
   }
 
-  // --- Delete Comment Functionality ---
   void _deleteComment(Comment comment) async {
-    // यह comment object को array से हटाता है
     final Map<String, dynamic> commentToDelete = {
       'userId': comment.userId,
       'username': comment.username,
@@ -244,9 +225,7 @@ class _UserpostcardState extends State<Userpostcard> {
     });
   }
 
-  // --- Comment Menu Widget ---
   Widget _buildCommentMenu(Comment comment) {
-    // केवल वही यूजर एडिट/डिलीट कर सकता है जिसने कमेंट पोस्ट किया है।
     final bool canModify = comment.userId.contains(widget.currentUserId);
 
     if (!canModify) {
@@ -284,7 +263,7 @@ class _UserpostcardState extends State<Userpostcard> {
         ? VideoPlayerController.networkUrl(Uri.parse(url))
         : VideoPlayerController.file(File(url));
     _videoController!.initialize().then((_) => setState(() {}));
-    _videoController!.setLooping(true); // Added for a better video experience
+    _videoController!.setLooping(true);
   }
 
   @override
@@ -303,7 +282,6 @@ class _UserpostcardState extends State<Userpostcard> {
     return "${date.day}/${date.month}/${date.year}";
   }
 
-  // --- UPDATED: Show comments as a Bottom Modal Sheet ---
   void _showCommentsBottomSheet(List<dynamic> commentMaps) {
     TextEditingController commentController = TextEditingController();
 
@@ -335,7 +313,6 @@ class _UserpostcardState extends State<Userpostcard> {
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    // Title and Close Button
                     Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
                       child: Row(
@@ -362,7 +339,6 @@ class _UserpostcardState extends State<Userpostcard> {
                           final comment = comments[index];
 
                           return FutureBuilder<Map<String, dynamic>>(
-                            // हर कमेंट के लिए Firestore से डिटेल्स फेच करना
                             future: _fetchCommentUserDetails(comment.userId),
                             builder: (context, userSnapshot) {
 
@@ -370,7 +346,6 @@ class _UserpostcardState extends State<Userpostcard> {
                               String displayPhotoUrl = comment.userPhotoUrl;
 
                               if (userSnapshot.connectionState == ConnectionState.done && userSnapshot.hasData) {
-                                // अगर सफलतापूर्वक फेच हो गया और कमेंट में 'You' या खाली नाम है, तो फेच किए गए डेटा का उपयोग करें
                                 if (comment.username == 'You' || comment.username.isEmpty) {
                                   displayUsername = userSnapshot.data!['username'] ?? 'Unknown User';
                                 }
@@ -378,7 +353,6 @@ class _UserpostcardState extends State<Userpostcard> {
                                   displayPhotoUrl = userSnapshot.data!['userPhotoUrl'] ?? '';
                                 }
                               } else if (userSnapshot.connectionState == ConnectionState.waiting) {
-                                // लोडिंग की स्थिति में Shimmer दिखाएं
                                 return Shimmer.fromColors(
                                   baseColor: Colors.grey[300]!,
                                   highlightColor: Colors.grey[100]!,
@@ -397,7 +371,6 @@ class _UserpostcardState extends State<Userpostcard> {
                                 );
                               }
 
-                              // *** USERNAME AND IMAGE DISPLAY ***
                               return Padding(
                                 padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
                                 child: Row(
@@ -405,7 +378,6 @@ class _UserpostcardState extends State<Userpostcard> {
                                   children: [
                                     CircleAvatar(
                                       radius: 18,
-                                      // backgroundImage null हैंडलिंग के साथ सेट करना
                                       backgroundImage: displayPhotoUrl.isNotEmpty
                                           ? (displayPhotoUrl.startsWith('http')
                                           ? NetworkImage(displayPhotoUrl)
@@ -413,7 +385,6 @@ class _UserpostcardState extends State<Userpostcard> {
                                       ) as ImageProvider<Object>?
                                           : null,
 
-                                      // Fallback child: Show person icon if no photoUrl is available
                                       child: displayPhotoUrl.isEmpty ? const Icon(Icons.person, size: 20) : null,
                                     ),
                                     const SizedBox(width: 8),
@@ -421,21 +392,16 @@ class _UserpostcardState extends State<Userpostcard> {
                                       child: Column(
                                         crossAxisAlignment: CrossAxisAlignment.start,
                                         children: [
-                                          RichText(
-                                            text: TextSpan(
-                                              style: DefaultTextStyle.of(context).style.copyWith(fontSize: 14),
-                                              children: <TextSpan>[
-                                                TextSpan(
-                                                  // 👤 फेच किया गया या स्टोर्ड username का उपयोग
-                                                  text: '${displayUsername} ',
-                                                  style: const TextStyle(fontWeight: FontWeight.bold),
-                                                ),
-                                                TextSpan(
-                                                  text: comment.text,
-                                                ),
-                                              ],
-                                            ),
+                                          Text(
+                                            displayUsername,
+                                            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
                                           ),
+                                          const SizedBox(height: 2),
+                                          Text(
+                                            comment.text,
+                                            style: DefaultTextStyle.of(context).style.copyWith(fontSize: 14),
+                                          ),
+
                                           const SizedBox(height: 2),
                                           Text(
                                             _getTimeAgo(comment.timestamp.toDate()),
@@ -445,7 +411,6 @@ class _UserpostcardState extends State<Userpostcard> {
                                       ),
                                     ),
 
-                                    // 🟢 Comment Menu (Edit/Delete)
                                     _buildCommentMenu(comment),
 
                                   ],
@@ -512,7 +477,6 @@ class _UserpostcardState extends State<Userpostcard> {
       },
     );
   }
-  // --- END UPDATED: Show comments as a Bottom Modal Sheet ---
 
   void _fetchImageAspectRatio(String url) {
     if (_imageAspectRatios.containsKey(url) || _loadingAspectRatio.contains(url)) return;
@@ -538,7 +502,6 @@ class _UserpostcardState extends State<Userpostcard> {
   }
 
   void _openFullScreenGallery(int initialIndex) {
-    // Re-implemented to correctly handle the initial image index for the full-screen view.
     setState(() => _currentImageIndex = initialIndex);
 
     showDialog(
@@ -610,7 +573,7 @@ class _UserpostcardState extends State<Userpostcard> {
         String username = widget.post.username;
         String profileImageUrl = widget.post.profileImageUrl;
         List<dynamic> likes = [];
-        List<dynamic> comments = []; // Now stores a list of maps (the comment structure)
+        List<dynamic> comments = [];
 
         if (snapshot.hasData && snapshot.data!.exists) {
           final data = snapshot.data!.data() as Map<String, dynamic>? ?? {};
@@ -629,7 +592,6 @@ class _UserpostcardState extends State<Userpostcard> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Header
                 Padding(
                   padding: EdgeInsets.symmetric(horizontal: sw * 0.04),
                   child: ListTile(
@@ -661,7 +623,6 @@ class _UserpostcardState extends State<Userpostcard> {
                 else if (widget.post.videos.isNotEmpty)
                   _buildVideoPlayer(sh),
 
-                // Like & Comment Section
                 Padding(
                   padding: EdgeInsets.only(top: sh * 0.006),
                   child: Row(
@@ -736,7 +697,6 @@ class _UserpostcardState extends State<Userpostcard> {
     );
   }
 
-  // LinkedIn Grid Layout (Adaptive)
   Widget _buildLinkedInImageGrid(List<String> images, double sw, double sh) {
     final count = images.length;
     if (count == 1) {
@@ -744,7 +704,7 @@ class _UserpostcardState extends State<Userpostcard> {
       final aspect = _imageAspectRatios[url];
       final maxH = sh * 0.75;
       final height = (aspect != null ? (sw / aspect) : sh * 0.45)
-          .clamp(100.0, maxH) // Use 100.0 for double
+          .clamp(100.0, maxH)
           .toDouble();
 
       return GestureDetector(
@@ -758,7 +718,6 @@ class _UserpostcardState extends State<Userpostcard> {
       );
     }
 
-    // 2 or more
     return GridView.builder(
       physics: const NeverScrollableScrollPhysics(),
       shrinkWrap: true,
@@ -814,7 +773,6 @@ class _UserpostcardState extends State<Userpostcard> {
         errorBuilder: (context, _, __) => const Center(child: Icon(Icons.broken_image, size: 40)),
       );
     } else {
-      // Local files don't need a loading indicator since they load instantly
       return Image.file(
         File(url),
         fit: fit,

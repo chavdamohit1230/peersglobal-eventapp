@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-// import 'package:peersglobleeventapp/color/colorfile.dart'; // Assuming this provides Appcolor.backgroundDark
+import 'package:intl/intl.dart'; // ✅ NEW: टाइमस्टैम्प को फॉर्मेट करने के लिए
 
 // Updated Professional Color Palette
 class Appcolor {
@@ -26,16 +26,37 @@ class _EventagendaState extends State<Eventagenda> {
     return FirebaseFirestore.instance
         .collection('eventagenda')
         .orderBy('day')
-        .orderBy('timeStart')
+        .orderBy('timeStart') // Timestamp के आधार पर सॉर्टिंग
         .snapshots();
+  }
+
+  // ✅ NEW: Timestamp को `h:mm a` (जैसे 10:30 AM) फॉर्मेट में बदलने का हेल्पर फंक्शन
+  String formatTimestamp(dynamic timestamp) {
+    // सुरक्षित रूप से चेक करें कि क्या यह Timestamp है
+    if (timestamp is Timestamp) {
+      final dateTime = timestamp.toDate();
+      return DateFormat('h:mm a').format(dateTime);
+    }
+    // यदि Timestamp नहीं है या null है, तो खाली स्ट्रिंग लौटा दें
+    return '';
   }
 
   // --- UI for each session card (PREMIUM TIMELINE DESIGN) ---
   Widget buildSessionCard(Map<String, dynamic> data) {
     final List speakers = data['speakers'] ?? [];
     final List images = data['images'] ?? [];
-    final String timeStart = data['timeStart'] ?? '';
-    final String timeEnd = data['timeEnd'] ?? '';
+
+    // ✅ FIX: data['timeStart'] को Timestamp के रूप में सुरक्षित रूप से पढ़ें
+    final dynamic rawTimeStart = data['timeStart'];
+    final dynamic rawTimeEnd = data['timeEnd'];
+
+    // सुरक्षित रूप से Timestamp में कास्ट करें
+    final Timestamp? timeStartTimestamp = rawTimeStart is Timestamp ? rawTimeStart : null;
+    final Timestamp? timeEndTimestamp = rawTimeEnd is Timestamp ? rawTimeEnd : null;
+
+    // फॉर्मेट किए हुए स्ट्रिंग प्राप्त करें
+    final String timeStart = formatTimestamp(timeStartTimestamp);
+    final String timeEnd = formatTimestamp(timeEndTimestamp);
 
     return IntrinsicHeight(
       child: Row(
@@ -48,7 +69,7 @@ class _EventagendaState extends State<Eventagenda> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  timeStart,
+                  timeStart.isNotEmpty ? timeStart : 'N/A', // फॉर्मेट किया हुआ टाइम
                   style: const TextStyle(
                     fontSize: 15,
                     fontWeight: FontWeight.bold,
@@ -56,7 +77,7 @@ class _EventagendaState extends State<Eventagenda> {
                   ),
                 ),
                 Text(
-                  timeEnd,
+                  timeEnd, // फॉर्मेट किया हुआ टाइम
                   style: const TextStyle(
                     fontSize: 13,
                     fontWeight: FontWeight.w500,
@@ -264,7 +285,7 @@ class _EventagendaState extends State<Eventagenda> {
             return Center(child: Text("Error: ${snapshot.error}"));
           }
 
-          // 1. Data Grouping Logic (Same robust logic as before)
+          // 1. Data Grouping Logic
           final Map<int, List<Map<String, dynamic>>> sessionsByDay = {};
           if (snapshot.hasData) {
             for (var doc in snapshot.data!.docs) {
@@ -282,7 +303,7 @@ class _EventagendaState extends State<Eventagenda> {
           final sortedDays = sessionsByDay.keys.toList()..sort();
           final tabCount = sortedDays.length;
 
-          // 2. No Data UI (Same logic)
+          // 2. No Data UI
           if (tabCount == 0) {
             return Scaffold(
               backgroundColor: primaryColor,

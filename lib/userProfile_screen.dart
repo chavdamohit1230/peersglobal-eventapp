@@ -565,12 +565,6 @@ class _UserprofileScreenState extends State<UserprofileScreen>
                                 },
                               ),
                               Text("${likes.length} Likes"),
-                              IconButton(
-                                icon: const Icon(Icons.comment),
-                                onPressed: () {
-                                  _openComments(context, postId);
-                                },
-                              ),
                             ],
                           ),
                         ),
@@ -587,15 +581,7 @@ class _UserprofileScreenState extends State<UserprofileScreen>
     );
   }
 
-  void _openComments(BuildContext context, String postId) {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      builder: (context) => CommentSection(postId: postId),
-    );
-  }
 
-  // -------------------- Connections Tab Method --------------------
   Widget _buildConnectionsTab(AuthUserModel user) {
     final cleanedCurrentUserId = docId;
 

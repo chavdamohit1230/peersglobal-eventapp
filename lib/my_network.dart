@@ -3,8 +3,9 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:lottie/lottie.dart';
 import 'package:url_launcher/url_launcher_string.dart';
 import 'package:peersglobleeventapp/color/colorfile.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
-// Helper function to capitalize the first letter of each word
+
 String capitalizeWords(String text) {
   if (text == null || text.isEmpty) {
     return '';
@@ -43,7 +44,6 @@ class Mynetwork {
   });
 }
 
-// -------------------- MyNetwork Screen --------------------
 class MyNetwork extends StatefulWidget {
   final String currentUserId;
   const MyNetwork({super.key, required this.currentUserId});
@@ -80,22 +80,21 @@ class _MyNetworkState extends State<MyNetwork> {
             final screenWidth = MediaQuery.of(context).size.width;
 
             // Fixed but adaptive box size (uniform look)
-            final boxHeight = screenHeight * 0.38; // thoda bada box
-            final boxWidth = screenWidth * 0.8;    // wider box
+            final boxHeight = screenHeight * 0.38;
+            final boxWidth = screenWidth * 0.8;
             final fontSize = (screenWidth * 0.048).clamp(14, 18);
 
             return Center(
               child: Opacity(
                 opacity: 0.7,
-                child: SingleChildScrollView( // ✅ Prevent overflow
+                child: SingleChildScrollView(
                   child: SizedBox(
                     height: boxHeight,
                     width: boxWidth,
                     child: Column(
-                      mainAxisSize: MainAxisSize.min, // ✅ Prevent layout stretching
+                      mainAxisSize: MainAxisSize.min,
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        // 🔥 Bigger Lottie animation (90% of box)
                         Flexible(
                           child: Lottie.asset(
                             'assets/lottieanimation/hello.json',
@@ -315,7 +314,7 @@ class ConnectionListWidget extends StatelessWidget {
                   ),
                 ),
                 IconButton(
-                  icon: const Icon(Icons.message, color: Colors.green),
+                  icon: const Icon(FontAwesomeIcons.whatsapp, color: Colors.green),
                   onPressed: () => _openWhatsApp(context, connection.mobile),
                 ),
               ],
@@ -471,7 +470,7 @@ class ConnectionDetailScreen extends StatelessWidget {
               children: [
                 ElevatedButton.icon(
                   onPressed: () => _openWhatsApp(context, connection.mobile),
-                  icon: const Icon(Icons.message, color: Colors.white),
+                  icon: const Icon(FontAwesomeIcons.whatsapp, color: Colors.white),
                   label: const Text(
                     "Message",
                     style: TextStyle(color: Colors.white),
