@@ -8,8 +8,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 class OtpverificationScreen extends StatefulWidget {
   final String mobile;
   final String verificationId;
-  final String userId; // ✅ This will come from login/register page
-
+  final String userId;
   const OtpverificationScreen({
     super.key,
     required this.mobile,
@@ -45,20 +44,17 @@ class _OtpverificationScreenState extends State<OtpverificationScreen> {
         smsCode: otp,
       );
 
-      // 🔹 Sign in with OTP credential
       await FirebaseAuth.instance.signInWithCredential(credential);
 
       if (!mounted) return;
 
-      print("✅ OTP Verified. UserId: ${widget.userId}");
+      print(" OTP Verified. UserId: ${widget.userId}");
 
-       // save state in sharedpreference
 
       final pref = await SharedPreferences.getInstance();
       await pref.setBool('isLoggedIn',true);
       await pref.setString('userId', widget.userId);
 
-      // ✅ Directly navigate to HomePage with userId
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(

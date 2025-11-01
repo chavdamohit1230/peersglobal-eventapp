@@ -62,6 +62,7 @@ dependencies:
   timeago:
   connectivity_plus:
   font_awesome_flutter:
+  rename: ^3.1.0
 
 
 

@@ -7,7 +7,7 @@
 
 
     <application
-        android:label="peersglobleeventapp"
+        android:label="peersglobalconclave"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher"
         android:enableOnBackInvokedCallback="true">

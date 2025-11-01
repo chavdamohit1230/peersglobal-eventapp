@@ -49,7 +49,6 @@ class _LoginscreenState extends State<Loginscreen> {
       });
 
       try {
-        // 🔹 Fetch users from Firestore
         List<AuthUserModel> users = await _repo.fetchUsers();
 
         final mobile = _mobileController.text.trim();
@@ -63,9 +62,13 @@ class _LoginscreenState extends State<Loginscreen> {
           print("✅ User found: ${matchUser.mobile}");
           print("userid: ${matchUser.id}");
 
+          final String phoneNumberForFirebase = '+91${matchUser.mobile}';
+          print("📞 Sending OTP to: $phoneNumberForFirebase");
+
           // 🔹 Send OTP via Firebase
           FirebaseAuth.instance.verifyPhoneNumber(
-            phoneNumber: '+91${matchUser.mobile}',
+            phoneNumber: phoneNumberForFirebase, // हमेशा +91 का उपयोग हो रहा है
+
             verificationCompleted: (PhoneAuthCredential credential) async {
               print("✅ Auto verification completed");
               await FirebaseAuth.instance.signInWithCredential(credential);
@@ -78,7 +81,7 @@ class _LoginscreenState extends State<Loginscreen> {
               );
             },
             verificationFailed: (FirebaseAuthException e) {
-              print("❌ Verification failed: ${e.message}");
+              print(" Verification failed: ${e.message}");
               ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(content: Text(e.message ?? "Error")));
               setState(() {
@@ -86,7 +89,7 @@ class _LoginscreenState extends State<Loginscreen> {
               });
             },
             codeSent: (String verificationId, int? resendToken) {
-              print("✅ codeSent triggered with verificationId: $verificationId");
+              print("codeSent triggered with verificationId: $verificationId");
               if (!mounted) return;
               Navigator.push(
                 context,
@@ -104,7 +107,7 @@ class _LoginscreenState extends State<Loginscreen> {
             },
           );
         } else {
-          // ❌ Invalid user
+          //  Invalid user
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
               content: Text("Mobile number not found!"),
@@ -116,7 +119,7 @@ class _LoginscreenState extends State<Loginscreen> {
           });
         }
       } catch (e) {
-        print("❌ Error: $e");
+        print(" Error: $e");
         ScaffoldMessenger.of(context)
             .showSnackBar(SnackBar(content: Text("Error: $e")));
         setState(() {

@@ -21,10 +21,7 @@ class DefaultFirebaseOptions {
     }
     switch (defaultTargetPlatform) {
       case TargetPlatform.android:
-        throw UnsupportedError(
-          'DefaultFirebaseOptions have not been configured for android - '
-          'you can reconfigure this by running the FlutterFire CLI again.',
-        );
+        return android;
       case TargetPlatform.iOS:
         return ios;
       case TargetPlatform.macOS:
@@ -45,22 +42,23 @@ class DefaultFirebaseOptions {
 
   static const FirebaseOptions web = FirebaseOptions(
     apiKey: 'AIzaSyBt0FskJQr2xvDWH6jbJIP_zsKceT_oHG0',
-    appId: '1:548351194654:web:af323a0a994c53863ba00f',
+    appId: '1:548351194654:web:806c61208b917a633ba00f',
     messagingSenderId: '548351194654',
     projectId: 'event-9da2e',
     authDomain: 'event-9da2e.firebaseapp.com',
     storageBucket: 'event-9da2e.firebasestorage.app',
-    measurementId: 'G-4QDM0VDZHG',
+    measurementId: 'G-DX26E32XN8',
   );
 
   static const FirebaseOptions ios = FirebaseOptions(
     apiKey: 'AIzaSyBGEcgiJvrZMJEf6A9BHHgAndhRygr-PcI',
-    appId: '1:548351194654:ios:1a1abc5888683eb33ba00f',
+    appId: '1:548351194654:ios:f1611eb36a81056a3ba00f',
     messagingSenderId: '548351194654',
     projectId: 'event-9da2e',
     storageBucket: 'event-9da2e.firebasestorage.app',
-    iosClientId: '548351194654-c50qnj13lm09c4gsmn92p1o57uv47ctl.apps.googleusercontent.com',
-    iosBundleId: 'com.example.peersglobleeventapp',
+    androidClientId: '548351194654-q1an29l5ddn2uhk3dqjo9v3nvst9tq5r.apps.googleusercontent.com',
+    iosClientId: '548351194654-f3pkk984o6udfcg9rc14k0tkq2jof7kc.apps.googleusercontent.com',
+    iosBundleId: 'com.peersglobal.conclave',
   );
 
   static const FirebaseOptions macos = FirebaseOptions(
@@ -75,11 +73,20 @@ class DefaultFirebaseOptions {
 
   static const FirebaseOptions windows = FirebaseOptions(
     apiKey: 'AIzaSyBt0FskJQr2xvDWH6jbJIP_zsKceT_oHG0',
-    appId: '1:548351194654:web:0d46ff977f7986ad3ba00f',
+    appId: '1:548351194654:web:22cdf34959a45f863ba00f',
     messagingSenderId: '548351194654',
     projectId: 'event-9da2e',
     authDomain: 'event-9da2e.firebaseapp.com',
     storageBucket: 'event-9da2e.firebasestorage.app',
-    measurementId: 'G-YQVXBM3JDB',
+    measurementId: 'G-P0Z13DB66H',
   );
+
+  static const FirebaseOptions android = FirebaseOptions(
+    apiKey: 'AIzaSyB4YmrfV34kNF2p7PF_ubkk5mA71L5k-3M',
+    appId: '1:548351194654:android:dba8378e8fc5bc6c3ba00f',
+    messagingSenderId: '548351194654',
+    projectId: 'event-9da2e',
+    storageBucket: 'event-9da2e.firebasestorage.app',
+  );
+
 }
