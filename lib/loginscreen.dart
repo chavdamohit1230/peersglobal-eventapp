@@ -24,7 +24,7 @@ class _LoginscreenState extends State<Loginscreen> {
 
   final _formKey = GlobalKey<FormState>();
   bool ischeck = false;
-  bool _isLoading = false; // Loading state for button
+  bool _isLoading = false;
 
   final AuthRepository _repo = AuthRepository();
 
@@ -45,7 +45,7 @@ class _LoginscreenState extends State<Loginscreen> {
       }
 
       setState(() {
-        _isLoading = true; // Start loading
+        _isLoading = true;
       });
 
       try {
@@ -65,9 +65,9 @@ class _LoginscreenState extends State<Loginscreen> {
           final String phoneNumberForFirebase = '+91${matchUser.mobile}';
           print("📞 Sending OTP to: $phoneNumberForFirebase");
 
-          // 🔹 Send OTP via Firebase
+          // Send OTP via Firebase
           FirebaseAuth.instance.verifyPhoneNumber(
-            phoneNumber: phoneNumberForFirebase, // हमेशा +91 का उपयोग हो रहा है
+            phoneNumber: phoneNumberForFirebase,
 
             verificationCompleted: (PhoneAuthCredential credential) async {
               print("✅ Auto verification completed");
@@ -85,7 +85,7 @@ class _LoginscreenState extends State<Loginscreen> {
               ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(content: Text(e.message ?? "Error")));
               setState(() {
-                _isLoading = false; // Stop loading on error
+                _isLoading = false;
               });
             },
             codeSent: (String verificationId, int? resendToken) {
@@ -107,15 +107,14 @@ class _LoginscreenState extends State<Loginscreen> {
             },
           );
         } else {
-          //  Invalid user
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
-              content: Text("Mobile number not found!"),
+              content: Text("Mobile number not found! please Register First "),
               backgroundColor: Colors.red,
             ),
           );
           setState(() {
-            _isLoading = false; // Stop loading
+            _isLoading = false;
           });
         }
       } catch (e) {
@@ -123,7 +122,7 @@ class _LoginscreenState extends State<Loginscreen> {
         ScaffoldMessenger.of(context)
             .showSnackBar(SnackBar(content: Text("Error: $e")));
         setState(() {
-          _isLoading = false; // Stop loading
+          _isLoading = false;
         });
       }
     }
@@ -299,7 +298,7 @@ class _LoginscreenState extends State<Loginscreen> {
                       // Login Button
                       SizedBox(
                         width: double.infinity, // Full width
-                        height: screenHeight * 0.062,
+                        height: screenHeight * 0.069,
                         child: ElevatedButton(
                           onPressed: _isLoading ? null : _loginUser,
                           style: ElevatedButton.styleFrom(
