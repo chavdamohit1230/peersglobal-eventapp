@@ -11,6 +11,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:peersglobleeventapp/modelClass/model/auth_User_model.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:peersglobleeventapp/color/colorfile.dart';
 
 class HomePage extends StatefulWidget {
   final String? userId;
@@ -23,7 +24,7 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   int selectedIndex = 0;
-  bool isBottomSheetOpen = false;
+  bool isBottomSheetOpen = false; // Kept for 'More' tab logic
   AuthUserModel? user;
   bool isLoading = true;
   final TextEditingController _searchController = TextEditingController();
@@ -186,19 +187,29 @@ class _HomePageState extends State<HomePage> {
     }
   }
 
+  // --- START: Back button handler (Only Bottom Navigation Index Logic) ---
+  Future<bool> _onWillPop() async {
+    // If not on the Home tab (index 0), switch to Home tab.
+    if (selectedIndex != 0) {
+      setState(() {
+        selectedIndex = 0;
+      });
+      return false; // Prevent app from exiting
+    }
+
+    // If on Home tab, allow the app to exit.
+    return true;
+  }
+  // --- END: Back button handler (Only Bottom Navigation Index Logic) ---
+
+
   @override
   Widget build(BuildContext context) {
     final screenWidth = MediaQuery.of(context).size.width;
     final screenHeight = MediaQuery.of(context).size.height;
 
     return WillPopScope(
-      onWillPop: () async {
-        if (isBottomSheetOpen) {
-          Navigator.of(context).maybePop();
-          return false;
-        }
-        return true;
-      },
+      onWillPop: _onWillPop, // 👈 Uses the logic to switch to index 0
       child: Scaffold(
         backgroundColor: const Color(0xFFF0F4FD),
         drawer: Drawer(
@@ -264,10 +275,10 @@ class _HomePageState extends State<HomePage> {
                         title: const Text('Home', style: TextStyle(fontSize: 18)),
                         onTap: () {
                           Navigator.pop(context);
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(builder: (context) =>HomePage()),
-                          );
+                          // Navigate to Home tab (index 0)
+                          setState(() {
+                            selectedIndex = 0;
+                          });
                         },
                       ),
 
@@ -484,7 +495,17 @@ class _HomePageState extends State<HomePage> {
             BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
             BottomNavigationBarItem(icon: Icon(Icons.people_alt_outlined), label: 'My Network'),
             BottomNavigationBarItem(
-              icon: CircleAvatar(backgroundColor: Color(0xFF2E356A), radius: 18, child: Icon(Icons.qr_code_scanner, color: Colors.white)),
+              icon: const CircleAvatar(
+                backgroundColor:Appcolor.backgroundLight,
+                radius: 28,
+                child: Padding(
+                  padding: EdgeInsets.all(4.0),
+                  child: Image(
+                    image: AssetImage('assets/peersgloblelogo.png'),
+                    fit: BoxFit.contain,
+                  ),
+                ),
+              ),
               label: '',
             ),
             BottomNavigationBarItem(icon: Icon(Icons.apartment_outlined), label: 'Exhibitors'),

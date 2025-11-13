@@ -8,7 +8,6 @@ buildscript {
         // Android Gradle Plugin
         classpath("com.android.tools.build:gradle:8.5.0")
 
-        // ✅ Google services plugin (Firebase ke liye)
         classpath("com.google.gms:google-services:4.4.2")
     }
 }

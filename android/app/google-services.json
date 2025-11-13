@@ -14,6 +14,14 @@
       },
       "oauth_client": [
         {
+          "client_id": "548351194654-nnqlb004gbj18op1oilu34s8rn9ah3ma.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.peersglobal.conclave",
+            "certificate_hash": "04eab20e33a9cfea8e2f605796e27d72acc96ed1"
+          }
+        },
+        {
           "client_id": "548351194654-kg4vj3p8h2icktmtppl1hquucjealrbc.apps.googleusercontent.com",
           "client_type": 3
         }

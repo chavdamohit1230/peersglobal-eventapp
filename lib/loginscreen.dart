@@ -297,35 +297,45 @@ class _LoginscreenState extends State<Loginscreen> {
 
                       // Login Button
                       SizedBox(
-                        width: double.infinity, // Full width
-                        height: screenHeight * 0.069,
-                        child: ElevatedButton(
-                          onPressed: _isLoading ? null : _loginUser,
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: const Color(0xFF2E356A),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(10),
-                            ),
-                            padding: const EdgeInsets.symmetric(vertical: 16),
-                          ),
-                          child: _isLoading
-                              ? const SizedBox(
-                            width: 24,
-                            height: 24,
-                            child: CircularProgressIndicator(
-                              color: Colors.white,
-                              strokeWidth: 2,
-                            ),
-                          )
-                              : Text(
-                            'Login',
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontSize: screenWidth * 0.050,
-                            ),
-                          ),
+                        width: MediaQuery.of(context).size.width * 0.9,   // 90% width of screen
+                        child: LayoutBuilder(
+                          builder: (context, constraints) {
+                            double buttonHeight = constraints.maxWidth * 0.13; // auto height
+                            double fontSize = constraints.maxWidth * 0.045;    // auto font size
+
+                            return SizedBox(
+                              height: buttonHeight.clamp(45, 60), // min 45, max 60
+                              child: ElevatedButton(
+                                onPressed: _isLoading ? null : _loginUser,
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: const Color(0xFF2E356A),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(10),
+                                  ),
+                                  padding: EdgeInsets.zero,
+                                ),
+                                child: _isLoading
+                                    ? const SizedBox(
+                                  width: 24,
+                                  height: 24,
+                                  child: CircularProgressIndicator(
+                                    color: Colors.white,
+                                    strokeWidth: 2,
+                                  ),
+                                )
+                                    : Text(
+                                  'Login',
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                    fontSize: fontSize, // Responsive font
+                                  ),
+                                ),
+                              ),
+                            );
+                          },
                         ),
                       ),
+
                       SizedBox(height: screenHeight * 0.06),
 
                       // Register link
